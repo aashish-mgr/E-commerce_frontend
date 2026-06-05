@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
 import ProductCard from "../Components/ProductCard";
 import AuthModal from "../Components/AuthModal";
+import {useDispatch, useSelector} from 'react-redux'
+import {useNavigate} from 'react-router-dom'
+
 
 const PRODUCTS = [
   { id: 1, name: "Wireless Headphones", price: "$89",  category: "Electronics", emoji: "🎧" },
   { id: 2, name: "Running Shoes",       price: "$120", category: "Footwear",    emoji: "👟" },
   { id: 3, name: "Leather Wallet",      price: "$45",  category: "Accessories", emoji: "👛" },
   { id: 4, name: "Sunglasses",          price: "$65",  category: "Accessories", emoji: "🕶️" },
-];
+]; 
 
 const STATS = [
   { value: "50k+", label: "Happy Customers" },
@@ -23,11 +26,22 @@ const STATS = [
 // ── Landing Page ──────────────────────────────────────────────
 export default function LandingPage() {
   const [authMode, setAuthMode] = useState(""); // "login" | "register" | null
+  const authState = useSelector( (state: any) => state.auth);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const openLogin    = () => setAuthMode("login");
   const openRegister = () => setAuthMode("register");
   const closeModal   = () => setAuthMode("");
   const switchMode   = () => setAuthMode((m) => (m === "login" ? "register" : "login"));
+  
+  useEffect(() => {
+    if(authState.isAuthenticated) {
+      closeModal();
+      navigate('/dashboard');
+      console.log(authState.isAuthenticated);
+    }
+  }, [authState.isAuthenticated]);
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col">
