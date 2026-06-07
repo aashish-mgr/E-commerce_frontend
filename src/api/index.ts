@@ -8,7 +8,16 @@ const API = axios.create({
     },
 })
 
+const authAPI = axios.create({
+  baseURL: "http://localhost:3000",
+  headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    },
+  withCredentials: true,
+});
 
 
 
-export {  API  };
+
+export {  API, authAPI };

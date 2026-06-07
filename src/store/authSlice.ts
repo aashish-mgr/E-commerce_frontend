@@ -1,6 +1,6 @@
 import { createSlice} from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import {API} from '../api/index';
+import {API,authAPI} from '../api/index';
 
 
 
@@ -86,14 +86,15 @@ export function registerUser(userData: RegisterData) {
 
 export function loginUser(userData: LoginData) {
     
-    return async function registerThunk (dispatch: any) {
+    return async function loginThunk (dispatch: any) {
         dispatch(setStatus(AuthStatus.Loading));
         try{
-       const response =await API.post("/auth/login",userData);
+       const response =await authAPI.post("/auth/login",userData);
        if(response.status === 200) {
           dispatch(setStatus(AuthStatus.Success));
           dispatch(setUserData(response.data));
           dispatch(setAuthenticated(true));
+         
           alert("Login Successful!");
        }
        else {
@@ -104,6 +105,37 @@ export function loginUser(userData: LoginData) {
         setStatus(AuthStatus.Error);
     }
 
+    }
+}
+
+export function LogoutUser() {
+    return function logoutThunk (dispatch: any) {
+         authAPI.post("/auth/logout");
+        dispatch(setUserData(null));
+        dispatch(setAuthenticated(false));
+   
+        alert("Logged out successfully!");
+    }
+}
+
+export function getUserProfile() {
+    return async function getUserProfileThunk (dispatch: any) {
+        dispatch(setStatus(AuthStatus.Loading));
+        try{
+         const response =await authAPI.get("/auth/getUserProfile");
+            if(response.status === 200) {
+                dispatch(setUserData(response.data));
+                dispatch(setAuthenticated(true));
+                dispatch(setStatus(AuthStatus.Success));
+            }
+            else {
+                dispatch(setStatus(AuthStatus.Error));
+
+            }
+        }
+        catch(error) {
+            dispatch(setStatus(AuthStatus.Error));
+        }
     }
 }
 

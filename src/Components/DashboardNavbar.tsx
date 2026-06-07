@@ -1,5 +1,7 @@
 import { useState } from "react";
 import type { User } from "../types";
+import { LogoutUser } from "../store/authSlice";
+import {useNavigate} from "react-router-dom";
 
 interface Props {
   user: User;
@@ -17,6 +19,16 @@ export default function DashboardNavbar({
   onProfileClick,
 }: Props) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    LogoutUser();
+    navigate('/');
+  }
+
+
+
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -89,7 +101,7 @@ export default function DashboardNavbar({
                   Order History
                 </button>
                 <div className="border-t border-gray-100 my-1" />
-                <button className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 transition-colors">
+                <button onClick= {handleLogout} className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 transition-colors" >
                   Sign Out
                 </button>
               </div>

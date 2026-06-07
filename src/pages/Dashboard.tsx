@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
-import DashboardNavbar from "../Components/DashboardNavbar";
+import { useState, useMemo,useEffect } from "react";
+import Navbar from "../Components/Navbar";
 import ProductCard from "../Components/ProductCardts";
 import FilterBar from "../Components/FilterBar";
 import type { Product, User } from "../types";
 import Footer from "../Components/Footer"
+import {useSelector} from 'react-redux'
 
 // ── Mock data ─────────────────────────────────────────────────
 const CURRENT_USER: User = {
@@ -37,6 +38,7 @@ export default function Dashboard() {
   const [search, setSearch]                 = useState("");
   const [selectedCategory, setCategory]     = useState("All");
   const [toasts, setToasts]                 = useState<Toast[]>([]);
+  const authState = useSelector( (state: any) => state.auth);
 
   // Filter products based on search + category
   const filteredProducts = useMemo(() => {
@@ -75,11 +77,15 @@ export default function Dashboard() {
     showToast("User profile coming soon!");
   };
 
+  useEffect(() => {
+    console.log("Current user:", authState.user);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
 
       {/* Navbar */}
-      <DashboardNavbar
+      <Navbar
         user={CURRENT_USER}
         cartCount={cartCount}
         onCartClick={handleCartClick}
@@ -88,7 +94,7 @@ export default function Dashboard() {
       />
       
         {/* Filter bar */}
-        <div className="sticky top-16 z-40 bg-white  shadow-md p-4 mb-6 " >
+        <div className="sticky top-16 z-20 bg-white  shadow-md p-4 mb-6 " >
           <FilterBar
             search={search}
             selectedCategory={selectedCategory}
@@ -106,9 +112,7 @@ export default function Dashboard() {
             <h1 className="text-xl font-bold mb-0.5">
               Welcome back, {CURRENT_USER.name.split(" ")[0]}! 👋
             </h1>
-            <p className="text-indigo-200 text-sm">
-              {PRODUCTS.filter((p) => p.inStock).length} products available · Free shipping over $50
-            </p>
+            
           </div>
           <div className="flex gap-3">
             <button

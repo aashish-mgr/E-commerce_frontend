@@ -3,7 +3,7 @@ import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
 import ProductCard from "../Components/ProductCard";
 import AuthModal from "../Components/AuthModal";
-import {useDispatch, useSelector} from 'react-redux'
+import { useSelector} from 'react-redux'
 import {useNavigate} from 'react-router-dom'
 
 
@@ -28,8 +28,7 @@ export default function LandingPage() {
   const [authMode, setAuthMode] = useState(""); // "login" | "register" | null
   const authState = useSelector( (state: any) => state.auth);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
+ 
   const openLogin    = () => setAuthMode("login");
   const openRegister = () => setAuthMode("register");
   const closeModal   = () => setAuthMode("");
