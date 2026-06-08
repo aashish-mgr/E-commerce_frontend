@@ -1,6 +1,6 @@
 import { useState, useMemo,useEffect } from "react";
 import Navbar from "../Components/Navbar";
-import ProductCard from "../Components/ProductCardts";
+import ProductCard from "../Components/ProductCard";
 import FilterBar from "../Components/FilterBar";
 import type { Product, User } from "../types";
 import Footer from "../Components/Footer"

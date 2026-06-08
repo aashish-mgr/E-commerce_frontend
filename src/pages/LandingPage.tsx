@@ -1,18 +1,24 @@
 import { useState,useEffect } from "react";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
-import ProductCard from "../Components/ProductCard";
+import ProductCardts from "../Components/ProductCard";
 import AuthModal from "../Components/AuthModal";
 import { useSelector} from 'react-redux'
 import {useNavigate} from 'react-router-dom'
+import type { Product } from "../types";
 
 
-const PRODUCTS = [
-  { id: 1, name: "Wireless Headphones", price: "$89",  category: "Electronics", emoji: "🎧" },
-  { id: 2, name: "Running Shoes",       price: "$120", category: "Footwear",    emoji: "👟" },
-  { id: 3, name: "Leather Wallet",      price: "$45",  category: "Accessories", emoji: "👛" },
-  { id: 4, name: "Sunglasses",          price: "$65",  category: "Accessories", emoji: "🕶️" },
-]; 
+const PRODUCTS: Product[] = [
+  { id: 1,  name: "Wireless Headphones",  price: 89,  category: "Electronics", emoji: "🎧", rating: 4.5, inStock: true,  description: "Premium over-ear headphones with active noise cancellation and 30-hour battery life." },
+  { id: 2,  name: "Running Shoes",        price: 120, category: "Footwear",    emoji: "👟", rating: 4.8, inStock: true,  description: "Lightweight, breathable shoes with responsive cushioning for long-distance runs." },
+  { id: 3,  name: "Leather Wallet",       price: 45,  category: "Accessories", emoji: "👛", rating: 4.2, inStock: true,  description: "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots." },
+  { id: 4,  name: "Sunglasses",           price: 65,  category: "Accessories", emoji: "🕶️", rating: 4.0, inStock: false, description: "UV400 polarized lenses in a lightweight titanium frame. Ideal for all-day outdoor wear." },
+  { id: 5,  name: "Mechanical Keyboard",  price: 149, category: "Electronics", emoji: "⌨️", rating: 4.7, inStock: true,  description: "TKL layout with tactile brown switches, per-key RGB backlighting, and aluminum body." },
+  { id: 6,  name: "Yoga Mat",             price: 38,  category: "Sports",      emoji: "🧘", rating: 4.3, inStock: true,  description: "6mm thick non-slip mat made from eco-friendly TPE material. Includes carry strap." },
+  { id: 7,  name: "Ceramic Coffee Mug",   price: 22,  category: "Home",        emoji: "☕", rating: 4.6, inStock: true,  description: "Hand-thrown 12oz ceramic mug with a comfortable handle. Microwave and dishwasher safe." },
+  { id: 8,  name: "Smart Water Bottle",   price: 55,  category: "Sports",      emoji: "🍶", rating: 4.4, inStock: false, description: "Insulated stainless steel bottle that tracks hydration and glows to remind you to drink." },
+];
+
 
 const STATS = [
   { value: "50k+", label: "Happy Customers" },
@@ -33,6 +39,10 @@ export default function LandingPage() {
   const openRegister = () => setAuthMode("register");
   const closeModal   = () => setAuthMode("");
   const switchMode   = () => setAuthMode((m) => (m === "login" ? "register" : "login"));
+  const handleAddToCart = (product: any) => {
+    // Implement add to cart functionality here
+    console.log("Added to cart:", product);
+  };
   
   useEffect(() => {
     if(authState.isAuthenticated) {
@@ -98,7 +108,7 @@ export default function LandingPage() {
           {/* ProductCard component used here — receives product as a prop */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {PRODUCTS.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCardts key={product.id} product={product} onAddToCart={handleAddToCart}/>
             ))}
           </div>
         </section>

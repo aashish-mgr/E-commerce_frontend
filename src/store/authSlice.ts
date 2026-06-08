@@ -99,10 +99,12 @@ export function loginUser(userData: LoginData) {
        }
        else {
          dispatch(setStatus(AuthStatus.Error));
+         alert("Login Failed! Please check your credentials.");
        }
     }
     catch(error) {
         setStatus(AuthStatus.Error);
+        alert("Login Failed! Please check your credentials.");
     }
 
     }

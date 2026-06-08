@@ -75,7 +75,37 @@ export default function Navbar({ onLogin, onRegister, user,
       {authState.isAuthenticated ? (
         <>
         {/* User avatar + dropdown */}
-          <div className="relative ml-1">
+        
+          <div className="relative ml-1 flex">
+            <button
+            onClick={onOrderHistoryClick}
+            className="hidden sm:flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
+          >
+            <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+              <rect x="9" y="3" width="6" height="4" rx="1"/>
+              <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+            </svg>
+            Orders
+          </button>
+
+          {/* Cart */}
+          <button
+            onClick={onCartClick}
+            className="relative flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
+          >
+            <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+            <span className="hidden sm:inline">Cart</span>
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2 hover:bg-gray-100 pl-2 pr-3 py-1.5 rounded-lg transition-colors"
@@ -90,7 +120,7 @@ export default function Navbar({ onLogin, onRegister, user,
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1 text-sm">
+              <div className="absolute right-0 mt-13 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1 text-sm">
                 <button
                   onClick={() => { onProfileClick(); setDropdownOpen(false); }}
                   className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
