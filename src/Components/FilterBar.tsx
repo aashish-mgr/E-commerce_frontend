@@ -36,7 +36,7 @@ export default function FilterBar({
 
       {/* Category filter */}
       <div className="flex items-center gap-2 flex-wrap">
-        {["All", ...categories].map((cat) => (
+        {[ ...categories].map((cat) => (
           <button
             key={cat}
             onClick={() => onCategoryChange(cat)}

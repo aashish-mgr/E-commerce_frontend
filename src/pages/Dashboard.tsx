@@ -5,7 +5,7 @@ import FilterBar from "../Components/FilterBar";
 import type { Product, User } from "../types";
 import Footer from "../Components/Footer"
 import {useSelector} from 'react-redux'
-
+import { API } from "../api/index"
 // ── Mock data ─────────────────────────────────────────────────
 const CURRENT_USER: User = {
   name: "Alex Johnson",
@@ -13,18 +13,17 @@ const CURRENT_USER: User = {
   avatar: "AJ",
 };
 
-const PRODUCTS: Product[] = [
-  { id: 1,  name: "Wireless Headphones",  price: 89,  category: "Electronics", emoji: "🎧", rating: 4.5, inStock: true,  description: "Premium over-ear headphones with active noise cancellation and 30-hour battery life." },
-  { id: 2,  name: "Running Shoes",        price: 120, category: "Footwear",    emoji: "👟", rating: 4.8, inStock: true,  description: "Lightweight, breathable shoes with responsive cushioning for long-distance runs." },
-  { id: 3,  name: "Leather Wallet",       price: 45,  category: "Accessories", emoji: "👛", rating: 4.2, inStock: true,  description: "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots." },
-  { id: 4,  name: "Sunglasses",           price: 65,  category: "Accessories", emoji: "🕶️", rating: 4.0, inStock: false, description: "UV400 polarized lenses in a lightweight titanium frame. Ideal for all-day outdoor wear." },
-  { id: 5,  name: "Mechanical Keyboard",  price: 149, category: "Electronics", emoji: "⌨️", rating: 4.7, inStock: true,  description: "TKL layout with tactile brown switches, per-key RGB backlighting, and aluminum body." },
-  { id: 6,  name: "Yoga Mat",             price: 38,  category: "Sports",      emoji: "🧘", rating: 4.3, inStock: true,  description: "6mm thick non-slip mat made from eco-friendly TPE material. Includes carry strap." },
-  { id: 7,  name: "Ceramic Coffee Mug",   price: 22,  category: "Home",        emoji: "☕", rating: 4.6, inStock: true,  description: "Hand-thrown 12oz ceramic mug with a comfortable handle. Microwave and dishwasher safe." },
-  { id: 8,  name: "Smart Water Bottle",   price: 55,  category: "Sports",      emoji: "🍶", rating: 4.4, inStock: false, description: "Insulated stainless steel bottle that tracks hydration and glows to remind you to drink." },
-];
+// const PRODUCTS: Product[] = [
+//   { id: 1,  name: "Wireless Headphones",  price: 89,  category: "Electronics", emoji: "🎧", rating: 4.5, inStock: true,  description: "Premium over-ear headphones with active noise cancellation and 30-hour battery life." },
+//   { id: 2,  name: "Running Shoes",        price: 120, category: "Footwear",    emoji: "👟", rating: 4.8, inStock: true,  description: "Lightweight, breathable shoes with responsive cushioning for long-distance runs." },
+//   { id: 3,  name: "Leather Wallet",       price: 45,  category: "Accessories", emoji: "👛", rating: 4.2, inStock: true,  description: "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots." },
+//   { id: 4,  name: "Sunglasses",           price: 65,  category: "Accessories", emoji: "🕶️", rating: 4.0, inStock: false, description: "UV400 polarized lenses in a lightweight titanium frame. Ideal for all-day outdoor wear." },
+//   { id: 5,  name: "Mechanical Keyboard",  price: 149, category: "Electronics", emoji: "⌨️", rating: 4.7, inStock: true,  description: "TKL layout with tactile brown switches, per-key RGB backlighting, and aluminum body." },
+//   { id: 6,  name: "Yoga Mat",             price: 38,  category: "Sports",      emoji: "🧘", rating: 4.3, inStock: true,  description: "6mm thick non-slip mat made from eco-friendly TPE material. Includes carry strap." },
+//   { id: 7,  name: "Ceramic Coffee Mug",   price: 22,  category: "Home",        emoji: "☕", rating: 4.6, inStock: true,  description: "Hand-thrown 12oz ceramic mug with a comfortable handle. Microwave and dishwasher safe." },
+//   { id: 8,  name: "Smart Water Bottle",   price: 55,  category: "Sports",      emoji: "🍶", rating: 4.4, inStock: false, description: "Insulated stainless steel bottle that tracks hydration and glows to remind you to drink." },
+// ];
 
-const CATEGORIES = [...new Set(PRODUCTS.map((p) => p.category))];
 
 // ── Toast notification ────────────────────────────────────────
 interface Toast {
@@ -39,19 +38,43 @@ export default function Dashboard() {
   const [selectedCategory, setCategory]     = useState("All");
   const [toasts, setToasts]                 = useState<Toast[]>([]);
   const authState = useSelector( (state: any) => state.auth);
+  const [products, setProducts] = useState<Product[]>([]);
+
+   const getProducts = async () => {
+    try {
+      const response = await API.get('/product/getAll');  
+      
+      
+      setProducts(response.data.data);
+     
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  }
+
+  useEffect(() => {
+    getProducts();
+   
+  },[])
+
+  const CATEGORIES = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => set.add(p.Category?.categoryName));
+    return ["All", ...Array.from(set)];
+  }, [products]);
 
   // Filter products based on search + category
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((p) => {
+    return products.filter((p: Product) => {
       const matchesSearch =
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.description.toLowerCase().includes(search.toLowerCase()) ||
-        p.category.toLowerCase().includes(search.toLowerCase());
+        p.productName.toLowerCase().includes(search.toLowerCase()) ||
+        p.productDescription.toLowerCase().includes(search.toLowerCase()) ||
+        p.Category.categoryName.toLowerCase().includes(search.toLowerCase());
       const matchesCategory =
-        selectedCategory === "All" || p.category === selectedCategory;
+        selectedCategory === "All" || p.Category.categoryName === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [search, selectedCategory]);
+  }, [search, selectedCategory, products]);
 
   // Show a short toast notification
   const showToast = (message: string) => {
@@ -62,7 +85,7 @@ export default function Dashboard() {
 
   const handleAddToCart = (product: Product) => {
     setCartCount((n) => n + 1);
-    showToast(`"${product.name}" added to cart`);
+    showToast(`"${product.productName}" added to cart`);
   };
 
   const handleCartClick = () => {
@@ -75,11 +98,13 @@ export default function Dashboard() {
 
   const handleProfileClick = () => {
     showToast("User profile coming soon!");
+    console.log(CATEGORIES);
+    console.log(products.map((p) => p.Category.categoryName));
   };
 
   useEffect(() => {
     console.log("Current user:", authState.user);
-  }, []);
+  }, [authState.user]);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -148,10 +173,10 @@ export default function Dashboard() {
         {filteredProducts.length > 0 ? (
           <>
             <p className="text-sm text-gray-500 mb-4">
-              Showing {filteredProducts.length} of {PRODUCTS.length} products
+              Showing {filteredProducts.length} of {products.length} products
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {filteredProducts.map((product) => (
+              {filteredProducts.map((product: Product) => (
                 <ProductCard
                   key={product.id}
                   product={product}

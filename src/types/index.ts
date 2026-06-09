@@ -1,12 +1,13 @@
 export interface Product {
   id: number;
-  name: string;
-  price: number;
-  description: string;
-  category: string;
-  emoji: string;
-  rating: number;
-  inStock: boolean;
+  productName: string;
+  productPrice: number;
+  productDescription: string;
+  image: string;
+  Category: Category;
+}
+export interface Category {
+  categoryName: string;
 }
 
 export interface User {
