@@ -37,43 +37,9 @@ interface AuthState {
     status: AuthStatus
 }
 
-const AUTH_STORAGE_KEY = "authState";
-
-function getStoredAuthState(): Pick<AuthState, "user" | "isAuthenticated"> {
-    if (typeof window === "undefined") {
-        return { user: null, isAuthenticated: false };
-    }
-
-    try {
-        const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-        if (!stored) {
-            return { user: null, isAuthenticated: false };
-        }
-
-        return JSON.parse(stored) as Pick<AuthState, "user" | "isAuthenticated">;
-    } catch {
-        return { user: null, isAuthenticated: false };
-    }
-}
-
-function persistAuthState(state: Pick<AuthState, "user" | "isAuthenticated">) {
-    if (typeof window === "undefined") {
-        return;
-    }
-
-    if (!state.user || !state.isAuthenticated) {
-        localStorage.removeItem(AUTH_STORAGE_KEY);
-        return;
-    }
-
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(state));
-}
-
-const storedAuthState = getStoredAuthState();
-
 const initialState: AuthState = {
-    user: storedAuthState.user,
-    isAuthenticated: storedAuthState.isAuthenticated,
+    user: null,
+    isAuthenticated: false,
     token: null,
     status:  AuthStatus.Idle
 }
@@ -83,11 +49,9 @@ const authSlice = createSlice({
     reducers: {
         setAuthenticated: (state, action: PayloadAction<boolean>) =>  {
             state.isAuthenticated = action.payload;
-            persistAuthState({ user: state.user, isAuthenticated: state.isAuthenticated });
         },
         setUserData: (state, action: PayloadAction<User | null>) => {
             state.user = action.payload
-            persistAuthState({ user: state.user, isAuthenticated: state.isAuthenticated });
         },
         setToken: (state, action: PayloadAction<string | null>) => {
             state.token = action.payload
@@ -114,7 +78,7 @@ export function registerUser(userData: RegisterData) {
        }
     }
     catch(error) {
-                dispatch(setStatus(AuthStatus.Error));
+        setStatus(AuthStatus.Error);
     }
 
     }
@@ -139,7 +103,7 @@ export function loginUser(userData: LoginData) {
        }
     }
     catch(error) {
-        dispatch(setStatus(AuthStatus.Error));
+        setStatus(AuthStatus.Error);
         alert("Login Failed! Please check your credentials.");
     }
 
@@ -151,7 +115,6 @@ export function LogoutUser() {
          authAPI.post("/auth/logout");
         dispatch(setUserData(null));
         dispatch(setAuthenticated(false));
-        dispatch(setStatus(AuthStatus.Idle));
    
         alert("Logged out successfully!");
     }
@@ -163,7 +126,7 @@ export function getUserProfile() {
         try{
          const response =await authAPI.get("/auth/getUserProfile");
             if(response.status === 200) {
-                dispatch(setUserData(response.data.data));
+                dispatch(setUserData(response.data));
                 dispatch(setAuthenticated(true));
                 dispatch(setStatus(AuthStatus.Success));
             }
