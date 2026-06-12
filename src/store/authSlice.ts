@@ -13,8 +13,8 @@ enum AuthStatus {
 
 interface User{
     userName: string,
-    email: string,
-    password: string
+    userEmail: string,
+    userPassword: string
 
 }
 
@@ -37,9 +37,43 @@ interface AuthState {
     status: AuthStatus
 }
 
+const AUTH_STORAGE_KEY = "authState";
+
+function getStoredAuthState(): Pick<AuthState, "user" | "isAuthenticated"> {
+    if (typeof window === "undefined") {
+        return { user: null, isAuthenticated: false };
+    }
+
+    try {
+        const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+        if (!stored) {
+            return { user: null, isAuthenticated: false };
+        }
+
+        return JSON.parse(stored) as Pick<AuthState, "user" | "isAuthenticated">;
+    } catch {
+        return { user: null, isAuthenticated: false };
+    }
+}
+
+function persistAuthState(state: Pick<AuthState, "user" | "isAuthenticated">) {
+    if (typeof window === "undefined") {
+        return;
+    }
+
+    if (!state.user || !state.isAuthenticated) {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        return;
+    }
+
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(state));
+}
+
+const storedAuthState = getStoredAuthState();
+
 const initialState: AuthState = {
-    user: null,
-    isAuthenticated: false,
+    user: storedAuthState.user,
+    isAuthenticated: storedAuthState.isAuthenticated,
     token: null,
     status:  AuthStatus.Idle
 }
@@ -49,9 +83,11 @@ const authSlice = createSlice({
     reducers: {
         setAuthenticated: (state, action: PayloadAction<boolean>) =>  {
             state.isAuthenticated = action.payload;
+            persistAuthState({ user: state.user, isAuthenticated: state.isAuthenticated });
         },
         setUserData: (state, action: PayloadAction<User | null>) => {
             state.user = action.payload
+            persistAuthState({ user: state.user, isAuthenticated: state.isAuthenticated });
         },
         setToken: (state, action: PayloadAction<string | null>) => {
             state.token = action.payload
@@ -78,7 +114,7 @@ export function registerUser(userData: RegisterData) {
        }
     }
     catch(error) {
-        setStatus(AuthStatus.Error);
+                dispatch(setStatus(AuthStatus.Error));
     }
 
     }
@@ -92,7 +128,7 @@ export function loginUser(userData: LoginData) {
        const response =await authAPI.post("/auth/login",userData);
        if(response.status === 200) {
           dispatch(setStatus(AuthStatus.Success));
-          dispatch(setUserData(response.data));
+          dispatch(setUserData(response.data.data));
           dispatch(setAuthenticated(true));
          
           alert("Login Successful!");
@@ -103,7 +139,7 @@ export function loginUser(userData: LoginData) {
        }
     }
     catch(error) {
-        setStatus(AuthStatus.Error);
+        dispatch(setStatus(AuthStatus.Error));
         alert("Login Failed! Please check your credentials.");
     }
 
@@ -115,6 +151,7 @@ export function LogoutUser() {
          authAPI.post("/auth/logout");
         dispatch(setUserData(null));
         dispatch(setAuthenticated(false));
+        dispatch(setStatus(AuthStatus.Idle));
    
         alert("Logged out successfully!");
     }
@@ -126,7 +163,7 @@ export function getUserProfile() {
         try{
          const response =await authAPI.get("/auth/getUserProfile");
             if(response.status === 200) {
-                dispatch(setUserData(response.data));
+                dispatch(setUserData(response.data.data));
                 dispatch(setAuthenticated(true));
                 dispatch(setStatus(AuthStatus.Success));
             }

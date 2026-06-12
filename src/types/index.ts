@@ -11,7 +11,7 @@ export interface Category {
 }
 
 export interface User {
-  name: string;
-  email: string;
-  avatar: string;
+  userName: string;
+  userEmail: string;
+  userRole: string;
 }

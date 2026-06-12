@@ -6,12 +6,9 @@ import type { Product, User } from "../types";
 import Footer from "../Components/Footer"
 import {useSelector} from 'react-redux'
 import { API } from "../api/index"
+
 // ── Mock data ─────────────────────────────────────────────────
-const CURRENT_USER: User = {
-  name: "Alex Johnson",
-  email: "alex@example.com",
-  avatar: "AJ",
-};
+
 
 // const PRODUCTS: Product[] = [
 //   { id: 1,  name: "Wireless Headphones",  price: 89,  category: "Electronics", emoji: "🎧", rating: 4.5, inStock: true,  description: "Premium over-ear headphones with active noise cancellation and 30-hour battery life." },
@@ -52,10 +49,13 @@ export default function Dashboard() {
     }
   }
 
+  const CURRENT_USER: User = authState.user ;
   useEffect(() => {
     getProducts();
-   
+    console.log(authState.user);
   },[])
+
+  
 
   const CATEGORIES = useMemo(() => {
     const set = new Set<string>();
@@ -102,9 +102,7 @@ export default function Dashboard() {
     console.log(products.map((p) => p.Category.categoryName));
   };
 
-  useEffect(() => {
-    console.log("Current user:", authState.user);
-  }, [authState.user]);
+ 
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -135,7 +133,7 @@ export default function Dashboard() {
         <div className="bg-indigo-600 text-white rounded-2xl px-6 py-5 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold mb-0.5">
-              Welcome back, {CURRENT_USER.name.split(" ")[0]}! 👋
+              Welcome back, {CURRENT_USER?.userName.split(" ")[0]}! 👋
             </h1>
             
           </div>
