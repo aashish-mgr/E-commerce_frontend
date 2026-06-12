@@ -49,10 +49,10 @@ export default function Dashboard() {
     }
   }
 
-  const CURRENT_USER: User = authState.user ;
+  const CURRENT_USER: User = authState.user?.data ;
   useEffect(() => {
     getProducts();
-    console.log(authState.user);
+    console.log(authState.user.data);
   },[])
 
   
@@ -133,7 +133,7 @@ export default function Dashboard() {
         <div className="bg-indigo-600 text-white rounded-2xl px-6 py-5 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold mb-0.5">
-              Welcome back, {CURRENT_USER?.userName.split(" ")[0]}! 👋
+              Welcome back, {CURRENT_USER?.userName?.split(" ")[0]}! 👋
             </h1>
             
           </div>

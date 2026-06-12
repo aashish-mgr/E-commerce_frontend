@@ -78,7 +78,7 @@ export function registerUser(userData: RegisterData) {
        }
     }
     catch(error) {
-        setStatus(AuthStatus.Error);
+        dispatch(setStatus(AuthStatus.Error));
     }
 
     }
@@ -92,7 +92,7 @@ export function loginUser(userData: LoginData) {
        const response =await authAPI.post("/auth/login",userData);
        if(response.status === 200) {
           dispatch(setStatus(AuthStatus.Success));
-          dispatch(setUserData(response.data.data));
+          dispatch(setUserData(response.data));
           dispatch(setAuthenticated(true));
          
           alert("Login Successful!");
