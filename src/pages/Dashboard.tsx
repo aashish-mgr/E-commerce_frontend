@@ -52,7 +52,7 @@ export default function Dashboard() {
   const CURRENT_USER: User = authState.user?.data ;
   useEffect(() => {
     getProducts();
-    console.log(authState.user.data);
+    console.log(authState.user?.data);
   },[])
 
   

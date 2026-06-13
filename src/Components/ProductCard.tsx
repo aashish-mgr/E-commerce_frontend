@@ -26,7 +26,11 @@ export default function ProductCard({ product, onAddToCart }: Props) {
 
       {/* Thumbnail */}
       <div className="bg-gray-50 h-36 flex items-center justify-center text-5xl relative">
-        {product.image}
+        <img
+          src={`http://localhost:3000/uploads/${product.image}`}
+          alt={product.productName}
+          className="h-full w-full object-contain"
+        />
 
       </div>
 
@@ -35,7 +39,7 @@ export default function ProductCard({ product, onAddToCart }: Props) {
 
         {/* Category badge */}
         <span className="inline-block text-[10px] font-semibold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full w-fit mb-2">
-          {product.categoryName}
+          {product.Category.categoryName}
         </span>
 
         {/* Name */}
