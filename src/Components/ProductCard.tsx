@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Product } from "../types";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   product: Product;
@@ -8,6 +9,7 @@ interface Props {
 
 export default function ProductCard({ product, onAddToCart }: Props) {
   const [added, setAdded] = useState(false);
+  const navigate = useNavigate();
 
   // const handleAdd = () => {
   //   if (!product.inStock) return;
@@ -18,6 +20,7 @@ export default function ProductCard({ product, onAddToCart }: Props) {
   const handleAdd = () => {
     onAddToCart(product);
     setAdded(true);
+    navigate('/product', { state: { product } });
     
   }
 

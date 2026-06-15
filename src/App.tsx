@@ -9,7 +9,9 @@ import { useEffect } from 'react'
 import { getUserProfile } from './store/authSlice.ts'
 import { useDispatch } from 'react-redux'
 
-
+import ProductDetail from './Components/ProductDetail.tsx'
+import NavbarProvider from './context/NavbarContext.tsx'
+import Navbar from './Components/Navbar.tsx'
 
 
 function App() {
@@ -26,12 +28,16 @@ function App() {
   return (
     <>
       <Provider store={store}>
+        <NavbarProvider>
+         
         <BrowserRouter> 
           <Routes>
             <Route path='/' element={<LandingPage/>} />
             <Route path='/dashboard' element={<Dashboard/>} />
+            <Route path='/product' element={<ProductDetail />} />
           </Routes>
         </BrowserRouter>
+        </NavbarProvider>
 
       </Provider>
     

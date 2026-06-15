@@ -1,4 +1,4 @@
-import { useState, useMemo,useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Navbar from "../Components/Navbar";
 import ProductCard from "../Components/ProductCard";
 import FilterBar from "../Components/FilterBar";
@@ -6,6 +6,7 @@ import type { Product, User } from "../types";
 import Footer from "../Components/Footer"
 import {useSelector} from 'react-redux'
 import { API } from "../api/index"
+import { useNavbar } from "../context/NavbarContext";
 
 // ── Mock data ─────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ export default function Dashboard() {
   const [toasts, setToasts]                 = useState<Toast[]>([]);
   const authState = useSelector( (state: any) => state.auth);
   const [products, setProducts] = useState<Product[]>([]);
+  const {setNavbarData} = useNavbar();
 
    const getProducts = async () => {
     try {
@@ -77,30 +79,47 @@ export default function Dashboard() {
   }, [search, selectedCategory, products]);
 
   // Show a short toast notification
-  const showToast = (message: string) => {
+  const showToast = useCallback((message: string) => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 2500);
-  };
+  }, []);
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = useCallback((product: Product) => {
     setCartCount((n) => n + 1);
     showToast(`"${product.productName}" added to cart`);
-  };
+  }, [showToast]);
 
-  const handleCartClick = () => {
+  const handleCartClick = useCallback(() => {
     showToast("Cart page coming soon!");
-  };
+  }, [showToast]);
 
-  const handleOrderHistoryClick = () => {
+  const handleOrderHistoryClick = useCallback(() => {
     showToast("Order history coming soon!");
-  };
+  }, [showToast]);
 
-  const handleProfileClick = () => {
+  const handleProfileClick = useCallback(() => {
     showToast("User profile coming soon!");
     console.log(CATEGORIES);
     console.log(products.map((p) => p.Category.categoryName));
-  };
+  }, [CATEGORIES, products, showToast]);
+
+  const navbarData = useMemo(
+    () => ({
+      user: CURRENT_USER,
+      cartCount,
+      onCartClick: handleCartClick,
+      onOrderHistoryClick: handleOrderHistoryClick,
+      onProfileClick: handleProfileClick,
+    }),
+    [CURRENT_USER, cartCount, handleCartClick, handleOrderHistoryClick, handleProfileClick]
+  );
+
+  useEffect(() => {
+    setNavbarData(navbarData);
+    return () => setNavbarData({});
+  }, [navbarData, setNavbarData])
+  
 
  
 
@@ -108,13 +127,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50 font-sans">
 
       {/* Navbar */}
-      <Navbar
-        user={CURRENT_USER}
-        cartCount={cartCount}
-        onCartClick={handleCartClick}
-        onOrderHistoryClick={handleOrderHistoryClick}
-        onProfileClick={handleProfileClick}
-      />
+      <Navbar />
       
         {/* Filter bar */}
         <div className="sticky top-16 z-20 bg-white  shadow-md p-4 mb-6 " >

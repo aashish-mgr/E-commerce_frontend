@@ -3,22 +3,16 @@ import {useDispatch, useSelector} from 'react-redux';
 import {useNavigate} from "react-router-dom";
 import { LogoutUser } from "../store/authSlice";
 import {getUserProfile} from "../store/authSlice";
+import { useNavbar } from "../context/NavbarContext";
 
 const NAV_LINKS = ["Home", "Products", "Categories", "About"];
 
-// Props:
-//   onLogin    () => void
-//   onRegister () => void
-export default function Navbar({ onLogin, onRegister, user,
-  cartCount,
-  onCartClick,
-  onOrderHistoryClick,
-  onProfileClick, }:any) {
+export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const dispatch = useDispatch();
   const authState = useSelector( (state: any) => state.auth);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
+  const { navbarData } = useNavbar();
 
   const navigate = useNavigate();
   const handleLogout = async () => {
@@ -78,7 +72,7 @@ export default function Navbar({ onLogin, onRegister, user,
         
           <div className="relative ml-1 flex">
             <button
-            onClick={onOrderHistoryClick}
+            onClick={navbarData.onOrderHistoryClick}
             className="hidden sm:flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
           >
             <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -91,7 +85,7 @@ export default function Navbar({ onLogin, onRegister, user,
 
           {/* Cart */}
           <button
-            onClick={onCartClick}
+            onClick={navbarData.onCartClick}
             className="relative flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
           >
             <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -100,9 +94,9 @@ export default function Navbar({ onLogin, onRegister, user,
               <path d="M16 10a4 4 0 01-8 0"/>
             </svg>
             <span className="hidden sm:inline">Cart</span>
-            {cartCount > 0 && (
+            {(navbarData.cartCount ?? 0) > 0 && (
               <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                {cartCount}
+                {navbarData.cartCount}
               </span>
             )}
           </button>
@@ -113,7 +107,7 @@ export default function Navbar({ onLogin, onRegister, user,
               <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-semibold text-indigo-700">
                 aj
               </div>
-              <span className="hidden sm:block text-sm font-medium text-gray-700">{user?.userName}</span>
+              <span className="hidden sm:block text-sm font-medium text-gray-700">{navbarData.user?.userName}</span>
               <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
@@ -122,13 +116,13 @@ export default function Navbar({ onLogin, onRegister, user,
             {dropdownOpen && (
               <div className="absolute right-0 mt-13 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1 text-sm">
                 <button
-                  onClick={() => { onProfileClick(); setDropdownOpen(false); }}
+                  onClick={() => { navbarData.onProfileClick?.(); setDropdownOpen(false); }}
                   className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                 >
                   My Profile
                 </button>
                 <button
-                  onClick={() => { onOrderHistoryClick(); setDropdownOpen(false); }}
+                  onClick={() => { navbarData.onOrderHistoryClick?.(); setDropdownOpen(false); }}
                   className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors sm:hidden"
                 >
                   Order History
@@ -144,13 +138,13 @@ export default function Navbar({ onLogin, onRegister, user,
       ): (<>
       <div className="hidden md:flex items-center gap-3">
           <button
-            onClick={onLogin}
+            onClick={navbarData.onLogin}
             className="text-sm text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5"
           >
             Login
           </button>
           <button
-            onClick={onRegister}
+            onClick={navbarData.onRegister}
             className="text-sm bg-gray-900 text-white px-4 py-1.5 rounded-lg hover:bg-gray-700 transition-colors"
           >
             Register
@@ -165,13 +159,13 @@ export default function Navbar({ onLogin, onRegister, user,
           ))}
           <div className="flex gap-3 pt-2">
             <button
-              onClick={() => { onLogin(); setMenuOpen(false); }}
+              onClick={() => { navbarData.onLogin?.(); setMenuOpen(false); }}
               className="flex-1 border border-gray-300 rounded-lg py-2 hover:bg-gray-50 transition-colors"
             >
               Login
             </button>
             <button
-              onClick={() => { onRegister(); setMenuOpen(false); }}
+              onClick={() => { navbarData.onRegister?.(); setMenuOpen(false); }}
               className="flex-1 bg-gray-900 text-white rounded-lg py-2 hover:bg-gray-700 transition-colors"
             >
               Register

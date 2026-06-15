@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
 import ProductCardts from "../Components/ProductCard";
@@ -7,6 +7,7 @@ import { useSelector} from 'react-redux'
 import {useNavigate} from 'react-router-dom'
 import type { Product } from "../types";
 import { API } from "../api/index"
+import { useNavbar } from "../context/NavbarContext";
 
 
 // const PRODUCTS: Product[] = [
@@ -37,15 +38,24 @@ export default function LandingPage() {
   const authState = useSelector( (state: any) => state.auth);
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const {setNavbarData} = useNavbar();
  
-  const openLogin    = () => setAuthMode("login");
-  const openRegister = () => setAuthMode("register");
-  const closeModal   = () => setAuthMode("");
-  const switchMode   = () => setAuthMode((m) => (m === "login" ? "register" : "login"));
+  const openLogin = useCallback(() => setAuthMode("login"), []);
+  const openRegister = useCallback(() => setAuthMode("register"), []);
+  const closeModal = useCallback(() => setAuthMode(""), []);
+  const switchMode = useCallback(() => setAuthMode((m) => (m === "login" ? "register" : "login")), []);
   const handleAddToCart = (product: any) => {
     // Implement add to cart functionality here
     console.log("Added to cart:", product);
   };
+
+  const navbarData = useMemo(
+    () => ({
+      onLogin: openLogin,
+      onRegister: openRegister,
+    }),
+    [openLogin, openRegister]
+  );
 
   const getProducts = async () => {
     try {
@@ -63,6 +73,12 @@ export default function LandingPage() {
     getProducts();
    
   },[])
+
+  useEffect(() => {
+    setNavbarData(navbarData);
+    return () => setNavbarData({});
+  }, [navbarData, setNavbarData])
+  
   
   useEffect(() => {
     if(authState.isAuthenticated) {
@@ -76,7 +92,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col">
 
       {/* Navbar — receives auth handlers as props */}
-      <Navbar onLogin={openLogin} onRegister={openRegister} />
+      <Navbar />
 
       <main className="flex-1">
 
