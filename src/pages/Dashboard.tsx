@@ -126,8 +126,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
 
-      {/* Navbar */}
-      <Navbar />
+   
       
         {/* Filter bar */}
         <div className="sticky top-16 z-20 bg-white  shadow-md p-4 mb-6 " >

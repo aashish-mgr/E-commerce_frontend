@@ -4,6 +4,7 @@ import {useNavigate} from "react-router-dom";
 import { LogoutUser } from "../store/authSlice";
 import {getUserProfile} from "../store/authSlice";
 import { useNavbar } from "../context/NavbarContext";
+import { Link } from "react-router-dom";
 
 const NAV_LINKS = ["Home", "Products", "Categories", "About"];
 
@@ -39,9 +40,9 @@ export default function Navbar() {
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8 text-sm text-gray-600">
           {NAV_LINKS.map((link) => (
-            <a key={link} href="#" className="hover:text-gray-900 transition-colors">
+            <Link key={link} to="/" className="hover:text-gray-900 transition-colors">
               {link}
-            </a>
+            </Link>
           ))}
         </div>
 

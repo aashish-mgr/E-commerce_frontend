@@ -21,11 +21,14 @@ export default function ProductCard({ product, onAddToCart }: Props) {
     onAddToCart(product);
     setAdded(true);
     navigate('/product', { state: { product } });
-    
+  }
+
+  const handleProduct = (id: number) => {
+     navigate(`/product/${id}`);
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow flex flex-col" onClick={() => handleProduct(product.id)}>
 
       {/* Thumbnail */}
       <div className="bg-gray-50 h-36 flex items-center justify-center text-5xl relative">

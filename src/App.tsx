@@ -14,6 +14,7 @@ import NavbarProvider from './context/NavbarContext.tsx'
 import Navbar from './Components/Navbar.tsx'
 
 
+
 function App() {
   const dispatch = useDispatch();
 
@@ -31,10 +32,11 @@ function App() {
         <NavbarProvider>
          
         <BrowserRouter> 
+          <Navbar />
           <Routes>
             <Route path='/' element={<LandingPage/>} />
             <Route path='/dashboard' element={<Dashboard/>} />
-            <Route path='/product' element={<ProductDetail />} />
+            <Route path='/product/:id' element={<ProductDetail />} />
           </Routes>
         </BrowserRouter>
         </NavbarProvider>

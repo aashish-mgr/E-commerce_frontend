@@ -91,9 +91,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col">
 
-      {/* Navbar — receives auth handlers as props */}
-      <Navbar />
-
+    
       <main className="flex-1">
 
         {/* ── Hero ─────────────────────────────────────── */}

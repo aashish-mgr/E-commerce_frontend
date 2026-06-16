@@ -1,63 +1,60 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { authAPI } from "../api";
+import type { Product } from "../types";
 
-const product = {
-  name: "Wireless Noise-Cancelling Headphones",
-  brand: "SoundCore",
-  category: "Electronics",
-  price: 89,
-  originalPrice: 129,
-  rating: 4.5,
-  reviewCount: 248,
-  emoji: "🎧",
-  inStock: true,
-  stockCount: 12,
-  sku: "SC-WH-1000XM4",
-  tags: ["Wireless", "Noise Cancelling", "Bluetooth 5.0", "30hr Battery"],
-  description: `Experience music the way it was meant to be heard. The SoundCore WH-1000XM4 
-  delivers industry-leading noise cancellation powered by our proprietary HD Noise Cancelling 
-  Processor, letting you focus on what matters most.`,
-  features: [
-    "Industry-leading noise cancellation with Dual Noise Sensor technology",
-    "Up to 30 hours of battery life with quick charging (10 min = 5 hrs playback)",
-    "Premium sound quality with 40mm drivers and LDAC codec support",
-    "Multipoint connection — seamlessly switch between two Bluetooth devices",
-    "Speak-to-chat automatically pauses music when you start a conversation",
-    "Foldable design with carry case for travel convenience",
-  ],
-  specs: [
-    { label: "Driver Size",        value: "40mm" },
-    { label: "Frequency Response", value: "4Hz – 40,000Hz" },
-    { label: "Battery Life",       value: "Up to 30 hours" },
-    { label: "Charging",           value: "USB-C, 3.5 hrs full charge" },
-    { label: "Bluetooth",          value: "Version 5.0" },
-    { label: "Weight",             value: "254g" },
-    { label: "Colors",             value: "Midnight Black, Silver" },
-    { label: "Warranty",           value: "1 Year Manufacturer" },
-  ],
-};
+// const product = {
+//   name: "Wireless Noise-Cancelling Headphones",
+//   brand: "SoundCore",
+//   category: "Electronics",
+//   price: 89,
+//   originalPrice: 129,
+//   rating: 4.5,
+//   reviewCount: 248,
+//   emoji: "🎧",
+//   inStock: true,
+//   stockCount: 12,
+//   sku: "SC-WH-1000XM4",
+//   tags: ["Wireless", "Noise Cancelling", "Bluetooth 5.0", "30hr Battery"],
+//   description: `Experience music the way it was meant to be heard. The SoundCore WH-1000XM4 
+//   delivers industry-leading noise cancellation powered by our proprietary HD Noise Cancelling 
+//   Processor, letting you focus on what matters most.`,
+  
+// };
 
 export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
+  const { id } = useParams();
+  const [product, setProduct] = useState<Product | null>(null);
 
   const decrement = () => setQuantity((q) => Math.max(1, q - 1));
-  const increment = () => setQuantity((q) => Math.min(product.stockCount, q + 1));
+  const increment = () => setQuantity((q) => Math.min(50, q + 1));
 
-  const discount = Math.round(
-    ((product.originalPrice - product.price) / product.originalPrice) * 100
-  );
+
+  const getProduct = async () => {
+    if (!id) return;
+    const res = await authAPI.get(`/product/getSingle/${id}`);
+    setProduct(res.data?.data ?? null);
+  };
+
+  useEffect(() => {
+    getProduct();
+  }, [id]);
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gray-50 font-sans">
+        <div className="max-w-6xl mx-auto px-4 py-10">
+          <p className="text-center text-gray-500">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <div className="max-w-6xl mx-auto px-4 py-10">
 
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
-          <a href="#" className="hover:text-gray-600 transition-colors">Home</a>
-          <span>/</span>
-          <a href="#" className="hover:text-gray-600 transition-colors">{product.category}</a>
-          <span>/</span>
-          <span className="text-gray-700 font-medium truncate">{product.name}</span>
-        </nav>
 
         {/* ── Top Section: Image + Info ── */}
         <div className="grid lg:grid-cols-2 gap-10 mb-12">
@@ -67,24 +64,14 @@ export default function ProductDetail() {
 
             {/* Main image */}
             <div className="bg-white border border-gray-200 rounded-2xl flex items-center justify-center h-[380px] text-[130px] select-none">
-              {product.emoji}
+              <img
+          src={`http://localhost:3000/uploads/${product.image}`}
+          alt={product.productName}
+          className="h-full w-full object-contain"
+        />
             </div>
 
-            {/* Thumbnail strip */}
-            <div className="flex gap-3">
-              {["🎧", "🎧", "🎧", "🎧"].map((e, i) => (
-                <button
-                  key={i}
-                  className={`flex-1 bg-white border rounded-xl h-20 flex items-center justify-center text-3xl transition-colors ${
-                    i === 0
-                      ? "border-indigo-500 ring-2 ring-indigo-100"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
+           
           </div>
 
           {/* ── Product Info ── */}
@@ -93,71 +80,45 @@ export default function ProductDetail() {
             {/* Brand + category */}
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xs font-semibold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
-                {product.category}
+                {product.Category.categoryName}
               </span>
-              <span className="text-xs text-gray-400">{product.brand}</span>
+              <span className="text-xs text-gray-400">brand</span>
             </div>
 
             {/* Name */}
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-3">
-              {product.name}
+              {product.productName}
             </h1>
 
-            {/* Rating row */}
-            <div className="flex items-center gap-3 mb-5">
-              <div className="flex items-center gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <svg
-                    key={i} width="15" height="15" viewBox="0 0 24 24"
-                    fill={i < Math.floor(product.rating) ? "#f59e0b" : i < product.rating ? "#fcd34d" : "#e5e7eb"}
-                    stroke="none"
-                  >
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                ))}
-              </div>
-              <span className="text-sm font-semibold text-gray-700">{product.rating}</span>
-              <span className="text-sm text-gray-400">({product.reviewCount} reviews)</span>
-              <span className="text-sm text-green-600 font-medium">· {product.reviewCount}+ sold</span>
-            </div>
+           
 
             {/* Price */}
             <div className="flex items-end gap-3 mb-5">
-              <span className="text-4xl font-bold text-gray-900">${product.price}</span>
-              <span className="text-xl text-gray-400 line-through mb-0.5">${product.originalPrice}</span>
+              <span className="text-4xl font-bold text-gray-900">${product.productPrice}</span>
+              <span className="text-xl text-gray-400 line-through mb-0.5">${Math.floor(110/100 * product.productPrice)}</span>
               <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-lg mb-1">
-                {discount}% off
+                10% off
               </span>
             </div>
 
             {/* Short description */}
             <p className="text-gray-500 text-sm leading-relaxed mb-5 border-b border-gray-100 pb-5">
-              {product.description}
+              {product.productDescription}
             </p>
 
             {/* Tags */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {product.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full transition-colors cursor-default"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+           
 
             {/* Stock */}
             <div className="flex items-center gap-2 mb-6">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <span className="text-sm text-gray-600">
                 In stock —{" "}
-                <span className="font-medium text-gray-800">{product.stockCount} units</span> left
+                <span className="font-medium text-gray-800">10 units</span> left
               </span>
             </div>
 
-            {/* SKU */}
-            <p className="text-xs text-gray-400 mb-6">SKU: {product.sku}</p>
+          
 
             {/* ── Quantity + Buttons ── */}
             <div className="flex flex-col gap-3">
@@ -178,7 +139,7 @@ export default function ProductDetail() {
                   </span>
                   <button
                     onClick={increment}
-                    disabled={quantity === product.stockCount}
+                    // disabled={quantity === product.stockCount}
                     className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors text-lg font-medium"
                   >
                     +
@@ -186,7 +147,7 @@ export default function ProductDetail() {
                 </div>
                 <span className="text-sm text-gray-400">
                   Total:{" "}
-                  <span className="font-semibold text-gray-700">${product.price * quantity}</span>
+                  <span className="font-semibold text-gray-700">${product.productPrice * quantity}</span>
                 </span>
               </div>
 
@@ -229,35 +190,9 @@ export default function ProductDetail() {
         {/* ── Bottom Section: Features + Specs ── */}
         <div className="grid md:grid-cols-2 gap-8">
 
-          {/* Features */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-5">Key Features</h2>
-            <ul className="flex flex-col gap-3">
-              {product.features.map((feature) => (
-                <li key={feature} className="flex items-start gap-3 text-sm text-gray-600">
-                  <span className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="3">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </span>
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </div>
+         
 
-          {/* Specs */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-5">Specifications</h2>
-            <div className="flex flex-col divide-y divide-gray-100">
-              {product.specs.map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between py-2.5 text-sm">
-                  <span className="text-gray-500">{label}</span>
-                  <span className="font-medium text-gray-800 text-right max-w-[55%]">{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+         
         </div>
 
       </div>
