@@ -12,6 +12,7 @@ import { useDispatch } from 'react-redux'
 import ProductDetail from './Components/ProductDetail.tsx'
 import NavbarProvider from './context/NavbarContext.tsx'
 import Navbar from './Components/Navbar.tsx'
+import Cart from './pages/Cart.tsx'
 
 
 
@@ -37,6 +38,7 @@ function App() {
             <Route path='/' element={<LandingPage/>} />
             <Route path='/dashboard' element={<Dashboard/>} />
             <Route path='/product/:id' element={<ProductDetail />} />
+            <Route path='/cart' element={<Cart />} />
           </Routes>
         </BrowserRouter>
         </NavbarProvider>

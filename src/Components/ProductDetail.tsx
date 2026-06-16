@@ -24,6 +24,7 @@ import type { Product } from "../types";
 
 export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
   const { id } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
 
@@ -36,6 +37,18 @@ export default function ProductDetail() {
     const res = await authAPI.get(`/product/getSingle/${id}`);
     setProduct(res.data?.data ?? null);
   };
+
+  const addToCart = async (q: number) => {
+    if (!id) return;
+    const res = await authAPI.post('cart/addToCart', {
+      quantity: q,
+      productId: id
+    })
+    if(res.status === 200) {
+      setAdded(true);
+    }
+    
+  }
 
   useEffect(() => {
     getProduct();
@@ -156,8 +169,10 @@ export default function ProductDetail() {
                 <button className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 active:scale-[0.98] transition-all">
                   Buy Now
                 </button>
-                <button className="flex-1 border-2 border-gray-900 text-gray-900 py-3 rounded-xl font-semibold text-sm hover:bg-gray-900 hover:text-white active:scale-[0.98] transition-all">
-                  Add to Cart
+                <button className={`flex-1 border-2 border-gray-900 text-gray-900 py-3 rounded-xl font-semibold text-sm hover:bg-gray-900 hover:text-white active:scale-[0.98] transition-all  ${added? "bg-green-600 text-white"
+                : "bg-gray-900 text-white hover:bg-gray-700"}` }
+                onClick={() => addToCart(quantity)}>
+                  {added ? "Added ✓" : "Add to Cart"}
                 </button>
                 <button className="w-12 h-12 flex items-center justify-center border border-gray-200 rounded-xl text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors flex-shrink-0">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -187,13 +202,7 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* ── Bottom Section: Features + Specs ── */}
-        <div className="grid md:grid-cols-2 gap-8">
-
-         
-
-         
-        </div>
+     
 
       </div>
     </div>

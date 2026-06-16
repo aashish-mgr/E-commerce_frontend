@@ -7,6 +7,7 @@ import Footer from "../Components/Footer"
 import {useSelector} from 'react-redux'
 import { API } from "../api/index"
 import { useNavbar } from "../context/NavbarContext";
+import { useNavigate } from "react-router-dom";
 
 // ── Mock data ─────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ export default function Dashboard() {
   const authState = useSelector( (state: any) => state.auth);
   const [products, setProducts] = useState<Product[]>([]);
   const {setNavbarData} = useNavbar();
+  const navigate = useNavigate();
 
    const getProducts = async () => {
     try {
@@ -91,8 +93,8 @@ export default function Dashboard() {
   }, [showToast]);
 
   const handleCartClick = useCallback(() => {
-    showToast("Cart page coming soon!");
-  }, [showToast]);
+    navigate("/cart");
+  }, []);
 
   const handleOrderHistoryClick = useCallback(() => {
     showToast("Order history coming soon!");
@@ -191,6 +193,7 @@ export default function Dashboard() {
                   key={product.id}
                   product={product}
                   onAddToCart={handleAddToCart}
+              
                 />
               ))}
             </div>

@@ -20,7 +20,7 @@ export default function ProductCard({ product, onAddToCart }: Props) {
   const handleAdd = () => {
     onAddToCart(product);
     setAdded(true);
-    navigate('/product', { state: { product } });
+
   }
 
   const handleProduct = (id: number) => {
@@ -28,8 +28,8 @@ export default function ProductCard({ product, onAddToCart }: Props) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow flex flex-col" onClick={() => handleProduct(product.id)}>
-
+    <div className="bg-white border border-gray-200 rounded-xl cursor-pointer overflow-hidden hover:shadow-md transition-shadow flex flex-col" onClick={() => handleProduct(product.id)}>
+ 
       {/* Thumbnail */}
       <div className="bg-gray-50 h-36 flex items-center justify-center text-5xl relative">
         <img
@@ -49,7 +49,7 @@ export default function ProductCard({ product, onAddToCart }: Props) {
         </span>
 
         {/* Name */}
-        <h3 className="font-semibold text-gray-900 mb-1">{product.productName}</h3>
+        <h3 className="font-semibold text-gray-900 mb-1 hover:text-blue-500">{product.productName}</h3>
 
         {/* Description */}
         <p className="text-sm text-gray-500 leading-relaxed mb-3 flex-1 line-clamp-2">
