@@ -61,7 +61,7 @@ export default function ProductCard({ product, onAddToCart }: Props) {
         {/* Price + button */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <span className="font-bold text-gray-900 text-lg">${product.productPrice}</span>
-          <button
+          {/* <button
             onClick= {handleAdd}
             
             className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${ added
@@ -70,7 +70,7 @@ export default function ProductCard({ product, onAddToCart }: Props) {
                 }` }
           >
             {added ? "Added ✓" : "Add to Cart"}
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

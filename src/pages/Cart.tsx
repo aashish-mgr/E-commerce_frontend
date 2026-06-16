@@ -1,37 +1,41 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import { authAPI } from "../api";
+import type { Cart } from "../types";
 
 // ── Types ─────────────────────────────────────────────────────
 
-interface CartItem {
-  id: number;
-  name: string;
-  brand: string;
-  category: string;
-  price: number;
-  emoji: string;
-  maxQty: number;
-  quantity: number;
-  selected: boolean;
-}
+// interface CartItem {
+//   id: number;
+//   name: string;
+//   brand: string;
+//   category: string;
+//   price: number;
+//   emoji: string;
+//   maxQty: number;
+//   quantity: number;
+//   selected: boolean;
+// }
 
 // ── Seed data ─────────────────────────────────────────────────
 
-const INITIAL_ITEMS: CartItem[] = [
-  { id: 1, name: "Wireless Headphones",   brand: "SoundCore",  category: "Electronics", price: 89,  emoji: "🎧", maxQty: 10, quantity: 1, selected: true  },
-  { id: 2, name: "Running Shoes",         brand: "StridePro",  category: "Footwear",    price: 120, emoji: "👟", maxQty: 5,  quantity: 2, selected: true  },
-  { id: 3, name: "Leather Wallet",        brand: "CraftedCo",  category: "Accessories", price: 45,  emoji: "👛", maxQty: 8,  quantity: 1, selected: false },
-  { id: 4, name: "Mechanical Keyboard",   brand: "TypeMaster", category: "Electronics", price: 149, emoji: "⌨️", maxQty: 4,  quantity: 1, selected: true  },
-];
+// const INITIAL_ITEMS: Cart[] = [
+//   { id: 1, name: "Wireless Headphones",   brand: "SoundCore",  category: "Electronics", price: 89,  emoji: "🎧", maxQty: 10, quantity: 1, selected: true  },
+//   { id: 2, name: "Running Shoes",         brand: "StridePro",  category: "Footwear",    price: 120, emoji: "👟", maxQty: 5,  quantity: 2, selected: true  },
+//   { id: 3, name: "Leather Wallet",        brand: "CraftedCo",  category: "Accessories", price: 45,  emoji: "👛", maxQty: 8,  quantity: 1, selected: false },
+//   { id: 4, name: "Mechanical Keyboard",   brand: "TypeMaster", category: "Electronics", price: 149, emoji: "⌨️", maxQty: 4,  quantity: 1, selected: true  },
+// ];
 
 const SHIPPING_THRESHOLD = 50; // free shipping above this
 const TAX_RATE           = 0.08;
 const SHIPPING_FLAT      = 9.99;
 
 // ── Helpers ───────────────────────────────────────────────────
+  const deleteCart = async (id: string) => {
+    if(!id) return;
+    await authAPI.delete(`/cart/delete/${id}`);
 
-function formatPrice(n: number) {
-  return `$${n.toFixed(2)}`;
-}
+  }
+
 
 // ── Sub-components ────────────────────────────────────────────
 
@@ -76,11 +80,11 @@ function CartItemRow({
   onDecrement,
   onRemove,
 }: {
-  item: CartItem;
-  onToggleSelect: (id: number) => void;
-  onIncrement: (id: number) => void;
-  onDecrement: (id: number) => void;
-  onRemove: (id: number) => void;
+  item: Cart;
+  onToggleSelect: (id: string) => void;
+  onIncrement: (id: string) => void;
+  onDecrement: (id: string) => void;
+  onRemove: (id: string) => void;
 }) {
   return (
     <div
@@ -100,7 +104,11 @@ function CartItemRow({
 
       {/* Thumbnail */}
       <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-3xl sm:text-4xl select-none">
-        {item.emoji}
+        <img
+          src={`http://localhost:3000/uploads/${item.Product.image}`}
+          alt={item.Product.productName}
+          className="h-full w-full object-contain"
+        />
       </div>
 
       {/* Details */}
@@ -108,15 +116,15 @@ function CartItemRow({
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
-              {item.category}
+              {item.Product.Category?.categoryName}
             </span>
-            <h3 className="font-semibold text-gray-900 mt-1 truncate">{item.name}</h3>
-            <p className="text-xs text-gray-400 mt-0.5">{item.brand}</p>
+            <h3 className="font-semibold text-gray-900 mt-1 truncate">{item.Product.productName}</h3>
+            <p className="text-xs text-gray-400 mt-0.5">brand</p>
           </div>
 
           {/* Unit price */}
           <p className="text-base font-bold text-gray-900 flex-shrink-0">
-            {formatPrice(item.price)}
+           {(item.Product.productPrice)}
           </p>
         </div>
 
@@ -132,14 +140,14 @@ function CartItemRow({
             <span className="text-xs text-gray-400">
               Subtotal:{" "}
               <span className="font-semibold text-gray-700">
-                {formatPrice(item.price * item.quantity)}
+                {item.Product.productPrice * item.quantity}
               </span>
             </span>
           </div>
 
           {/* Remove button */}
           <button
-            onClick={() => onRemove(item.id)}
+            onClick={() => deleteCart(item.id)}
             className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-colors"
           >
             <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -159,7 +167,7 @@ function CartItemRow({
 // ── Cart Page ─────────────────────────────────────────────────
 
 export default function Cart() {
-  const [items, setItems] = useState<CartItem[]>(INITIAL_ITEMS);
+  const [items, setItems] = useState<Cart[]>([]);
   const [coupon, setCoupon]     = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponError, setCouponError]     = useState(false);
@@ -170,7 +178,7 @@ export default function Cart() {
   const allSelected    = items.length > 0 && items.every((i) => i.selected);
   const someSelected   = items.some((i) => i.selected);
 
-  const subtotal       = selectedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const subtotal       = selectedItems.reduce((sum, i) => sum + i.Product.productPrice * i.quantity, 0);
   const discount       = couponApplied ? subtotal * 0.1 : 0;
   const afterDiscount  = subtotal - discount;
   const shipping       = afterDiscount >= SHIPPING_THRESHOLD || afterDiscount === 0 ? 0 : SHIPPING_FLAT;
@@ -179,14 +187,28 @@ export default function Cart() {
   const totalItems     = items.reduce((sum, i) => sum + i.quantity, 0);
   const selectedCount  = selectedItems.reduce((sum, i) => sum + i.quantity, 0);
 
+
+
   // ── Handlers ─────────────────────────────────────────────
 
-  const toggleSelect   = (id: number) => setItems((prev) => prev.map((i) => i.id === id ? { ...i, selected: !i.selected } : i));
+  const toggleSelect   = (id: string) => setItems((prev) => prev.map((i) => i.id === id ? { ...i, selected: !i.selected } : i));
   const toggleAll      = () => setItems((prev) => prev.map((i) => ({ ...i, selected: !allSelected })));
-  const increment      = (id: number) => setItems((prev) => prev.map((i) => i.id === id && i.quantity < i.maxQty ? { ...i, quantity: i.quantity + 1 } : i));
-  const decrement      = (id: number) => setItems((prev) => prev.map((i) => i.id === id && i.quantity > 1 ? { ...i, quantity: i.quantity - 1 } : i));
-  const remove         = (id: number) => setItems((prev) => prev.filter((i) => i.id !== id));
+  const increment      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity < i.maxQty ? { ...i, quantity: i.quantity + 1 } : i));
+  const decrement      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity > 1 ? { ...i, quantity: i.quantity - 1 } : i));
+  const remove         = (id: string) => setItems((prev) => prev.filter((i) => i.id !== id));
   const removeSelected = () => setItems((prev) => prev.filter((i) => !i.selected));
+
+  const getCartItems = async () => {
+      const res = await authAPI.get('/cart/getMyCarts');
+      console.log(res);
+      setItems(res.data?.data);
+  }
+
+  useEffect(() => {
+    getCartItems();
+    
+  }, [items])
+  
 
   const applyCoupon = () => {
     if (coupon.trim().toUpperCase() === "SAVE10") {
@@ -197,6 +219,9 @@ export default function Cart() {
       setCouponApplied(false);
     }
   };
+  
+
+
 
   // ── Render ────────────────────────────────────────────────
 
@@ -255,7 +280,9 @@ export default function Cart() {
 
                 {someSelected && (
                   <button
-                    onClick={removeSelected}
+                    onClick={() => {
+                      selectedItems.map(i => deleteCart(i.id));
+                    }}
                     className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
                   >
                     <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -288,7 +315,7 @@ export default function Cart() {
                     <span className="text-gray-600">
                       Add{" "}
                       <span className="font-semibold text-gray-900">
-                        {formatPrice(SHIPPING_THRESHOLD - subtotal)}
+                        {SHIPPING_THRESHOLD - subtotal}
                       </span>{" "}
                       more for free shipping
                     </span>
@@ -350,22 +377,22 @@ export default function Cart() {
 
                 {/* Price breakdown */}
                 <div className="flex flex-col gap-2.5 border-t border-gray-100 pt-4">
-                  <PriceLine label="Subtotal"  value={formatPrice(subtotal)} />
+                  <PriceLine label="Subtotal"  value={subtotal.toFixed(2)} />
                   {couponApplied && (
-                    <PriceLine label="Discount (10%)" value={`− ${formatPrice(discount)}`} highlight="green" />
+                    <PriceLine label="Discount (10%)" value={`− ${discount}`} highlight="green" />
                   )}
                   <PriceLine
                     label="Shipping"
-                    value={shipping === 0 ? (subtotal === 0 ? "—" : "Free") : formatPrice(shipping)}
+                    value={shipping === 0 ? (subtotal === 0 ? "—" : "Free") : (shipping.toFixed(2))}
                     highlight={shipping === 0 && subtotal > 0 ? "green" : undefined}
                   />
-                  <PriceLine label={`Tax (${(TAX_RATE * 100).toFixed(0)}%)`} value={formatPrice(tax)} muted />
+                  <PriceLine label={`Tax (${(TAX_RATE * 100).toFixed(0)}%)`} value={(tax.toFixed(2))} muted />
                 </div>
 
                 {/* Total */}
                 <div className="flex items-center justify-between border-t border-gray-200 pt-4">
                   <span className="font-bold text-gray-900">Total</span>
-                  <span className="text-xl font-bold text-gray-900">{formatPrice(total)}</span>
+                  <span className="text-xl font-bold text-gray-900">{total.toFixed(2)}</span>
                 </div>
 
                 {/* Proceed button */}
