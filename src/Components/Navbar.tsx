@@ -86,7 +86,7 @@ export default function Navbar() {
 
           {/* Cart */}
           <button
-            onClick={navbarData.onCartClick}
+            onClick={() => navigate("/cart")}
             className="relative flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
           >
             <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

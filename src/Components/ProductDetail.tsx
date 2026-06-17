@@ -2,6 +2,7 @@ import { useState,useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { authAPI } from "../api";
 import type { Product } from "../types";
+import { Link } from "react-router-dom";
 
 // const product = {
 //   name: "Wireless Noise-Cancelling Headphones",
@@ -91,11 +92,19 @@ export default function ProductDetail() {
           <div className="flex flex-col">
 
             {/* Brand + category */}
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div>
               <span className="text-xs font-semibold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
                 {product.Category.categoryName}
               </span>
               <span className="text-xs text-gray-400">brand</span>
+              </div>
+               <Link to="/dashboard" className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+            </svg>
+            Continue Shopping
+          </Link>
             </div>
 
             {/* Name */}

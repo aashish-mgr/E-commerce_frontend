@@ -1,6 +1,7 @@
 import { useState,useEffect } from "react";
 import { authAPI } from "../api";
 import type { Cart } from "../types";
+import { Link } from "react-router-dom";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -30,12 +31,7 @@ const TAX_RATE           = 0.08;
 const SHIPPING_FLAT      = 9.99;
 
 // ── Helpers ───────────────────────────────────────────────────
-  const deleteCart = async (id: string) => {
-    if(!id) return;
-    await authAPI.delete(`/cart/delete/${id}`);
-
-  }
-
+ 
 
 // ── Sub-components ────────────────────────────────────────────
 
@@ -147,7 +143,7 @@ function CartItemRow({
 
           {/* Remove button */}
           <button
-            onClick={() => deleteCart(item.id)}
+            onClick={() => onRemove(item.id)}
             className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-colors"
           >
             <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -171,6 +167,7 @@ export default function Cart() {
   const [coupon, setCoupon]     = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponError, setCouponError]     = useState(false);
+  const [isempty, setIsempty] = useState(false)
 
   // ── Derived values ────────────────────────────────────────
 
@@ -195,20 +192,31 @@ export default function Cart() {
   const toggleAll      = () => setItems((prev) => prev.map((i) => ({ ...i, selected: !allSelected })));
   const increment      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity < i.maxQty ? { ...i, quantity: i.quantity + 1 } : i));
   const decrement      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity > 1 ? { ...i, quantity: i.quantity - 1 } : i));
-  const remove         = (id: string) => setItems((prev) => prev.filter((i) => i.id !== id));
-  const removeSelected = () => setItems((prev) => prev.filter((i) => !i.selected));
+
 
   const getCartItems = async () => {
+    try {
       const res = await authAPI.get('/cart/getMyCarts');
-      console.log(res);
-      setItems(res.data?.data);
+      setItems(res.data?.data ?? []);
+    } catch (err) {
+      setItems([]);
+    }
   }
 
   useEffect(() => {
     getCartItems();
-    
-  }, [items])
-  
+  }, []);
+
+  const deleteCart = async (id: string) => {
+    try {
+      if (!id) return;
+      await authAPI.delete(`/cart/delete/${id}`);
+      await getCartItems();
+    } catch (err) {
+      alert("Something went wrong");
+    }
+  }
+
 
   const applyCoupon = () => {
     if (coupon.trim().toUpperCase() === "SAVE10") {
@@ -237,12 +245,12 @@ export default function Cart() {
               {totalItems} {totalItems === 1 ? "item" : "items"} in your cart
             </p>
           </div>
-          <a href="#" className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
+          <Link to="/dashboard" className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
             </svg>
             Continue Shopping
-          </a>
+          </Link>
         </div>
 
         {items.length === 0 ? (
@@ -252,9 +260,9 @@ export default function Cart() {
             <div className="text-6xl mb-4">🛒</div>
             <h2 className="text-xl font-bold text-gray-800 mb-1">Your cart is empty</h2>
             <p className="text-gray-400 text-sm mb-6">Looks like you haven't added anything yet.</p>
-            <a href="#" className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors">
+            <Link to="/dashboard" className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors">
               Browse Products
-            </a>
+            </Link>
           </div>
 
         ) : (
@@ -304,7 +312,7 @@ export default function Cart() {
                   onToggleSelect={toggleSelect}
                   onIncrement={increment}
                   onDecrement={decrement}
-                  onRemove={remove}
+                  onRemove={deleteCart}
                 />
               ))}
 
