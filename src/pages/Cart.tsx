@@ -129,7 +129,7 @@ function CartItemRow({
           <div className="flex items-center gap-3">
             <QuantityControl
               value={item.quantity}
-              max={item.maxQty}
+              max={15}
               onDecrement={() => onDecrement(item.id)}
               onIncrement={() => onIncrement(item.id)}
             />
@@ -190,7 +190,7 @@ export default function Cart() {
 
   const toggleSelect   = (id: string) => setItems((prev) => prev.map((i) => i.id === id ? { ...i, selected: !i.selected } : i));
   const toggleAll      = () => setItems((prev) => prev.map((i) => ({ ...i, selected: !allSelected })));
-  const increment      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity < i.maxQty ? { ...i, quantity: i.quantity + 1 } : i));
+  const increment      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity < 15? { ...i, quantity: i.quantity + 1 } : i));
   const decrement      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity > 1 ? { ...i, quantity: i.quantity - 1 } : i));
 
 

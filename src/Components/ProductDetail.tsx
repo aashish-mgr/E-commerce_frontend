@@ -30,7 +30,7 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
 
   const decrement = () => setQuantity((q) => Math.max(1, q - 1));
-  const increment = () => setQuantity((q) => Math.min(50, q + 1));
+  const increment = () => setQuantity((q) => Math.min(15, q + 1));
 
 
   const getProduct = async () => {
@@ -161,7 +161,7 @@ export default function ProductDetail() {
                   </span>
                   <button
                     onClick={increment}
-                    // disabled={quantity === product.stockCount}
+                    disabled={quantity === 15}
                     className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors text-lg font-medium"
                   >
                     +

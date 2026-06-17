@@ -20,5 +20,5 @@ export interface Cart {
   Product: Product,
   id: string,
   quantity: number,
-  selected: boolean
+  selected: boolean,
 }
