@@ -60,7 +60,7 @@ export default function ProductCard({ product, onAddToCart }: Props) {
 
         {/* Price + button */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <span className="font-bold text-gray-900 text-lg">${product.productPrice}</span>
+          <span className="font-bold text-gray-900 text-lg">Rs.{product.productPrice}</span>
           {/* <button
             onClick= {handleAdd}
             

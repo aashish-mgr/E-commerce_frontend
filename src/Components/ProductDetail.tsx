@@ -116,8 +116,8 @@ export default function ProductDetail() {
 
             {/* Price */}
             <div className="flex items-end gap-3 mb-5">
-              <span className="text-4xl font-bold text-gray-900">${product.productPrice}</span>
-              <span className="text-xl text-gray-400 line-through mb-0.5">${Math.floor(110/100 * product.productPrice)}</span>
+              <span className="text-4xl font-bold text-gray-900">Rs.{product.productPrice}</span>
+              <span className="text-xl text-gray-400 line-through mb-0.5">Rs.{Math.floor(110/100 * product.productPrice)}</span>
               <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-lg mb-1">
                 10% off
               </span>
@@ -136,7 +136,7 @@ export default function ProductDetail() {
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <span className="text-sm text-gray-600">
                 In stock —{" "}
-                <span className="font-medium text-gray-800">10 units</span> left
+                {/* <span className="font-medium text-gray-800">10 units</span> left */}
               </span>
             </div>
 
@@ -169,7 +169,7 @@ export default function ProductDetail() {
                 </div>
                 <span className="text-sm text-gray-400">
                   Total:{" "}
-                  <span className="font-semibold text-gray-700">${product.productPrice * quantity}</span>
+                  <span className="font-semibold text-gray-700">Rs.{product.productPrice * quantity}</span>
                 </span>
               </div>
 

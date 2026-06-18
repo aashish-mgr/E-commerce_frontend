@@ -110,11 +110,10 @@ export default function Dashboard() {
     () => ({
       user: CURRENT_USER,
       cartCount,
-      onCartClick: handleCartClick,
       onOrderHistoryClick: handleOrderHistoryClick,
       onProfileClick: handleProfileClick,
     }),
-    [CURRENT_USER, cartCount, handleCartClick, handleOrderHistoryClick, handleProfileClick]
+    [CURRENT_USER, cartCount, handleOrderHistoryClick, handleProfileClick]
   );
 
   useEffect(() => {

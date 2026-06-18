@@ -164,10 +164,6 @@ function CartItemRow({
 
 export default function Cart() {
   const [items, setItems] = useState<Cart[]>([]);
-  const [coupon, setCoupon]     = useState("");
-  const [couponApplied, setCouponApplied] = useState(false);
-  const [couponError, setCouponError]     = useState(false);
-  const [isempty, setIsempty] = useState(false)
 
   // ── Derived values ────────────────────────────────────────
 
@@ -176,11 +172,10 @@ export default function Cart() {
   const someSelected   = items.some((i) => i.selected);
 
   const subtotal       = selectedItems.reduce((sum, i) => sum + i.Product.productPrice * i.quantity, 0);
-  const discount       = couponApplied ? subtotal * 0.1 : 0;
-  const afterDiscount  = subtotal - discount;
-  const shipping       = afterDiscount >= SHIPPING_THRESHOLD || afterDiscount === 0 ? 0 : SHIPPING_FLAT;
-  const tax            = afterDiscount * TAX_RATE;
-  const total          = afterDiscount + shipping + tax;
+
+  const shipping       = subtotal >= SHIPPING_THRESHOLD || subtotal === 0 ? 0 : SHIPPING_FLAT;
+  const tax            = subtotal * TAX_RATE;
+  const total          = subtotal + shipping + tax;
   const totalItems     = items.reduce((sum, i) => sum + i.quantity, 0);
   const selectedCount  = selectedItems.reduce((sum, i) => sum + i.quantity, 0);
 
@@ -217,17 +212,6 @@ export default function Cart() {
     }
   }
 
-
-  const applyCoupon = () => {
-    if (coupon.trim().toUpperCase() === "SAVE10") {
-      setCouponApplied(true);
-      setCouponError(false);
-    } else {
-      setCouponError(true);
-      setCouponApplied(false);
-    }
-  };
-  
 
 
 
@@ -357,38 +341,12 @@ export default function Cart() {
                   </p>
                 )}
 
-                {/* Coupon */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Coupon code"
-                    value={coupon}
-                    onChange={(e) => { setCoupon(e.target.value); setCouponError(false); }}
-                    className={`flex-1 border rounded-lg px-3 py-2 text-sm outline-none transition-colors ${
-                      couponApplied
-                        ? "border-green-400 bg-green-50 text-green-700"
-                        : couponError
-                        ? "border-red-300 bg-red-50"
-                        : "border-gray-200 focus:border-indigo-400"
-                    }`}
-                  />
-                  <button
-                    onClick={applyCoupon}
-                    disabled={couponApplied}
-                    className="px-3 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 disabled:bg-gray-300 transition-colors whitespace-nowrap"
-                  >
-                    {couponApplied ? "Applied ✓" : "Apply"}
-                  </button>
-                </div>
-                {couponError && <p className="text-xs text-red-500 -mt-2">Invalid code. Try SAVE10.</p>}
-                {couponApplied && <p className="text-xs text-green-600 -mt-2">🎉 10% discount applied!</p>}
+                
 
                 {/* Price breakdown */}
                 <div className="flex flex-col gap-2.5 border-t border-gray-100 pt-4">
                   <PriceLine label="Subtotal"  value={subtotal.toFixed(2)} />
-                  {couponApplied && (
-                    <PriceLine label="Discount (10%)" value={`− ${discount}`} highlight="green" />
-                  )}
+                 
                   <PriceLine
                     label="Shipping"
                     value={shipping === 0 ? (subtotal === 0 ? "—" : "Free") : (shipping.toFixed(2))}
