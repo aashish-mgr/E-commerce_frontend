@@ -97,8 +97,8 @@ export default function Dashboard() {
   }, []);
 
   const handleOrderHistoryClick = useCallback(() => {
-    showToast("Order history coming soon!");
-  }, [showToast]);
+    navigate('/orders');
+  }, []);
 
   const handleProfileClick = useCallback(() => {
     showToast("User profile coming soon!");
@@ -110,7 +110,6 @@ export default function Dashboard() {
     () => ({
       user: CURRENT_USER,
       cartCount,
-      onOrderHistoryClick: handleOrderHistoryClick,
       onProfileClick: handleProfileClick,
     }),
     [CURRENT_USER, cartCount, handleOrderHistoryClick, handleProfileClick]

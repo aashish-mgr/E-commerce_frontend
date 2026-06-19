@@ -7,7 +7,6 @@ export type NavbarData = {
   onRegister?: VoidFunction;
   user?: User | null;
   cartCount?: number;
-  onOrderHistoryClick?: VoidFunction;
   onProfileClick?: VoidFunction;
 };
 

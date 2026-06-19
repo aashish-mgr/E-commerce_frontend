@@ -73,7 +73,7 @@ export default function Navbar() {
         
           <div className="relative ml-1 flex">
             <button
-            onClick={navbarData.onOrderHistoryClick}
+            onClick={() => navigate("/orders")}
             className="hidden sm:flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
           >
             <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -123,7 +123,7 @@ export default function Navbar() {
                   My Profile
                 </button>
                 <button
-                  onClick={() => { navbarData.onOrderHistoryClick?.(); setDropdownOpen(false); }}
+                  onClick={() => { navigate("/orders"); setDropdownOpen(false); }}
                   className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors sm:hidden"
                 >
                   Order History
