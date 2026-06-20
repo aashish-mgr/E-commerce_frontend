@@ -1,79 +1,67 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo,useEffect } from "react";
+import { authAPI } from "../api";
 
 // ── Types ─────────────────────────────────────────────────────
+import type { Order } from "../types";
+import type { OrderStatus } from "../types";
 
-type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";
 
-interface OrderItem {
-  id: number;
-  name: string;
-  emoji: string;
-  price: number;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  date: string;
-  status: OrderStatus;
-  items: OrderItem[];
-}
 
 // ── Seed data ─────────────────────────────────────────────────
 
-const ORDERS: Order[] = [
-  {
-    id: "ORD-7821",
-    date: "June 14, 2026",
-    status: "delivered",
-    items: [
-      { id: 1, name: "Wireless Headphones", emoji: "🎧", price: 89, quantity: 1 },
-      { id: 2, name: "Leather Wallet",      emoji: "👛", price: 45, quantity: 2 },
-    ],
-  },
-  {
-    id: "ORD-7799",
-    date: "June 10, 2026",
-    status: "shipped",
-    items: [
-      { id: 3, name: "Running Shoes", emoji: "👟", price: 120, quantity: 1 },
-    ],
-  },
-  {
-    id: "ORD-7765",
-    date: "June 3, 2026",
-    status: "pending",
-    items: [
-      { id: 4, name: "Mechanical Keyboard", emoji: "⌨️", price: 149, quantity: 1 },
-      { id: 5, name: "Ceramic Coffee Mug",  emoji: "☕", price: 22,  quantity: 3 },
-    ],
-  },
-  {
-    id: "ORD-7702",
-    date: "May 28, 2026",
-    status: "cancelled",
-    items: [
-      { id: 6, name: "Smart Water Bottle", emoji: "🍶", price: 55, quantity: 1 },
-    ],
-  },
-  {
-    id: "ORD-7654",
-    date: "May 20, 2026",
-    status: "delivered",
-    items: [
-      { id: 7, name: "Yoga Mat", emoji: "🧘", price: 38, quantity: 1 },
-      { id: 8, name: "Sunglasses", emoji: "🕶️", price: 65, quantity: 1 },
-    ],
-  },
-  {
-    id: "ORD-7601",
-    date: "May 12, 2026",
-    status: "shipped",
-    items: [
-      { id: 9, name: "Wireless Headphones", emoji: "🎧", price: 89, quantity: 2 },
-    ],
-  },
-];
+// const ORDERS: Order[] = [
+//   {
+//     id: "ORD-7821",
+//     date: "June 14, 2026",
+//     status: "delivered",
+//     items: [
+//       { id: 1, name: "Wireless Headphones", emoji: "🎧", price: 89, quantity: 1 },
+//       { id: 2, name: "Leather Wallet",      emoji: "👛", price: 45, quantity: 2 },
+//     ],
+//   },
+//   {
+//     id: "ORD-7799",
+//     date: "June 10, 2026",
+//     status: "shipped",
+//     items: [
+//       { id: 3, name: "Running Shoes", emoji: "👟", price: 120, quantity: 1 },
+//     ],
+//   },
+//   {
+//     id: "ORD-7765",
+//     date: "June 3, 2026",
+//     status: "pending",
+//     items: [
+//       { id: 4, name: "Mechanical Keyboard", emoji: "⌨️", price: 149, quantity: 1 },
+//       { id: 5, name: "Ceramic Coffee Mug",  emoji: "☕", price: 22,  quantity: 3 },
+//     ],
+//   },
+//   {
+//     id: "ORD-7702",
+//     date: "May 28, 2026",
+//     status: "cancelled",
+//     items: [
+//       { id: 6, name: "Smart Water Bottle", emoji: "🍶", price: 55, quantity: 1 },
+//     ],
+//   },
+//   {
+//     id: "ORD-7654",
+//     date: "May 20, 2026",
+//     status: "delivered",
+//     items: [
+//       { id: 7, name: "Yoga Mat", emoji: "🧘", price: 38, quantity: 1 },
+//       { id: 8, name: "Sunglasses", emoji: "🕶️", price: 65, quantity: 1 },
+//     ],
+//   },
+//   {
+//     id: "ORD-7601",
+//     date: "May 12, 2026",
+//     status: "shipped",
+//     items: [
+//       { id: 9, name: "Wireless Headphones", emoji: "🎧", price: 89, quantity: 2 },
+//     ],
+//   },
+// ];
 
 const STATUS_TABS: { label: string; value: OrderStatus | "all" }[] = [
   { label: "All",       value: "all" },
@@ -94,16 +82,20 @@ const STATUS_STYLES: Record<OrderStatus, { bg: string; text: string; dot: string
 
 // ── Helpers ───────────────────────────────────────────────────
 
-function formatPrice(n: number) {
-  return `$${n.toFixed(2)}`;
+function formatPrice(n: number | string) {
+  const value = typeof n === "number" ? n : Number(n);
+  return isNaN(value) ? "$0.00" : `$${value.toFixed(2)}`;
 }
 
 function orderTotal(order: Order) {
-  return order.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  return order.OrderDetails.reduce((sum, i) => {
+    const price = typeof i.Product.productPrice === "number" ? i.Product.productPrice : Number(i.Product.productPrice);
+    return sum + (isNaN(price) ? 0 : price * i.quantity);
+  }, 0);
 }
 
 function orderItemCount(order: Order) {
-  return order.items.reduce((sum, i) => sum + i.quantity, 0);
+  return order.OrderDetails.reduce((sum, i) => sum + i.quantity, 0);
 }
 
 // ── Status Badge ──────────────────────────────────────────────
@@ -122,8 +114,8 @@ function StatusBadge({ status }: { status: OrderStatus }) {
 
 function OrderCard({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
-  const visibleItems = expanded ? order.items : order.items.slice(0, 2);
-  const hiddenCount = order.items.length - visibleItems.length;
+  const visibleItems = expanded ? order.OrderDetails : order.OrderDetails.slice(0, 2);
+  const hiddenCount = order.OrderDetails.length - visibleItems.length;
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition-shadow">
@@ -138,36 +130,46 @@ function OrderCard({ order }: { order: Order }) {
           <div className="w-px h-8 bg-gray-200" />
           <div>
             <p className="text-xs text-gray-400">Placed on</p>
-            <p className="text-sm font-medium text-gray-700">{order.date}</p>
+            <p className="text-sm font-medium text-gray-700">{order.createdAt}</p>
           </div>
         </div>
-        <StatusBadge status={order.status} />
+        <StatusBadge status={order.orderStatus as OrderStatus} />
       </div>
 
       {/* Items */}
       <div className="px-5 py-4 flex flex-col gap-3">
-        {visibleItems.map((item) => (
-          <div key={item.id} className="flex items-center gap-4">
+        {visibleItems.map((item) => {
+          const price = typeof item.Product.productPrice === "number"
+            ? item.Product.productPrice
+            : Number(item.Product.productPrice);
 
-            {/* Image */}
-            <div className="w-14 h-14 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-2xl">
-              {item.emoji}
-            </div>
+          return (
+            <div key={item.id} className="flex items-center gap-4">
 
-            {/* Name + qty */}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Qty: {item.quantity} × {formatPrice(item.price)}
+              {/* Image */}
+              <div className="w-14 h-14 shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-2xl">
+                <img
+          src={`http://localhost:3000/uploads/${item.Product.image}`}
+          alt={item.Product.productName}
+          className="h-full w-full object-contain"
+        />
+              </div>
+
+              {/* Name + qty */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{item.Product.productName}</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Qty: {item.quantity} × {formatPrice(price)}
+                </p>
+              </div>
+
+              {/* Line total */}
+              <p className="text-sm font-semibold text-gray-800 shrink-0">
+                {formatPrice(price * item.quantity)}
               </p>
             </div>
-
-            {/* Line total */}
-            <p className="text-sm font-semibold text-gray-800 flex-shrink-0">
-              {formatPrice(item.price * item.quantity)}
-            </p>
-          </div>
-        ))}
+          );
+        })}
 
         {hiddenCount > 0 && (
           <button
@@ -177,7 +179,7 @@ function OrderCard({ order }: { order: Order }) {
             + {hiddenCount} more item{hiddenCount > 1 ? "s" : ""}
           </button>
         )}
-        {expanded && order.items.length > 2 && (
+        {expanded && order.OrderDetails.length > 2 && (
           <button
             onClick={() => setExpanded(false)}
             className="text-xs text-gray-400 hover:text-gray-600 font-medium text-left"
@@ -195,17 +197,17 @@ function OrderCard({ order }: { order: Order }) {
         </p>
 
         <div className="flex items-center gap-2">
-          {order.status === "delivered" && (
+          {order.orderStatus === "delivered" && (
             <button className="text-xs font-medium border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
               Buy Again
             </button>
           )}
-          {(order.status === "pending" || order.status === "shipped") && (
+          {(order.orderStatus === "pending" || order.orderStatus === "shipped") && (
             <button className="text-xs font-medium border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
               Track Order
             </button>
           )}
-          {order.status === "pending" && (
+          {order.orderStatus === "pending" && (
             <button className="text-xs font-medium border border-red-200 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
               Cancel
             </button>
@@ -224,27 +226,45 @@ function OrderCard({ order }: { order: Order }) {
 export default function Orders() {
   const [search, setSearch]             = useState("");
   const [activeStatus, setActiveStatus] = useState<OrderStatus | "all">("all");
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  const fetchOrders = async () => {
+       try{
+        const res =await authAPI.get("/order/getMyOrders");
+        console.log(res.data?.data);
+        setOrders(res.data?.data);
+       }
+       catch (err) {
+        console.log(err);
+       }
+  }
+
+  useEffect(() => {
+fetchOrders();
+console.log(orders);
+  }, [])
+  
 
   const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: ORDERS.length };
+    const counts: Record<string, number> = { all: orders.length };
     for (const tab of STATUS_TABS) {
       if (tab.value !== "all") {
-        counts[tab.value] = ORDERS.filter((o) => o.status === tab.value).length;
+        counts[tab.value] = orders.filter((o) => o.orderStatus === tab.value).length;
       }
     }
     return counts;
-  }, []);
+  }, [orders]);
 
   const filteredOrders = useMemo(() => {
-    return ORDERS.filter((order) => {
-      const matchesStatus = activeStatus === "all" || order.status === activeStatus;
+    return orders.filter((order) => {
+      const matchesStatus = activeStatus === "all" || order.orderStatus === activeStatus;
       const query = search.toLowerCase();
       const matchesSearch =
         order.id.toLowerCase().includes(query) ||
-        order.items.some((item) => item.name.toLowerCase().includes(query));
+        order.OrderDetails.some((item) => item.Product.productName.toLowerCase().includes(query));
       return matchesStatus && matchesSearch;
     });
-  }, [search, activeStatus]);
+  }, [orders, search, activeStatus]);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">

@@ -22,3 +22,39 @@ export interface Cart {
   quantity: number,
   selected: boolean,
 }
+
+export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";
+
+// export interface OrderItem {
+//   id: number;
+//   name: string;
+//   emoji: string;
+//   price: number;
+//   quantity: number;
+// }
+
+//  export interface Order {
+//   id: string;
+//   date: string;
+//   status: OrderStatus;
+//   items: OrderItem[];
+// }
+
+
+export interface Order {
+  id: string,
+  shippingAddress: string,
+  phoneNumber: number,
+  totalAmount: number,
+  orderStatus: string,
+  createdAt: string,
+  OrderDetails: OrderItem[],
+
+}
+
+export interface OrderItem {
+  id: string,
+  quantity: number,
+  orderId: string,
+  Product: Product
+}
