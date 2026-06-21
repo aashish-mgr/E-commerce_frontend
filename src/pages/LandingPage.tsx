@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
 import ProductCardts from "../Components/ProductCard";
 import AuthModal from "../Components/AuthModal";

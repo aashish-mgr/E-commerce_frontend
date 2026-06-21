@@ -14,6 +14,7 @@ import NavbarProvider from './context/NavbarContext.tsx'
 import Navbar from './Components/Navbar.tsx'
 import Cart from './pages/Cart.tsx'
 import Orders from './pages/Order.tsx'
+import OrderDetail from './pages/OrderDetail.tsx'
 
 
 
@@ -41,6 +42,7 @@ function App() {
             <Route path='/product/:id' element={<ProductDetail />} />
             <Route path='/cart' element={<Cart />} />
             <Route path= '/orders' element={<Orders />} />
+            <Route path= '/orderDetail/:id' element={<OrderDetail />} />
           </Routes>
         </BrowserRouter>
         </NavbarProvider>

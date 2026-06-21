@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Navbar from "../Components/Navbar";
 import ProductCard from "../Components/ProductCard";
 import FilterBar from "../Components/FilterBar";
 import type { Product, User } from "../types";

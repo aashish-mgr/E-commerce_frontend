@@ -89,7 +89,7 @@ function CartItemRow({
       }`}
     >
       {/* Checkbox */}
-      <div className="pt-0.5 flex-shrink-0">
+      <div className="pt-0.5 shrink-0">
         <input
           type="checkbox"
           checked={item.selected}
@@ -99,7 +99,7 @@ function CartItemRow({
       </div>
 
       {/* Thumbnail */}
-      <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-3xl sm:text-4xl select-none">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-3xl sm:text-4xl select-none">
         <img
           src={`http://localhost:3000/uploads/${item.Product.image}`}
           alt={item.Product.productName}
@@ -119,7 +119,7 @@ function CartItemRow({
           </div>
 
           {/* Unit price */}
-          <p className="text-base font-bold text-gray-900 flex-shrink-0">
+          <p className="text-base font-bold text-gray-900 shrink-0">
            {(item.Product.productPrice)}
           </p>
         </div>
@@ -324,7 +324,7 @@ export default function Cart() {
             </div>
 
             {/* ── Right — Order summary ── */}
-            <div className="w-full lg:w-[340px] flex-shrink-0">
+            <div className="w-full lg:w-85 shrink-0">
               <div className="bg-white border border-gray-200 rounded-2xl p-5 sticky top-6 flex flex-col gap-4">
 
                 <h2 className="text-base font-bold text-gray-900">Order Summary</h2>
