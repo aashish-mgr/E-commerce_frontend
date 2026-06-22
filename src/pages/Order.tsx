@@ -253,7 +253,7 @@ const navigate = useNavigate();
           )}
           <button
             className="text-xs font-medium bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 transition-colors"
-            onClick={() => viewDetail(order.id )}
+            onClick={() => viewDetail(order.id)}
           >
             View Details
           </button>

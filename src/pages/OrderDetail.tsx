@@ -1,71 +1,49 @@
-import { useState } from "react";
-
+import { useState,useEffect } from "react";
+import { authAPI } from "../api";
+import { useParams } from "react-router-dom";
+import type { Order,OrderItem } from "../types";
 // ── Types ─────────────────────────────────────────────────────
 
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  category: string;
-  image: string; // emoji placeholder — swap for a real image URL
-}
 
-export interface Order {
-  id: string;
-  shippingAddress: string;
-  phoneNumber: number;
-  totalAmount: number;
-  orderStatus: string;
-  createdAt: string;
-  OrderDetails: OrderItem[];
-}
-
-export interface OrderItem {
-  id: string;
-  quantity: number;
-  orderId: string;
-  Product: Product;
-}
 
 // ── Seed data ─────────────────────────────────────────────────
 
-const ORDER: Order = {
-  id: "ORD-7821",
-  shippingAddress: "221B Baker Street, Kathmandu, Bagmati Province, Nepal",
-  phoneNumber: 9812345678,
-  totalAmount: 178,
-  orderStatus: "shipped",
-  createdAt: "2026-06-14T10:32:00Z",
-  OrderDetails: [
-    {
-      id: "od-1",
-      quantity: 1,
-      orderId: "ORD-7821",
-      Product: {
-        id: "p-1",
-        name: "Wireless Headphones",
-        price: 89,
-        description: "Premium over-ear headphones with active noise cancellation and 30-hour battery life.",
-        category: "Electronics",
-        image: "🎧",
-      },
-    },
-    {
-      id: "od-2",
-      quantity: 2,
-      orderId: "ORD-7821",
-      Product: {
-        id: "p-2",
-        name: "Leather Wallet",
-        price: 45,
-        description: "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots.",
-        category: "Accessories",
-        image: "👛",
-      },
-    },
-  ],
-};
+// const ORDER: Order = {
+//   id: "ORD-7821",
+//   shippingAddress: "221B Baker Street, Kathmandu, Bagmati Province, Nepal",
+//   phoneNumber: 9812345678,
+//   totalAmount: 178,
+//   orderStatus: "shipped",
+//   createdAt: "2026-06-14T10:32:00Z",
+//   OrderDetails: [
+//     {
+//       id: "od-1",
+//       quantity: 1,
+//       orderId: "ORD-7821",
+//       Product: {
+//         id: "p-1",
+//         productName: "Wireless Headphones",
+//         price: 89,
+//         description: "Premium over-ear headphones with active noise cancellation and 30-hour battery life.",
+//         category: "Electronics",
+//         image: "🎧",
+//       },
+//     },
+//     {
+//       id: "od-2",
+//       quantity: 2,
+//       orderId: "ORD-7821",
+//       Product: {
+//         id: "p-2",
+//         name: "Leather Wallet",
+//         price: 45,
+//         description: "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots.",
+//         category: "Accessories",
+//         image: "👛",
+//       },
+//     },
+//   ],
+// };
 
 // ── Status styling ───────────────────────────────────────────
 
@@ -80,11 +58,12 @@ const STATUS_STEPS = ["pending", "shipped", "delivered"];
 
 // ── Helpers ───────────────────────────────────────────────────
 
-function formatPrice(n: number) {
-  return `$${n.toFixed(2)}`;
+function formatPrice(n: number | string) {
+  const value = typeof n === "number" ? n : Number(n);
+  return isNaN(value) ? "$0.00" : `$${value.toFixed(2)}`;
 }
 
-function formatDate(iso: string) {
+function formatDate(iso: string ) {
   return new Date(iso).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -101,11 +80,11 @@ function formatPhone(phone: number) {
 }
 
 function lineTotal(item: OrderItem) {
-  return item.Product.price * item.quantity;
+  return item.Product.productPrice * item.quantity;
 }
 
 function totalItems(order: Order) {
-  return order.OrderDetails.reduce((sum, i) => sum + i.quantity, 0);
+  return order.OrderDetails?.reduce((sum, i) => sum + i.quantity, 0);
 }
 
 // ── Status Badge ──────────────────────────────────────────────
@@ -197,11 +176,11 @@ function OrderItemRow({ item }: { item: OrderItem }) {
         {/* Info */}
         <div className="flex-1 min-w-0">
           <span className="text-[10px] font-semibold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
-            {item.Product.category}
+            {item.Product.Category?.categoryName}
           </span>
-          <h3 className="font-semibold text-gray-900 mt-1.5">{item.Product.name}</h3>
+          <h3 className="font-semibold text-gray-900 mt-1.5">{item.Product.productName}</h3>
           <p className="text-xs text-gray-400 mt-0.5">
-            Qty: {item.quantity} × {formatPrice(item.Product.price)}
+            Qty: {item.quantity} × {formatPrice(item.Product.productPrice)}
           </p>
 
           <button
@@ -219,7 +198,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
 
           {expanded && (
             <p className="text-xs text-gray-500 leading-relaxed mt-2 bg-gray-50 rounded-lg p-3">
-              {item.Product.description}
+              {item.Product.productDescription}
             </p>
           )}
         </div>
@@ -236,9 +215,32 @@ function OrderItemRow({ item }: { item: OrderItem }) {
 // ── Order Detail Page ─────────────────────────────────────────
 
 export default function OrderDetail() {
-  const order = ORDER;
-  const subtotal = order.OrderDetails.reduce((sum, i) => sum + lineTotal(i), 0);
-  const shipping = order.totalAmount - subtotal;
+  // const order = ORDER;
+
+  const {id} = useParams();
+  const [order, setOrder] = useState<Order>();
+  const subtotal = order?.OrderDetails?.reduce((sum, i) => sum + lineTotal(i), 0) ?? 0;
+  const shipping = (order?.totalAmount ?? 0) - subtotal;
+ 
+  const getOrderDetail = async () => {
+    try{
+      const res = await authAPI.get(`/order/getOrderDetail/${id}`);
+      console.log(res);
+      setOrder(res.data?.data[0]);
+    }
+    catch(err) {
+      console.log(err);
+    }
+  }
+
+  useEffect(() => {
+    getOrderDetail();
+
+  }, [])
+  
+
+  
+  
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -255,15 +257,15 @@ export default function OrderDetail() {
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Order {order.id}</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Placed on {formatDate(order.createdAt)}</p>
+            <h1 className="text-2xl font-bold text-gray-900">Order {order?.id}</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Placed on {order?.createdAt ? formatDate(order.createdAt) : 'N/A'}</p>
           </div>
-          <StatusBadge status={order.orderStatus} />
+          <StatusBadge status={order?.orderStatus ? order.orderStatus : 'N/A'} />
         </div>
 
         {/* Status tracker */}
         <div className="mb-6">
-          <StatusTracker status={order.orderStatus} />
+          <StatusTracker status={order?.orderStatus ? order.orderStatus : 'N/A'} />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -274,10 +276,10 @@ export default function OrderDetail() {
             {/* Items */}
             <div className="bg-white border border-gray-200 rounded-xl p-5">
               <h2 className="text-base font-bold text-gray-900 mb-4">
-                Items ({totalItems(order)})
+                Items ({order ? totalItems(order) : 0})
               </h2>
               <div className="flex flex-col gap-3">
-                {order.OrderDetails.map((item) => (
+                {order?.OrderDetails?.map((item) => (
                   <OrderItemRow key={item.id} item={item} />
                 ))}
               </div>
@@ -297,7 +299,7 @@ export default function OrderDetail() {
                   </span>
                   <div>
                     <p className="text-xs text-gray-400">Delivery Address</p>
-                    <p className="text-sm font-medium text-gray-800 mt-0.5">{order.shippingAddress}</p>
+                    <p className="text-sm font-medium text-gray-800 mt-0.5">{order?.shippingAddress}</p>
                   </div>
                 </div>
 
@@ -309,7 +311,7 @@ export default function OrderDetail() {
                   </span>
                   <div>
                     <p className="text-xs text-gray-400">Contact Number</p>
-                    <p className="text-sm font-medium text-gray-800 mt-0.5">{formatPhone(order.phoneNumber)}</p>
+                    <p className="text-sm font-medium text-gray-800 mt-0.5">{formatPhone(order?.phoneNumber? order.phoneNumber : 0)}</p>
                   </div>
                 </div>
               </div>
@@ -336,16 +338,16 @@ export default function OrderDetail() {
 
               <div className="flex items-center justify-between border-t border-gray-200 pt-4">
                 <span className="font-bold text-gray-900">Total</span>
-                <span className="text-xl font-bold text-gray-900">{formatPrice(order.totalAmount)}</span>
+                <span className="text-xl font-bold text-gray-900">{formatPrice(order?.totalAmount? order.totalAmount : 0)}</span>
               </div>
 
               <div className="flex flex-col gap-2 mt-1">
-                {order.orderStatus.toLowerCase() === "delivered" && (
+                {order?.orderStatus?.toLowerCase() === "delivered" && (
                   <button className="w-full bg-indigo-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors">
                     Buy Again
                   </button>
                 )}
-                {(order.orderStatus.toLowerCase() === "pending" || order.orderStatus.toLowerCase() === "shipped") && (
+                {(order?.orderStatus?.toLowerCase() === "pending" || order?.orderStatus?.toLowerCase() === "shipped") && (
                   <button className="w-full bg-gray-900 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors">
                     Track Shipment
                   </button>
@@ -353,7 +355,7 @@ export default function OrderDetail() {
                 <button className="w-full border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
                   Download Invoice
                 </button>
-                {order.orderStatus.toLowerCase() === "pending" && (
+                {order?.orderStatus?.toLowerCase() === "pending" && (
                   <button className="w-full border border-red-200 text-red-500 py-2.5 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors">
                     Cancel Order
                   </button>
