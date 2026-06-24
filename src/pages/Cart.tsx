@@ -1,7 +1,7 @@
 import { useState,useEffect } from "react";
 import { authAPI } from "../api";
 import type { Cart } from "../types";
-import { Link } from "react-router-dom";
+import { Link,useNavigate} from "react-router-dom";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -178,8 +178,7 @@ export default function Cart() {
   const total          = subtotal + shipping + tax;
   const totalItems     = items.reduce((sum, i) => sum + i.quantity, 0);
   const selectedCount  = selectedItems.reduce((sum, i) => sum + i.quantity, 0);
-
-
+  const navigate = useNavigate();
 
   // ── Handlers ─────────────────────────────────────────────
 
@@ -201,6 +200,10 @@ export default function Cart() {
   useEffect(() => {
     getCartItems();
   }, []);
+
+  const placeOrder = () => {
+    navigate("/placeOrder");
+  }
 
   const deleteCart = async (id: string) => {
     try {
@@ -364,6 +367,7 @@ export default function Cart() {
                 {/* Proceed button */}
                 <button
                   disabled={selectedCount === 0}
+                  onClick={placeOrder}
                   className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-indigo-700 active:scale-[0.98] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
                 >
                   {selectedCount === 0 ? "Select items to checkout" : "Proceed to Payment →"}

@@ -15,7 +15,7 @@ import Navbar from './Components/Navbar.tsx'
 import Cart from './pages/Cart.tsx'
 import Orders from './pages/Order.tsx'
 import OrderDetail from './pages/OrderDetail.tsx'
-
+import PlaceOrder from './pages/PlaceOrder.tsx'
 
 
 function App() {
@@ -43,7 +43,8 @@ function App() {
             <Route path='/cart' element={<Cart />} />
             <Route path= '/orders' element={<Orders />} />
             <Route path= '/orderDetail/:id' element={<OrderDetail />} />
-          </Routes>
+            <Route path= '/placeOrder' element= {<PlaceOrder />} />
+           </Routes>
         </BrowserRouter>
         </NavbarProvider>
 

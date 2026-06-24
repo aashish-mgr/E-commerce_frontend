@@ -2,7 +2,9 @@ import { useState,useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { authAPI } from "../api";
 import type { Product } from "../types";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
+
+
 
 // const product = {
 //   name: "Wireless Noise-Cancelling Headphones",
@@ -28,6 +30,7 @@ export default function ProductDetail() {
   const [added, setAdded] = useState(false);
   const { id } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
+  const navigate = useNavigate();
 
   const decrement = () => setQuantity((q) => Math.max(1, q - 1));
   const increment = () => setQuantity((q) => Math.min(15, q + 1));
@@ -54,6 +57,10 @@ export default function ProductDetail() {
   useEffect(() => {
     getProduct();
   }, [id]);
+
+  const placeOrder = () => {
+     navigate("/placeOrder");
+  }
 
   if (!product) {
     return (
@@ -175,7 +182,7 @@ export default function ProductDetail() {
 
               {/* Action buttons */}
               <div className="flex gap-3 mt-1">
-                <button className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 active:scale-[0.98] transition-all">
+                <button className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 active:scale-[0.98] transition-all" onClick={placeOrder}>
                   Buy Now
                 </button>
                 <button className={`flex-1 border-2 border-gray-900 text-gray-900 py-3 rounded-xl font-semibold text-sm hover:bg-gray-900 hover:text-white active:scale-[0.98] transition-all  ${added? "bg-green-600 text-white"
