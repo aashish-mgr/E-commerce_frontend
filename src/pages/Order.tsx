@@ -163,7 +163,7 @@ const navigate = useNavigate();
           <div>
             <p className="text-xs text-gray-400">Placed on</p>
             <p className="text-sm font-medium text-gray-700">
-              {order.createdAt}
+              {new Date(order.createdAt).toLocaleDateString()}
             </p>
           </div>
         </div>
