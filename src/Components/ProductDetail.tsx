@@ -84,7 +84,7 @@ export default function ProductDetail() {
           <div className="flex flex-col gap-4">
 
             {/* Main image */}
-            <div className="bg-white border border-gray-200 rounded-2xl flex items-center justify-center h-[380px] text-[130px] select-none">
+            <div className="bg-white border border-gray-200 rounded-2xl flex items-center justify-center h-95 text-[130px] select-none">
               <img
           src={`http://localhost:3000/uploads/${product.image}`}
           alt={product.productName}
@@ -190,7 +190,7 @@ export default function ProductDetail() {
                 onClick={() => addToCart(quantity)}>
                   {added ? "Added ✓" : "Add to Cart"}
                 </button>
-                <button className="w-12 h-12 flex items-center justify-center border border-gray-200 rounded-xl text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors flex-shrink-0">
+                <button className="w-12 h-12 flex items-center justify-center border border-gray-200 rounded-xl text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors shrink-0">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
                   </svg>

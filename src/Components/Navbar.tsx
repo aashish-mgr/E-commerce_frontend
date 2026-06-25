@@ -22,6 +22,7 @@ export default function Navbar() {
     navigate('/',{replace: true});
   }
 
+
  useEffect(() => {
    if(!authState.isAuthenticated) return;
     dispatch(getUserProfile() as any);

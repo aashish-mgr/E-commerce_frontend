@@ -1,51 +1,9 @@
-import { useState } from "react";
-
+import { useState,useEffect } from "react";
+import type {User,Cart } from "../types";
+import { useSelector } from "react-redux";
+import cartSlice from "../store/cartSlice";
 // ── Types (your exact interfaces) ────────────────────────────
 
-export interface Category {
-  categoryName: string;
-}
-
-export interface Product {
-  id: string;
-  productName: string;
-  productPrice: number;
-  productDescription: string;
-  image: string;
-  Category: Category;
-}
-
-export interface User {
-  userName: string;
-  userEmail: string;
-  userRole: string;
-}
-
-export interface Cart {
-  Product: Product;
-  id: string;
-  quantity: number;
-  selected: boolean;
-}
-
-export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";
-
-export interface Order {
-  id: string;
-  shippingAddress: string;
-  phoneNumber: number;
-  totalAmount: number;
-  orderStatus: string;
-  createdAt: string;
-  OrderDetails: OrderItem[];
-}
-
-export interface OrderItem {
-  id: string;
-  quantity: number;
-  orderId: string;
-  Product: Product;
-}
 
 // ── Seed data ─────────────────────────────────────────────────
 
@@ -65,7 +23,8 @@ const CART_ITEMS: Cart[] = [
       id: "p-1",
       productName: "Wireless Headphones",
       productPrice: 89,
-      productDescription: "Premium over-ear headphones with active noise cancellation and 30-hour battery life.",
+      productDescription:
+        "Premium over-ear headphones with active noise cancellation and 30-hour battery life.",
       image: "🎧",
       Category: { categoryName: "Electronics" },
     },
@@ -78,7 +37,8 @@ const CART_ITEMS: Cart[] = [
       id: "p-2",
       productName: "Leather Wallet",
       productPrice: 45,
-      productDescription: "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots.",
+      productDescription:
+        "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots.",
       image: "👛",
       Category: { categoryName: "Accessories" },
     },
@@ -91,7 +51,8 @@ const CART_ITEMS: Cart[] = [
       id: "p-3",
       productName: "Mechanical Keyboard",
       productPrice: 149,
-      productDescription: "TKL layout with tactile brown switches, per-key RGB backlighting, and aluminum body.",
+      productDescription:
+        "TKL layout with tactile brown switches, per-key RGB backlighting, and aluminum body.",
       image: "⌨️",
       Category: { categoryName: "Electronics" },
     },
@@ -99,9 +60,21 @@ const CART_ITEMS: Cart[] = [
 ];
 
 const PAYMENT_METHODS = [
-  { id: "card",   label: "Credit / Debit Card", icon: "💳" },
-  { id: "paypal", label: "PayPal",               icon: "🅿️" },
-  { id: "cod",    label: "Cash on Delivery",     icon: "💵" },
+  {
+    id: "esewa",
+    label: "E-sewa",
+    icon: "https://laz-img-cdn.alicdn.com/tfs/TB1EdzsDuT2gK0jSZFvXXXnFXXa-160-160.png",
+  },
+  {
+    id: "khalti",
+    label: "Khalti",
+    icon: "https://img.alicdn.com/imgextra/i3/O1CN01NiZzF21BsxsUY7d54_!!6000000000002-2-tps-288-288.png",
+  },
+  {
+    id: "cod",
+    label: "Cash on Delivery",
+    icon: "https://laz-img-cdn.alicdn.com/tfs/TB1ZP8kM1T2gK0jSZFvXXXnFXXa-96-96.png",
+  },
 ];
 
 const TAX_RATE = 0.08;
@@ -137,8 +110,17 @@ function Field({ label, required, error, children }: FieldProps) {
       {children}
       {error && (
         <p className="text-xs text-red-500 flex items-center gap-1">
-          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+          <svg
+            width="12"
+            height="12"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           {error}
         </p>
@@ -157,12 +139,25 @@ function inputClass(hasError: boolean) {
 
 // ── Success screen ────────────────────────────────────────────
 
-function OrderSuccess({ orderId, onBack }: { orderId: string; onBack: () => void }) {
+function OrderSuccess({
+  orderId,
+  onBack,
+}: {
+  orderId: string;
+  onBack: () => void;
+}) {
   return (
     <div className="min-h-screen bg-gray-50 font-sans flex items-center justify-center px-4">
       <div className="bg-white border border-gray-200 rounded-2xl p-10 max-w-md w-full text-center shadow-sm">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
-          <svg width="30" height="30" fill="none" stroke="#16a34a" strokeWidth="2.5" viewBox="0 0 24 24">
+          <svg
+            width="30"
+            height="30"
+            fill="none"
+            stroke="#16a34a"
+            strokeWidth="2.5"
+            viewBox="0 0 24 24"
+          >
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
@@ -172,7 +167,10 @@ function OrderSuccess({ orderId, onBack }: { orderId: string; onBack: () => void
         </p>
         <p className="text-indigo-600 font-semibold text-sm mb-6">{orderId}</p>
         <p className="text-xs text-gray-400 mb-8">
-          A confirmation will be sent to <span className="font-medium text-gray-600">{CURRENT_USER.userEmail}</span>
+          A confirmation will be sent to{" "}
+          <span className="font-medium text-gray-600">
+            {CURRENT_USER.userEmail}
+          </span>
         </p>
         <div className="flex flex-col gap-3">
           <button className="w-full bg-gray-900 text-white py-3 rounded-xl text-sm font-semibold hover:bg-gray-700 transition-colors">
@@ -194,27 +192,32 @@ function OrderSuccess({ orderId, onBack }: { orderId: string; onBack: () => void
 
 export default function PlaceOrder() {
   // Form state
-  const [address, setAddress]     = useState("");
-  const [phone, setPhone]         = useState("");
-  const [note, setNote]           = useState("");
-  const [payment, setPayment]     = useState("card");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [note, setNote] = useState("");
+  const [payment, setPayment] = useState("card");
+  const cartState = useSelector((state: any) => state.cart);
 
   // Card fields (shown only when payment === "card")
-  const [cardNumber, setCardNumber]   = useState("");
-  const [cardExpiry, setCardExpiry]   = useState("");
-  const [cardCvc, setCardCvc]         = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCardCvc] = useState("");
 
   // UI state
-  const [errors, setErrors]       = useState<Record<string, string>>({});
-  const [loading, setLoading]     = useState(false);
-  const [placed, setPlaced]       = useState(false);
-  const [orderId, setOrderId]     = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [placed, setPlaced] = useState(false);
+  const [orderId, setOrderId] = useState("");
 
   // Quantities (per cart item, editable on this page too)
   const [quantities, setQuantities] = useState<Record<string, number>>(
-    Object.fromEntries(CART_ITEMS.map((c) => [c.id, c.quantity]))
+    Object.fromEntries(CART_ITEMS.map((c) => [c.id, c.quantity])),
   );
 
+   useEffect(() => {
+    console.log(cartState.cart)
+   }, [cartState])
+   
   const updateQty = (id: string, delta: number) => {
     setQuantities((prev) => ({
       ...prev,
@@ -224,26 +227,25 @@ export default function PlaceOrder() {
 
   // Pricing
   const subtotal = CART_ITEMS.reduce(
-    (sum, item) => sum + item.Product.productPrice * (quantities[item.id] ?? item.quantity),
-    0
+    (sum, item) =>
+      sum + item.Product.productPrice * (quantities[item.id] ?? item.quantity),
+    0,
   );
-  const shipping  = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT;
-  const tax       = subtotal * TAX_RATE;
-  const total     = subtotal + shipping + tax;
+  const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT;
+  const tax = subtotal * TAX_RATE;
+  const total = subtotal + shipping + tax;
 
   // Validation
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!address.trim())
-      e.address = "Shipping address is required.";
-    if (!phone.trim())
-      e.phone = "Phone number is required.";
+    if (!address.trim()) e.address = "Shipping address is required.";
+    if (!phone.trim()) e.phone = "Phone number is required.";
     else if (!/^\+?[\d\s\-]{7,15}$/.test(phone))
       e.phone = "Enter a valid phone number.";
     if (payment === "card") {
       if (!cardNumber.trim()) e.cardNumber = "Card number is required.";
       if (!cardExpiry.trim()) e.cardExpiry = "Expiry date is required.";
-      if (!cardCvc.trim())    e.cardCvc    = "CVC is required.";
+      if (!cardCvc.trim()) e.cardCvc = "CVC is required.";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -262,23 +264,37 @@ export default function PlaceOrder() {
     }, 1800);
   };
 
-  if (placed) return <OrderSuccess orderId={orderId} onBack={() => setPlaced(false)} />;
+  if (placed)
+    return <OrderSuccess orderId={orderId} onBack={() => setPlaced(false)} />;
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <div className="max-w-5xl mx-auto px-4 py-8">
-
         {/* Header */}
         <div className="mb-7">
-          <a href="#" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors mb-4">
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+          <a
+            href="#"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors mb-4"
+          >
+            <svg
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
             </svg>
             Back to Cart
           </a>
           <h1 className="text-2xl font-bold text-gray-900">Place Order</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Ordering as <span className="font-medium text-gray-700">{CURRENT_USER.userName}</span>{" "}
+            Ordering as{" "}
+            <span className="font-medium text-gray-700">
+              {CURRENT_USER.userName}
+            </span>{" "}
             · {CURRENT_USER.userEmail}
           </p>
         </div>
@@ -287,9 +303,13 @@ export default function PlaceOrder() {
         <div className="flex items-center gap-2 mb-8">
           {["Shipping", "Payment", "Review"].map((step, i) => (
             <div key={step} className="flex items-center gap-2">
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                i === 0 ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-400"
-              }`}>
+              <div
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                  i === 0
+                    ? "bg-gray-900 text-white"
+                    : "bg-gray-100 text-gray-400"
+                }`}
+              >
                 <span>{i + 1}</span>
                 <span>{step}</span>
               </div>
@@ -299,19 +319,21 @@ export default function PlaceOrder() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-
           {/* ── Left column — Forms ── */}
           <div className="lg:col-span-2 flex flex-col gap-5">
-
             {/* Shipping details */}
             <div className="bg-white border border-gray-200 rounded-xl p-5">
               <div className="flex items-center gap-2 mb-5">
-                <span className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center">1</span>
-                <h2 className="text-base font-bold text-gray-900">Shipping Details</h2>
+                <span className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center">
+                  1
+                </span>
+                <h2 className="text-base font-bold text-gray-900">
+                  Shipping Details
+                </h2>
               </div>
 
               <div className="flex flex-col gap-4">
-                {/* Prefilled user info — read only */}
+                {/* Prefilled user info — read only
                 <div className="grid sm:grid-cols-2 gap-4">
                   <Field label="Full Name">
                     <input
@@ -329,7 +351,7 @@ export default function PlaceOrder() {
                       className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
                     />
                   </Field>
-                </div>
+                </div> */}
 
                 {/* Phone */}
                 <Field label="Phone Number" required error={errors.phone}>
@@ -341,7 +363,10 @@ export default function PlaceOrder() {
                       type="tel"
                       placeholder="98XXXXXXXX"
                       value={phone}
-                      onChange={(e) => { setPhone(e.target.value); setErrors((p) => ({ ...p, phone: "" })); }}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        setErrors((p) => ({ ...p, phone: "" }));
+                      }}
                       className={inputClass(!!errors.phone) + " flex-1"}
                     />
                   </div>
@@ -353,7 +378,10 @@ export default function PlaceOrder() {
                     rows={3}
                     placeholder="Street address, City, Province, Postal Code"
                     value={address}
-                    onChange={(e) => { setAddress(e.target.value); setErrors((p) => ({ ...p, address: "" })); }}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setErrors((p) => ({ ...p, address: "" }));
+                    }}
                     className={inputClass(!!errors.address) + " resize-none"}
                   />
                 </Field>
@@ -374,8 +402,12 @@ export default function PlaceOrder() {
             {/* Payment method */}
             <div className="bg-white border border-gray-200 rounded-xl p-5">
               <div className="flex items-center gap-2 mb-5">
-                <span className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center">2</span>
-                <h2 className="text-base font-bold text-gray-900">Payment Method</h2>
+                <span className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center">
+                  2
+                </span>
+                <h2 className="text-base font-bold text-gray-900">
+                  Payment Method
+                </h2>
               </div>
 
               {/* Method selector */}
@@ -390,76 +422,23 @@ export default function PlaceOrder() {
                         : "border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                   >
-                    <span className="text-2xl">{m.icon}</span>
+                    <span className="text-2xl">
+                      {<img className="w-20 h-20 mt-6 mb-6" src={m.icon}></img>}
+                    </span>
                     {m.label}
                   </button>
                 ))}
               </div>
 
-              {/* Card fields */}
-              {payment === "card" && (
-                <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <Field label="Card Number" required error={errors.cardNumber}>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="1234 5678 9012 3456"
-                        maxLength={19}
-                        value={cardNumber}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "").slice(0, 16);
-                          setCardNumber(val.replace(/(.{4})/g, "$1 ").trim());
-                          setErrors((p) => ({ ...p, cardNumber: "" }));
-                        }}
-                        className={inputClass(!!errors.cardNumber)}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg">💳</span>
-                    </div>
-                  </Field>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Expiry Date" required error={errors.cardExpiry}>
-                      <input
-                        type="text"
-                        placeholder="MM / YY"
-                        maxLength={7}
-                        value={cardExpiry}
-                        onChange={(e) => {
-                          let val = e.target.value.replace(/\D/g, "").slice(0, 4);
-                          if (val.length > 2) val = val.slice(0, 2) + " / " + val.slice(2);
-                          setCardExpiry(val);
-                          setErrors((p) => ({ ...p, cardExpiry: "" }));
-                        }}
-                        className={inputClass(!!errors.cardExpiry)}
-                      />
-                    </Field>
-                    <Field label="CVC" required error={errors.cardCvc}>
-                      <input
-                        type="text"
-                        placeholder="123"
-                        maxLength={3}
-                        value={cardCvc}
-                        onChange={(e) => {
-                          setCardCvc(e.target.value.replace(/\D/g, "").slice(0, 3));
-                          setErrors((p) => ({ ...p, cardCvc: "" }));
-                        }}
-                        className={inputClass(!!errors.cardCvc)}
-                      />
-                    </Field>
-                  </div>
-                </div>
-              )}
-
-              {payment === "paypal" && (
-                <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700 flex items-center gap-2">
-                  <span className="text-xl">🅿️</span>
-                  You'll be redirected to PayPal to complete your payment after confirming.
-                </div>
-              )}
-
-              {payment === "cod" && (
+              {payment === "cod" ? (
                 <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-700 flex items-center gap-2">
                   <span className="text-xl">💵</span>
                   Pay in cash when your order is delivered to your door.
+                </div>
+              ) : (
+                <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700 flex items-center gap-2">
+                  You'll be redirected to wallet to complete your payment after
+                  confirming.
                 </div>
               )}
             </div>
@@ -469,8 +448,12 @@ export default function PlaceOrder() {
           <div className="lg:col-span-1">
             <div className="bg-white border border-gray-200 rounded-xl p-5 sticky top-6 flex flex-col gap-4">
               <div className="flex items-center gap-2 mb-1">
-                <span className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center">3</span>
-                <h2 className="text-base font-bold text-gray-900">Order Summary</h2>
+                <span className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center">
+                  3
+                </span>
+                <h2 className="text-base font-bold text-gray-900">
+                  Order Summary
+                </h2>
               </div>
 
               {/* Item list */}
@@ -502,7 +485,9 @@ export default function PlaceOrder() {
                           >
                             −
                           </button>
-                          <span className="text-xs font-semibold text-gray-700 w-4 text-center">{qty}</span>
+                          <span className="text-xs font-semibold text-gray-700 w-4 text-center">
+                            {qty}
+                          </span>
                           <button
                             onClick={() => updateQty(item.id, 1)}
                             className="w-5 h-5 rounded border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors text-xs"
@@ -525,17 +510,23 @@ export default function PlaceOrder() {
               <div className="border-t border-gray-100 pt-4 flex flex-col gap-2.5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Subtotal</span>
-                  <span className="font-medium text-gray-800">{formatPrice(subtotal)}</span>
+                  <span className="font-medium text-gray-800">
+                    {formatPrice(subtotal)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Shipping</span>
-                  <span className={`font-medium ${shipping === 0 ? "text-green-600" : "text-gray-800"}`}>
+                  <span
+                    className={`font-medium ${shipping === 0 ? "text-green-600" : "text-gray-800"}`}
+                  >
                     {shipping === 0 ? "Free" : formatPrice(shipping)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Tax (8%)</span>
-                  <span className="font-medium text-gray-500">{formatPrice(tax)}</span>
+                  <span className="font-medium text-gray-500">
+                    {formatPrice(tax)}
+                  </span>
                 </div>
               </div>
 
@@ -552,7 +543,9 @@ export default function PlaceOrder() {
               {/* Total */}
               <div className="flex justify-between items-center border-t border-gray-200 pt-3">
                 <span className="font-bold text-gray-900">Total</span>
-                <span className="text-xl font-bold text-gray-900">{formatPrice(total)}</span>
+                <span className="text-xl font-bold text-gray-900">
+                  {formatPrice(total)}
+                </span>
               </div>
 
               {/* Submit button */}
@@ -563,22 +556,44 @@ export default function PlaceOrder() {
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" />
-                      <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+                    <svg
+                      className="animate-spin"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="white"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="white"
+                        d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
+                      />
                     </svg>
                     Placing Order...
                   </>
                 ) : (
-                  <>
-                    Proceed to Pay · {formatPrice(total)}
-                  </>
+                  <>Proceed to Pay · {formatPrice(total)}</>
                 )}
               </button>
 
               {/* Trust note */}
               <p className="text-center text-[10px] text-gray-400 flex items-center justify-center gap-1">
-                <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg
+                  width="11"
+                  height="11"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
                 Secured with SSL encryption

@@ -2,6 +2,7 @@ import { useState,useEffect } from "react";
 import { authAPI } from "../api";
 import type { Cart } from "../types";
 import { Link,useNavigate} from "react-router-dom";
+import { setCart } from "../store/cartSlice";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -202,6 +203,7 @@ export default function Cart() {
   }, []);
 
   const placeOrder = () => {
+    setCart(selectedItems);
     navigate("/placeOrder");
   }
 
