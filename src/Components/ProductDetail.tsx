@@ -6,6 +6,9 @@ import { Link,useNavigate } from "react-router-dom";
 
 
 
+
+
+
 // const product = {
 //   name: "Wireless Noise-Cancelling Headphones",
 //   brand: "SoundCore",
@@ -32,6 +35,7 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const navigate = useNavigate();
 
+
   const decrement = () => setQuantity((q) => Math.max(1, q - 1));
   const increment = () => setQuantity((q) => Math.min(15, q + 1));
 
@@ -56,9 +60,11 @@ export default function ProductDetail() {
 
   useEffect(() => {
     getProduct();
+  
   }, [id]);
 
   const placeOrder = () => {
+  
      navigate("/placeOrder");
   }
 

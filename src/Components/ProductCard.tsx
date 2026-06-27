@@ -23,7 +23,7 @@ export default function ProductCard({ product, onAddToCart }: Props) {
 
   }
 
-  const handleProduct = (id: number) => {
+  const handleProduct = (id: string) => {
      navigate(`/product/${id}`);
   }
 
