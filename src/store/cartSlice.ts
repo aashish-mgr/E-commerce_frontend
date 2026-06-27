@@ -1,13 +1,17 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { Cart } from "../types";
+import { STATUS, type Cart } from "../types";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
+
+ 
 interface cartState {
-    cart: Cart[] | null
+    cart: Cart[] | null,
+    status: STATUS
 }
 
 const initialState: cartState = {
-    cart: null
+    cart: null,
+    status: STATUS.Idle
 }
 
 const cartSlice = createSlice({
@@ -16,9 +20,20 @@ const cartSlice = createSlice({
     reducers: {
         setCart(state, action: PayloadAction<Cart[] | null>) {
             state.cart = action.payload;
+        },
+        setStatus(state, action: PayloadAction<STATUS>) {
+            state.status = action.payload;
         }
     }
 })
 
-export default cartSlice;
-export const {setCart} = cartSlice.actions;
+export default cartSlice.reducer;
+export const {setCart,setStatus} = cartSlice.actions;
+
+
+export function addToCart () {
+    return async function addToCartThunk (dispatch: any) {
+        dispatch(setStatus(STATUS.Loading));
+
+    }
+}

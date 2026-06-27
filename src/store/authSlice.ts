@@ -15,7 +15,6 @@ interface User{
     userName: string,
     userEmail: string,
     userPassword: string
-
 }
 
 interface RegisterData {
@@ -62,6 +61,7 @@ const authSlice = createSlice({
     }
 }) 
 export const {setUserData, setStatus,setAuthenticated} = authSlice.actions
+
 
 export function registerUser(userData: RegisterData) {
     

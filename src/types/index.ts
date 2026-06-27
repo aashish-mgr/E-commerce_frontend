@@ -25,21 +25,6 @@ export interface Cart {
 
 export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";
 
-// export interface OrderItem {
-//   id: number;
-//   name: string;
-//   emoji: string;
-//   price: number;
-//   quantity: number;
-// }
-
-//  export interface Order {
-//   id: string;
-//   date: string;
-//   status: OrderStatus;
-//   items: OrderItem[];
-// }
-
 
 export interface Order {
   id: string,
@@ -57,4 +42,11 @@ export interface OrderItem {
   quantity: number,
   orderId: string,
   Product: Product
+}
+
+export enum STATUS {
+    Idle = "idle",
+    Loading = "loading",
+    Success = "success",
+    Error = "error"
 }

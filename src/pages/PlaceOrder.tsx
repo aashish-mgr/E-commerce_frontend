@@ -252,6 +252,7 @@ export default function PlaceOrder() {
   };
 
   const handleSubmit = () => {
+    console.log(cartState.cart)
     if (!validate()) return;
     setLoading(true);
 
