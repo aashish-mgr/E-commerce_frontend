@@ -3,6 +3,8 @@ import { authAPI } from "../api";
 import type { Cart } from "../types";
 import { Link,useNavigate} from "react-router-dom";
 import { setCart } from "../store/cartSlice";
+import { useDispatch,useSelector } from "react-redux";
+import { getCartItems } from "../store/cartSlice";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -165,20 +167,22 @@ function CartItemRow({
 
 export default function Cart() {
   const [items, setItems] = useState<Cart[]>([]);
+  const dispatch = useDispatch();
+  const cartState = useSelector((state: any) => state.cart);
 
   // ── Derived values ────────────────────────────────────────
 
-  const selectedItems  = items.filter((i) => i.selected);
-  const allSelected    = items.length > 0 && items.every((i) => i.selected);
-  const someSelected   = items.some((i) => i.selected);
+  const selectedItems  = items?.filter((i) => i.selected);
+  const allSelected    = items?.length > 0 && items.every((i) => i.selected);
+  const someSelected   = items?.some((i) => i.selected);
 
-  const subtotal       = selectedItems.reduce((sum, i) => sum + i.Product.productPrice * i.quantity, 0);
+  const subtotal       = selectedItems?.reduce((sum, i) => sum + i.Product.productPrice * i.quantity, 0);
 
   const shipping       = subtotal >= SHIPPING_THRESHOLD || subtotal === 0 ? 0 : SHIPPING_FLAT;
   const tax            = subtotal * TAX_RATE;
   const total          = subtotal + shipping + tax;
-  const totalItems     = items.reduce((sum, i) => sum + i.quantity, 0);
-  const selectedCount  = selectedItems.reduce((sum, i) => sum + i.quantity, 0);
+  const totalItems     = items?.reduce((sum, i) => sum + i.quantity, 0);
+  const selectedCount  = selectedItems?.reduce((sum, i) => sum + i.quantity, 0);
   const navigate = useNavigate();
 
   // ── Handlers ─────────────────────────────────────────────
@@ -189,21 +193,24 @@ export default function Cart() {
   const decrement      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity > 1 ? { ...i, quantity: i.quantity - 1 } : i));
 
 
-  const getCartItems = async () => {
-    try {
-      const res = await authAPI.get('/cart/getMyCarts');
-      setItems(res.data?.data ?? []);
-    } catch (err) {
-      setItems([]);
-    }
-  }
+  // const getCartItems = async () => {
+  //   try {
+  //     const res = await authAPI.get('/cart/getMyCarts');
+  //     setItems(res.data?.data ?? []);
+  //   } catch (err) {
+  //     setItems([]);
+  //   }
+  // }
 
   useEffect(() => {
-    getCartItems();
+    dispatch(getCartItems() as any);
   }, []);
+    useEffect(() => {
+    setItems(cartState.cart)
+  }, [cartState.cart]);
 
   const placeOrder = () => {
-    setCart(selectedItems);
+    dispatch(setCart(selectedItems));
     navigate("/placeOrder");
   }
 
@@ -211,7 +218,7 @@ export default function Cart() {
     try {
       if (!id) return;
       await authAPI.delete(`/cart/delete/${id}`);
-      await getCartItems();
+      await dispatch(getCartItems()as any);
     } catch (err) {
       alert("Something went wrong");
     }
@@ -242,7 +249,7 @@ export default function Cart() {
           </Link>
         </div>
 
-        {items.length === 0 ? (
+        {items?.length === 0 ? (
 
           /* ── Empty state ── */
           <div className="bg-white border border-gray-200 rounded-2xl py-24 flex flex-col items-center text-center">
@@ -271,14 +278,14 @@ export default function Cart() {
                   />
                   <span className="text-sm font-medium text-gray-700">
                     Select All
-                    <span className="text-gray-400 font-normal ml-1">({items.length} items)</span>
+                    <span className="text-gray-400 font-normal ml-1">({items?.length} items)</span>
                   </span>
                 </label>
 
                 {someSelected && (
                   <button
                     onClick={() => {
-                      selectedItems.map(i => deleteCart(i.id));
+                      selectedItems?.map(i => deleteCart(i.id));
                     }}
                     className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
                   >
@@ -294,7 +301,7 @@ export default function Cart() {
               </div>
 
               {/* Items */}
-              {items.map((item) => (
+              {items?.map((item) => (
                 <CartItemRow
                   key={item.id}
                   item={item}
@@ -350,7 +357,7 @@ export default function Cart() {
 
                 {/* Price breakdown */}
                 <div className="flex flex-col gap-2.5 border-t border-gray-100 pt-4">
-                  <PriceLine label="Subtotal"  value={subtotal.toFixed(2)} />
+                  <PriceLine label="Subtotal"  value={subtotal?.toFixed(2)} />
                  
                   <PriceLine
                     label="Shipping"
