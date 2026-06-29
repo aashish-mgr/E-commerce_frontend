@@ -87,9 +87,6 @@ function formatPrice(n: number) {
   return `$${n.toFixed(2)}`;
 }
 
-function lineTotal(item: Cart) {
-  return item.Product.productPrice * item.quantity;
-}
 
 // ── Input field component ─────────────────────────────────────
 
@@ -199,10 +196,6 @@ export default function PlaceOrder() {
   const [payment, setPayment] = useState("card");
   const cartState = useSelector((state: any) => state.cart);
 
-  // Card fields (shown only when payment === "card")
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvc, setCardCvc] = useState("");
 
   // UI state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -245,11 +238,6 @@ export default function PlaceOrder() {
     if (!phone.trim()) e.phone = "Phone number is required.";
     else if (!/^\+?[\d\s\-]{7,15}$/.test(phone))
       e.phone = "Enter a valid phone number.";
-    if (payment === "card") {
-      if (!cardNumber.trim()) e.cardNumber = "Card number is required.";
-      if (!cardExpiry.trim()) e.cardExpiry = "Expiry date is required.";
-      if (!cardCvc.trim()) e.cardCvc = "CVC is required.";
-    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
