@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom";
 import { authAPI } from "../api";
 import type { Product } from "../types";
 import { Link,useNavigate } from "react-router-dom";
-
+import { setCart } from "../store/cartSlice";
+import { useDispatch } from "react-redux";
 
 
 
@@ -34,6 +35,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
 
   const decrement = () => setQuantity((q) => Math.max(1, q - 1));
@@ -64,8 +66,17 @@ export default function ProductDetail() {
   }, [id]);
 
   const placeOrder = () => {
-  
-     navigate("/placeOrder");
+    if (!product) return;
+
+    dispatch(setCart([
+      {
+        Product: product,
+        id: "34398",
+        quantity: quantity,
+        selected: true   
+       },
+    ]));
+    navigate("/placeOrder");
   }
 
   if (!product) {

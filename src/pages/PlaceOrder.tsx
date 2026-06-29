@@ -1,9 +1,9 @@
 import { useState,useEffect } from "react";
 import type {User,Cart } from "../types";
 import { useSelector } from "react-redux";
-import cartSlice from "../store/cartSlice";
-// ── Types (your exact interfaces) ────────────────────────────
+import { Link } from "react-router-dom";
 
+// ── Types (your exact interfaces) ────────────────────────────
 
 // ── Seed data ─────────────────────────────────────────────────
 
@@ -14,50 +14,50 @@ const CURRENT_USER: User = {
 };
 
 // Only selected cart items are passed to the order page
-const CART_ITEMS: Cart[] = [
-  {
-    id: "cart-1",
-    quantity: 1,
-    selected: true,
-    Product: {
-      id: "p-1",
-      productName: "Wireless Headphones",
-      productPrice: 89,
-      productDescription:
-        "Premium over-ear headphones with active noise cancellation and 30-hour battery life.",
-      image: "🎧",
-      Category: { categoryName: "Electronics" },
-    },
-  },
-  {
-    id: "cart-2",
-    quantity: 2,
-    selected: true,
-    Product: {
-      id: "p-2",
-      productName: "Leather Wallet",
-      productPrice: 45,
-      productDescription:
-        "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots.",
-      image: "👛",
-      Category: { categoryName: "Accessories" },
-    },
-  },
-  {
-    id: "cart-3",
-    quantity: 1,
-    selected: true,
-    Product: {
-      id: "p-3",
-      productName: "Mechanical Keyboard",
-      productPrice: 149,
-      productDescription:
-        "TKL layout with tactile brown switches, per-key RGB backlighting, and aluminum body.",
-      image: "⌨️",
-      Category: { categoryName: "Electronics" },
-    },
-  },
-];
+// const cartItems: Cart[] = [
+//   {
+//     id: "cart-1",
+//     quantity: 1,
+//     selected: true,
+//     Product: {
+//       id: "p-1",
+//       productName: "Wireless Headphones",
+//       productPrice: 89,
+//       productDescription:
+//         "Premium over-ear headphones with active noise cancellation and 30-hour battery life.",
+//       image: "🎧",
+//       Category: { categoryName: "Electronics" },
+//     },
+//   },
+//   {
+//     id: "cart-2",
+//     quantity: 2,
+//     selected: true,
+//     Product: {
+//       id: "p-2",
+//       productName: "Leather Wallet",
+//       productPrice: 45,
+//       productDescription:
+//         "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots.",
+//       image: "👛",
+//       Category: { categoryName: "Accessories" },
+//     },
+//   },
+//   {
+//     id: "cart-3",
+//     quantity: 1,
+//     selected: true,
+//     Product: {
+//       id: "p-3",
+//       productName: "Mechanical Keyboard",
+//       productPrice: 149,
+//       productDescription:
+//         "TKL layout with tactile brown switches, per-key RGB backlighting, and aluminum body.",
+//       image: "⌨️",
+//       Category: { categoryName: "Electronics" },
+//     },
+//   },
+// ];
 
 const PAYMENT_METHODS = [
   {
@@ -192,6 +192,7 @@ function OrderSuccess({
 
 export default function PlaceOrder() {
   // Form state
+  const [cartItems, setCartItems] = useState<Cart[]>([]);
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
@@ -211,11 +212,13 @@ export default function PlaceOrder() {
 
   // Quantities (per cart item, editable on this page too)
   const [quantities, setQuantities] = useState<Record<string, number>>(
-    Object.fromEntries(CART_ITEMS.map((c) => [c.id, c.quantity])),
+    Object.fromEntries(cartItems.map((c) => [c.id, c.quantity])),
   );
 
    useEffect(() => {
-    console.log(cartState.cart)
+    console.log(cartState.cart);
+    setCartItems(cartState.cart);
+    
    }, [cartState])
    
   const updateQty = (id: string, delta: number) => {
@@ -226,7 +229,7 @@ export default function PlaceOrder() {
   };
 
   // Pricing
-  const subtotal = CART_ITEMS.reduce(
+  const subtotal = cartItems.reduce(
     (sum, item) =>
       sum + item.Product.productPrice * (quantities[item.id] ?? item.quantity),
     0,
@@ -273,8 +276,8 @@ export default function PlaceOrder() {
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-7">
-          <a
-            href="#"
+          <Link
+            to="/cart"
             className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors mb-4"
           >
             <svg
@@ -289,7 +292,7 @@ export default function PlaceOrder() {
               <polyline points="12 19 5 12 12 5" />
             </svg>
             Back to Cart
-          </a>
+          </Link>
           <h1 className="text-2xl font-bold text-gray-900">Place Order</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             Ordering as{" "}
@@ -459,13 +462,17 @@ export default function PlaceOrder() {
 
               {/* Item list */}
               <div className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1">
-                {CART_ITEMS.map((item) => {
+                {cartItems.map((item) => {
                   const qty = quantities[item.id] ?? item.quantity;
                   return (
                     <div key={item.id} className="flex items-center gap-3">
                       {/* Image */}
                       <div className="w-12 h-12 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-center text-xl">
-                        {item.Product.image}
+                       <img
+          src={`http://localhost:3000/uploads/${item.Product.image}`}
+          alt={item.Product.productName}
+          className="h-full w-full object-contain"
+        />
                       </div>
 
                       {/* Name + qty controls */}
