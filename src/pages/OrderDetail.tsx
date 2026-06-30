@@ -108,7 +108,7 @@ function StatusTracker({ status }: { status: string }) {
   if (normalized === "cancelled") {
     return (
       <div className="bg-red-50 border border-red-100 rounded-xl px-5 py-4 flex items-center gap-3">
-        <span className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 flex-shrink-0">
+        <span className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 shrink-0">
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -133,7 +133,7 @@ function StatusTracker({ status }: { status: string }) {
             <div key={step} className={`flex items-center ${isLast ? "" : "flex-1"}`}>
               <div className="flex flex-col items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                     isComplete ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-400"
                   }`}
                 >
@@ -170,7 +170,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
       <div className="flex items-start gap-4">
 
         {/* Image */}
-        <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-3xl sm:text-4xl">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-3xl sm:text-4xl">
           {item.Product.image}
         </div>
 
@@ -205,7 +205,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
         </div>
 
         {/* Line total */}
-        <p className="text-sm font-bold text-gray-900 flex-shrink-0">
+        <p className="text-sm font-bold text-gray-900 shrink-0">
           {formatPrice(lineTotal(item))}
         </p>
       </div>
@@ -299,7 +299,7 @@ export default function OrderDetail() {
               <div className="flex flex-col gap-4">
 
                 <div className="flex items-start gap-3">
-                  <span className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
+                  <span className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                       <circle cx="12" cy="10" r="3" />
@@ -312,7 +312,7 @@ export default function OrderDetail() {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <span className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
+                  <span className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
                     </svg>

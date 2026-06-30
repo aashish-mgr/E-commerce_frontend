@@ -2,6 +2,7 @@ import { useState,useEffect } from "react";
 import type {User,Cart } from "../types";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { authAPI } from "../api";
 
 // ── Types (your exact interfaces) ────────────────────────────
 
@@ -84,7 +85,7 @@ const SHIPPING_FLAT = 9.99;
 // ── Helpers ───────────────────────────────────────────────────
 
 function formatPrice(n: number) {
-  return `$${n.toFixed(2)}`;
+  return `Rs. ${n.toFixed(2)}`;
 }
 
 
@@ -193,7 +194,7 @@ export default function PlaceOrder() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
-  const [payment, setPayment] = useState("card");
+  const [payment, setPayment] = useState("esewa");
   const cartState = useSelector((state: any) => state.cart);
 
 
@@ -221,6 +222,8 @@ export default function PlaceOrder() {
     }));
   };
 
+ 
+
   // Pricing
   const subtotal = cartItems.reduce(
     (sum, item) =>
@@ -242,18 +245,36 @@ export default function PlaceOrder() {
     return Object.keys(e).length === 0;
   };
 
+   const createOrder = async () => {
+    const res = await authAPI.post("/order/create",{
+      phoneNumber: phone,
+      shippingAddress: address,
+      totalAmount: total,
+      paymentDetails: {
+        paymentMethod: payment
+      },
+      items: cartState.cart
+      
+        })
+
+        if(res.status === 200) {
+          console.log(res);
+          const id = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+      setOrderId(id);
+      setLoading(false);
+      setPlaced(true);
+        }
+        else {
+          alert("order not placed");
+          return;
+        }
+  }
+
   const handleSubmit = () => {
     console.log(cartState.cart)
     if (!validate()) return;
     setLoading(true);
-
-    // Simulate API call — replace with your real POST /orders
-    setTimeout(() => {
-      const id = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
-      setOrderId(id);
-      setLoading(false);
-      setPlaced(true);
-    }, 1800);
+    createOrder();
   };
 
   if (placed)
@@ -455,7 +476,7 @@ export default function PlaceOrder() {
                   return (
                     <div key={item.id} className="flex items-center gap-3">
                       {/* Image */}
-                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-center text-xl">
+                      <div className="w-12 h-12 shrink-0 bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-center text-xl">
                        <img
           src={`http://localhost:3000/uploads/${item.Product.image}`}
           alt={item.Product.productName}
@@ -494,7 +515,7 @@ export default function PlaceOrder() {
                       </div>
 
                       {/* Line total */}
-                      <p className="text-sm font-semibold text-gray-800 flex-shrink-0">
+                      <p className="text-sm font-semibold text-gray-800 shrink-0">
                         {formatPrice(item.Product.productPrice * qty)}
                       </p>
                     </div>

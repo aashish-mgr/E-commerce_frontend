@@ -73,7 +73,8 @@ export default function ProductDetail() {
         Product: product,
         id: "34398",
         quantity: quantity,
-        selected: true   
+        selected: true,
+        productId: product.id
        },
     ]));
     navigate("/placeOrder");
