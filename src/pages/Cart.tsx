@@ -210,8 +210,9 @@ export default function Cart() {
   }, [cartState.cart]);
 
   const placeOrder = () => {
-    dispatch(setCart(selectedItems));
-    navigate("/placeOrder");
+    const selectedIds = selectedItems?.map( i => i.productId);
+    // dispatch(setCart(selectedItems));
+    navigate(`/placeOrder?items=${selectedIds?.join(",")}`);
   }
 
   const deleteCart = async (id: string) => {

@@ -1,9 +1,11 @@
-import { useState,useEffect } from "react";
+import { useState,useEffect,useMemo } from "react";
 import type {User,Cart } from "../types";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { authAPI } from "../api";
-
+import { getCartItems } from "../store/cartSlice";
+import { useDispatch } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 // ── Types (your exact interfaces) ────────────────────────────
 
 // ── Seed data ─────────────────────────────────────────────────
@@ -196,6 +198,7 @@ export default function PlaceOrder() {
   const [note, setNote] = useState("");
   const [payment, setPayment] = useState("esewa");
   const cartState = useSelector((state: any) => state.cart);
+  const dispatch = useDispatch();
 
 
   // UI state
@@ -208,12 +211,31 @@ export default function PlaceOrder() {
   const [quantities, setQuantities] = useState<Record<string, number>>(
     Object.fromEntries(cartItems.map((c) => [c.id, c.quantity])),
   );
+const [searchParams] = useSearchParams();
+const selectedIds = useMemo(
+  () => searchParams.get('items')?.split(',') ?? [],
+  [searchParams]
+);
 
    useEffect(() => {
-    console.log(cartState.cart);
-    setCartItems(cartState.cart);
+    const fetchCart = async () => {
+      const res = await authAPI.get("/cart/getMyCarts");
+      const cart: Cart[] = res.data?.data;
+      const filteredItems = cart.filter((item) =>
+      selectedIds.includes(item.productId)
+    );
+    setCartItems(filteredItems);
+    }
+    fetchCart();
     
-   }, [cartState])
+    }, [])
+   
+
+  //  useEffect(() => {
+  //   console.log(cartState.cart);
+  //   setCartItems(cartState.cart);
+    
+  //  }, [cartState])
    
   const updateQty = (id: string, delta: number) => {
     setQuantities((prev) => ({
