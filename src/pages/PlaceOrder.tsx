@@ -259,10 +259,9 @@ export default function PlaceOrder() {
 
         if(res.status === 200) {
           console.log(res);
-          const id = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
-      setOrderId(id);
-      setLoading(false);
-      setPlaced(true);
+          if(payment === "khalti") {
+            window.location.href = res.data.response;
+          }
         }
         else {
           alert("order not placed");
