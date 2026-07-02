@@ -21,6 +21,7 @@ export interface Cart {
   id: string,
   quantity: number,
   selected: boolean,
+  productId: string
 }
 
 export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";

@@ -211,6 +211,7 @@ export default function Cart() {
 
   const placeOrder = () => {
     const selectedIds = selectedItems?.map( i => i.productId);
+    console.log(selectedIds);
     // dispatch(setCart(selectedItems));
     navigate(`/placeOrder?items=${selectedIds?.join(",")}`);
   }

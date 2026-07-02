@@ -78,6 +78,7 @@ export default function ProductDetail() {
        },
     ]));
    const selectedIds = [product.id];
+   console.log(selectedIds);
     // dispatch(setCart(selectedItems));
     navigate(`/placeOrder?items=${selectedIds?.join(",")}`);
   }

@@ -3,9 +3,9 @@ import type {User,Cart } from "../types";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { authAPI } from "../api";
-import { getCartItems } from "../store/cartSlice";
 import { useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
+import { setCart } from "../store/cartSlice";
 // ── Types (your exact interfaces) ────────────────────────────
 
 // ── Seed data ─────────────────────────────────────────────────
@@ -224,7 +224,12 @@ const selectedIds = useMemo(
       const filteredItems = cart.filter((item) =>
       selectedIds.includes(item.productId)
     );
+    console.log("Filtered Items:", filteredItems);
+    if (filteredItems.length === 0) {
+      return 
+    }
     setCartItems(filteredItems);
+    dispatch(setCart(filteredItems));
     }
     fetchCart();
     
@@ -268,6 +273,8 @@ const selectedIds = useMemo(
   };
 
    const createOrder = async () => {
+    try {
+      console.log(cartState.cart);
     const res = await authAPI.post("/order/create",{
       phoneNumber: phone,
       shippingAddress: address,
@@ -282,13 +289,28 @@ const selectedIds = useMemo(
         if(res.status === 200) {
           console.log(res);
           if(payment === "khalti") {
+            setPlaced(true);
+            setLoading(false);
+            setOrderId(res.data?.orderId ?? "N/A");
             window.location.href = res.data.response;
           }
+          setPlaced(true);
+          setLoading(false);
+          setOrderId(res.data?.orderId ?? "N/A");
         }
         else {
           alert("order not placed");
+          setErrors((p) => ({ ...p, form: "Failed to place order. Please try again." }));
           return;
         }
+      }
+      catch (error) {
+        console.error(error);
+        alert("An error occurred while placing the order.");
+        setErrors((p) => ({ ...p, form: "Failed to place order. Please try again." }));
+        setLoading(false);
+        return;
+      }
   }
 
   const handleSubmit = () => {
