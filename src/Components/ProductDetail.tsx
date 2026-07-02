@@ -77,7 +77,9 @@ export default function ProductDetail() {
         productId: product.id
        },
     ]));
-    navigate("/placeOrder");
+   const selectedIds = [product.id];
+    // dispatch(setCart(selectedItems));
+    navigate(`/placeOrder?items=${selectedIds?.join(",")}`);
   }
 
   if (!product) {
