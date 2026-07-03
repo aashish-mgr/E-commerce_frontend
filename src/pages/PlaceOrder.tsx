@@ -225,11 +225,15 @@ const selectedIds = useMemo(
       selectedIds.includes(item.productId)
     );
     console.log("Filtered Items:", filteredItems);
-    if (filteredItems.length === 0) {
-      return 
-    }
-    setCartItems(filteredItems);
+    if (filteredItems.length !== 0) {
+      setCartItems(filteredItems);
     dispatch(setCart(filteredItems));
+    }
+    else {
+      setCartItems(cartState.cart);
+      return;
+    }
+    
     }
     fetchCart();
     
