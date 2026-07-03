@@ -65,9 +65,9 @@ export default function ProductDetail() {
   
   }, [id]);
 
-  const placeOrder = () => {
+  const placeOrder =async () => {
     if (!product) return;
-
+    await addToCart(quantity);
     dispatch(setCart([
       {
         Product: product,

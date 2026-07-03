@@ -1,7 +1,7 @@
 import { useState,useEffect,useMemo } from "react";
 import type {User,Cart } from "../types";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link ,useNavigate} from "react-router-dom";
 import { authAPI } from "../api";
 import { useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
@@ -146,6 +146,7 @@ function OrderSuccess({
   orderId: string;
   onBack: () => void;
 }) {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50 font-sans flex items-center justify-center px-4">
       <div className="bg-white border border-gray-200 rounded-2xl p-10 max-w-md w-full text-center shadow-sm">
@@ -173,7 +174,7 @@ function OrderSuccess({
           </span>
         </p>
         <div className="flex flex-col gap-3">
-          <button className="w-full bg-gray-900 text-white py-3 rounded-xl text-sm font-semibold hover:bg-gray-700 transition-colors">
+          <button className="w-full bg-gray-900 text-white py-3 rounded-xl text-sm font-semibold hover:bg-gray-700 transition-colors" onClick={() => navigate(`/orderDetail/${orderId}`)}>
             Track Order
           </button>
           <button
@@ -209,7 +210,7 @@ export default function PlaceOrder() {
 
   // Quantities (per cart item, editable on this page too)
   const [quantities, setQuantities] = useState<Record<string, number>>(
-    Object.fromEntries(cartItems.map((c) => [c.id, c.quantity])),
+    Object.fromEntries(cartItems?.map((c) => [c.id, c.quantity])),
   );
 const [searchParams] = useSearchParams();
 const selectedIds = useMemo(
@@ -235,6 +236,7 @@ const selectedIds = useMemo(
     }
     
     }
+    console.log("Selected IDs:", selectedIds);
     fetchCart();
     
     }, [])
@@ -293,10 +295,12 @@ const selectedIds = useMemo(
         if(res.status === 200) {
           console.log(res);
           if(payment === "khalti") {
+            window.location.href = res.data.response;
             setPlaced(true);
             setLoading(false);
             setOrderId(res.data?.orderId ?? "N/A");
-            window.location.href = res.data.response;
+            
+            return;
           }
           setPlaced(true);
           setLoading(false);
@@ -414,7 +418,7 @@ const selectedIds = useMemo(
                 </div> */}
 
                 {/* Phone */}
-                <Field label="Phone Number" required error={errors.phone}>
+                <Field label="Phone Number" required error={errors.phone} >
                   <div className="flex gap-2">
                     <span className="flex items-center px-3 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-500 whitespace-nowrap">
                       +977
@@ -427,7 +431,7 @@ const selectedIds = useMemo(
                         setPhone(e.target.value);
                         setErrors((p) => ({ ...p, phone: "" }));
                       }}
-                      className={inputClass(!!errors.phone) + " flex-1"}
+                      className={inputClass(!!errors.phone) + `flex-1 ${phone.length !== 10 ? inputClass(!!errors.phone) : ""}` }
                     />
                   </div>
                 </Field>

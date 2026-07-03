@@ -171,7 +171,11 @@ function OrderItemRow({ item }: { item: OrderItem }) {
 
         {/* Image */}
         <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-3xl sm:text-4xl">
-          {item.Product.image}
+          <img
+          src={`http://localhost:3000/uploads/${item.Product.image}`}
+          alt={item.Product.productName}
+          className="h-full w-full object-contain"
+        />
         </div>
 
         {/* Info */}
