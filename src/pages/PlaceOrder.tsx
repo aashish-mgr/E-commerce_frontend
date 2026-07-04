@@ -1,11 +1,12 @@
-import { useState,useEffect,useMemo } from "react";
-import type {User,Cart } from "../types";
+import { useState, useEffect, useMemo } from "react";
+import type { User, Cart } from "../types";
 import { useSelector } from "react-redux";
-import { Link ,useNavigate} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { authAPI } from "../api";
 import { useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { setCart } from "../store/cartSlice";
+import OrderSuccess from "../Components/OrderSuccess";
 // ── Types (your exact interfaces) ────────────────────────────
 
 // ── Seed data ─────────────────────────────────────────────────
@@ -87,9 +88,8 @@ const SHIPPING_FLAT = 9.99;
 // ── Helpers ───────────────────────────────────────────────────
 
 function formatPrice(n: number) {
-  return `Rs. ${n.toFixed(2)}`;
+  return `Rs. ${n?.toFixed(2)}`;
 }
-
 
 // ── Input field component ─────────────────────────────────────
 
@@ -137,57 +137,6 @@ function inputClass(hasError: boolean) {
   }`;
 }
 
-// ── Success screen ────────────────────────────────────────────
-
-function OrderSuccess({
-  orderId,
-  onBack,
-}: {
-  orderId: string;
-  onBack: () => void;
-}) {
-  const navigate = useNavigate();
-  return (
-    <div className="min-h-screen bg-gray-50 font-sans flex items-center justify-center px-4">
-      <div className="bg-white border border-gray-200 rounded-2xl p-10 max-w-md w-full text-center shadow-sm">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
-          <svg
-            width="30"
-            height="30"
-            fill="none"
-            stroke="#16a34a"
-            strokeWidth="2.5"
-            viewBox="0 0 24 24"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Placed!</h2>
-        <p className="text-gray-500 text-sm mb-1">
-          Your order has been placed successfully.
-        </p>
-        <p className="text-indigo-600 font-semibold text-sm mb-6">{orderId}</p>
-        <p className="text-xs text-gray-400 mb-8">
-          A confirmation will be sent to{" "}
-          <span className="font-medium text-gray-600">
-            {CURRENT_USER.userEmail}
-          </span>
-        </p>
-        <div className="flex flex-col gap-3">
-          <button className="w-full bg-gray-900 text-white py-3 rounded-xl text-sm font-semibold hover:bg-gray-700 transition-colors" onClick={() => navigate(`/orderDetail/${orderId}`)}>
-            Track Order
-          </button>
-          <button
-            onClick={onBack}
-            className="w-full border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
-          >
-            Continue Shopping
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Place Order Page ──────────────────────────────────────────
 
@@ -201,7 +150,6 @@ export default function PlaceOrder() {
   const cartState = useSelector((state: any) => state.cart);
   const dispatch = useDispatch();
 
-
   // UI state
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -210,44 +158,40 @@ export default function PlaceOrder() {
 
   // Quantities (per cart item, editable on this page too)
   const [quantities, setQuantities] = useState<Record<string, number>>(
-    Object.fromEntries(cartItems?.map((c) => [c.id, c.quantity])),
+    Object.fromEntries(cartItems? cartItems.map((c) => [c.id, c.quantity]): []),
   );
-const [searchParams] = useSearchParams();
-const selectedIds = useMemo(
-  () => searchParams.get('items')?.split(',') ?? [],
-  [searchParams]
-);
+  const [searchParams] = useSearchParams();
+  const selectedIds = useMemo(
+    () => searchParams.get("items")?.split(",") ?? [],
+    [searchParams],
+  );
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchCart = async () => {
       const res = await authAPI.get("/cart/getMyCarts");
       const cart: Cart[] = res.data?.data;
       const filteredItems = cart.filter((item) =>
-      selectedIds.includes(item.productId)
-    );
-    console.log("Filtered Items:", filteredItems);
-    if (filteredItems.length !== 0) {
-      setCartItems(filteredItems);
-    dispatch(setCart(filteredItems));
-    }
-    else {
-      setCartItems(cartState.cart);
-      return;
-    }
-    
-    }
+        selectedIds.includes(item.productId),
+      );
+      console.log("Filtered Items:", filteredItems);
+      if (filteredItems.length !== 0) {
+        setCartItems(filteredItems);
+        dispatch(setCart(filteredItems));
+      } else {
+        setCartItems(cartState.cart);
+        return;
+      }
+    };
     console.log("Selected IDs:", selectedIds);
     fetchCart();
-    
-    }, [])
-   
+  }, []);
 
   //  useEffect(() => {
   //   console.log(cartState.cart);
   //   setCartItems(cartState.cart);
-    
+
   //  }, [cartState])
-   
+
   const updateQty = (id: string, delta: number) => {
     setQuantities((prev) => ({
       ...prev,
@@ -255,10 +199,8 @@ const selectedIds = useMemo(
     }));
   };
 
- 
-
   // Pricing
-  const subtotal = cartItems.reduce(
+  const subtotal = cartItems?.reduce(
     (sum, item) =>
       sum + item.Product.productPrice * (quantities[item.id] ?? item.quantity),
     0,
@@ -278,51 +220,60 @@ const selectedIds = useMemo(
     return Object.keys(e).length === 0;
   };
 
-   const createOrder = async () => {
+  const createOrder = async () => {
     try {
       console.log(cartState.cart);
-    const res = await authAPI.post("/order/create",{
-      phoneNumber: phone,
-      shippingAddress: address,
-      totalAmount: total,
-      paymentDetails: {
-        paymentMethod: payment
-      },
-      items: cartState.cart
-      
-        })
+      const res = await authAPI.post("/order/create", {
+        phoneNumber: phone,
+        shippingAddress: address,
+        totalAmount: total,
+        paymentDetails: {
+          paymentMethod: payment,
+        },
+        items: cartState.cart,
+      });
 
-        if(res.status === 200) {
-          console.log(res);
-          if(payment === "khalti") {
-            window.location.href = res.data.response;
-            setPlaced(true);
-            setLoading(false);
-            setOrderId(res.data?.orderId ?? "N/A");
-            
-            return;
+      if (res.status === 200) {
+        console.log(res);
+        if (payment === "khalti") {
+          window.location.href = res.data.response;
+          const [searchParams] = useSearchParams();
+          const pidx = searchParams.get("pidx");
+          if (!pidx) {
+            alert("Payment failed or cancelled.");
           }
+          console.log(pidx);
           setPlaced(true);
           setLoading(false);
           setOrderId(res.data?.orderId ?? "N/A");
-        }
-        else {
-          alert("order not placed");
-          setErrors((p) => ({ ...p, form: "Failed to place order. Please try again." }));
+
           return;
         }
-      }
-      catch (error) {
-        console.error(error);
-        alert("An error occurred while placing the order.");
-        setErrors((p) => ({ ...p, form: "Failed to place order. Please try again." }));
+        setPlaced(true);
         setLoading(false);
+        setOrderId(res.data?.orderId ?? "N/A");
+      } else {
+        alert("order not placed");
+        setErrors((p) => ({
+          ...p,
+          form: "Failed to place order. Please try again.",
+        }));
         return;
       }
-  }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while placing the order.");
+      setErrors((p) => ({
+        ...p,
+        form: "Failed to place order. Please try again.",
+      }));
+      setLoading(false);
+      return;
+    }
+  };
 
   const handleSubmit = () => {
-    console.log(cartState.cart)
+    console.log(cartState.cart);
     if (!validate()) return;
     setLoading(true);
     createOrder();
@@ -363,25 +314,6 @@ const selectedIds = useMemo(
           </p>
         </div>
 
-        {/* Steps indicator */}
-        <div className="flex items-center gap-2 mb-8">
-          {["Shipping", "Payment", "Review"].map((step, i) => (
-            <div key={step} className="flex items-center gap-2">
-              <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                  i === 0
-                    ? "bg-gray-900 text-white"
-                    : "bg-gray-100 text-gray-400"
-                }`}
-              >
-                <span>{i + 1}</span>
-                <span>{step}</span>
-              </div>
-              {i < 2 && <div className="w-6 h-px bg-gray-200" />}
-            </div>
-          ))}
-        </div>
-
         <div className="grid lg:grid-cols-3 gap-6">
           {/* ── Left column — Forms ── */}
           <div className="lg:col-span-2 flex flex-col gap-5">
@@ -418,7 +350,7 @@ const selectedIds = useMemo(
                 </div> */}
 
                 {/* Phone */}
-                <Field label="Phone Number" required error={errors.phone} >
+                <Field label="Phone Number" required error={errors.phone}>
                   <div className="flex gap-2">
                     <span className="flex items-center px-3 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-500 whitespace-nowrap">
                       +977
@@ -431,7 +363,10 @@ const selectedIds = useMemo(
                         setPhone(e.target.value);
                         setErrors((p) => ({ ...p, phone: "" }));
                       }}
-                      className={inputClass(!!errors.phone) + `flex-1 ${phone.length !== 10 ? inputClass(!!errors.phone) : ""}` }
+                      className={
+                        inputClass(!!errors.phone) +
+                        `flex-1 ${phone.length !== 10 ? inputClass(!!errors.phone) : ""}`
+                      }
                     />
                   </div>
                 </Field>
@@ -522,17 +457,17 @@ const selectedIds = useMemo(
 
               {/* Item list */}
               <div className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1">
-                {cartItems.map((item) => {
+                {cartItems?.map((item) => {
                   const qty = quantities[item.id] ?? item.quantity;
                   return (
                     <div key={item.id} className="flex items-center gap-3">
                       {/* Image */}
                       <div className="w-12 h-12 shrink-0 bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-center text-xl">
-                       <img
-          src={`http://localhost:3000/uploads/${item.Product.image}`}
-          alt={item.Product.productName}
-          className="h-full w-full object-contain"
-        />
+                        <img
+                          src={`http://localhost:3000/uploads/${item.Product.image}`}
+                          alt={item.Product.productName}
+                          className="h-full w-full object-contain"
+                        />
                       </div>
 
                       {/* Name + qty controls */}
