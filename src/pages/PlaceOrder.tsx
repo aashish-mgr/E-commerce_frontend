@@ -150,6 +150,7 @@ export default function PlaceOrder() {
   const [payment, setPayment] = useState("esewa");
   const cartState = useSelector((state: any) => state.cart);
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
 
   // UI state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -161,7 +162,7 @@ export default function PlaceOrder() {
   const [quantities, setQuantities] = useState<Record<string, number>>(
     Object.fromEntries(cartItems? cartItems.map((c) => [c.id, c.quantity]): []),
   );
-  const [searchParams] = useSearchParams();
+  
   const selectedIds = useMemo(
     () => searchParams.get("items")?.split(",") ?? [],
     [searchParams],
@@ -239,13 +240,13 @@ export default function PlaceOrder() {
          cartItems.map(c => dispatch(deleteCartItem(c.id) as any));
         if (payment === "khalti") {
           window.location.href = res.data.response;
-          const [searchParams] = useSearchParams();
+          
           const pidx = searchParams.get("pidx");
           if (!pidx) {
             alert("Payment failed or cancelled.");
           }
-          console.log(pidx);
-          setPlaced(true);
+         
+         
           setLoading(false);
           setOrderId(res.data?.orderId ?? "N/A");
 
@@ -255,7 +256,7 @@ export default function PlaceOrder() {
         setLoading(false);
         setOrderId(res.data?.orderId ?? "N/A");
       } else {
-        alert("order not placed");
+        
         setErrors((p) => ({
           ...p,
           form: "Failed to place order. Please try again.",
@@ -263,8 +264,8 @@ export default function PlaceOrder() {
         return;
       }
     } catch (error) {
-      console.error(error);
-      alert("An error occurred while placing the order.");
+      console.log(error);
+      alert("Failed to place order. Please try again.");
       setErrors((p) => ({
         ...p,
         form: "Failed to place order. Please try again.",
