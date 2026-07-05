@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { setCart } from "../store/cartSlice";
 import OrderSuccess from "../Components/OrderSuccess";
+import { deleteCartItem } from "../store/cartSlice";
 // ── Types (your exact interfaces) ────────────────────────────
 
 // ── Seed data ─────────────────────────────────────────────────
@@ -235,6 +236,7 @@ export default function PlaceOrder() {
 
       if (res.status === 200) {
         console.log(res);
+         cartItems.map(c => dispatch(deleteCartItem(c.id) as any));
         if (payment === "khalti") {
           window.location.href = res.data.response;
           const [searchParams] = useSearchParams();
