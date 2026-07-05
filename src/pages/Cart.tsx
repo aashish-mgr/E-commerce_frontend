@@ -4,7 +4,7 @@ import type { Cart } from "../types";
 import { Link,useNavigate} from "react-router-dom";
 import { setCart } from "../store/cartSlice";
 import { useDispatch,useSelector } from "react-redux";
-import { getCartItems } from "../store/cartSlice";
+import { getCartItems,deleteCartItem } from "../store/cartSlice";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -211,7 +211,7 @@ export default function Cart() {
 
   const placeOrder = () => {
     const selectedIds = selectedItems?.map( i => i.productId);
-    console.log(selectedIds);
+   
     // dispatch(setCart(selectedItems));
     navigate(`/placeOrder?items=${selectedIds?.join(",")}`);
   }
@@ -219,7 +219,7 @@ export default function Cart() {
   const deleteCart = async (id: string) => {
     try {
       if (!id) return;
-      await authAPI.delete(`/cart/delete/${id}`);
+      await dispatch(deleteCartItem(id) as any);
       await dispatch(getCartItems()as any);
     } catch (err) {
       alert("Something went wrong");
@@ -441,4 +441,6 @@ function PriceLine({
       </span>
     </div>
   );
+
 }
+
