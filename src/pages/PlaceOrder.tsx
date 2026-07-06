@@ -12,57 +12,7 @@ import { deleteCartItem } from "../store/cartSlice";
 
 // ── Seed data ─────────────────────────────────────────────────
 
-const CURRENT_USER: User = {
-  userName: "Alex Johnson",
-  userEmail: "alex@example.com",
-  userRole: "user",
-};
 
-// Only selected cart items are passed to the order page
-// const cartItems: Cart[] = [
-//   {
-//     id: "cart-1",
-//     quantity: 1,
-//     selected: true,
-//     Product: {
-//       id: "p-1",
-//       productName: "Wireless Headphones",
-//       productPrice: 89,
-//       productDescription:
-//         "Premium over-ear headphones with active noise cancellation and 30-hour battery life.",
-//       image: "🎧",
-//       Category: { categoryName: "Electronics" },
-//     },
-//   },
-//   {
-//     id: "cart-2",
-//     quantity: 2,
-//     selected: true,
-//     Product: {
-//       id: "p-2",
-//       productName: "Leather Wallet",
-//       productPrice: 45,
-//       productDescription:
-//         "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots.",
-//       image: "👛",
-//       Category: { categoryName: "Accessories" },
-//     },
-//   },
-//   {
-//     id: "cart-3",
-//     quantity: 1,
-//     selected: true,
-//     Product: {
-//       id: "p-3",
-//       productName: "Mechanical Keyboard",
-//       productPrice: 149,
-//       productDescription:
-//         "TKL layout with tactile brown switches, per-key RGB backlighting, and aluminum body.",
-//       image: "⌨️",
-//       Category: { categoryName: "Electronics" },
-//     },
-//   },
-// ];
 
 const PAYMENT_METHODS = [
   {
@@ -151,12 +101,17 @@ export default function PlaceOrder() {
   const cartState = useSelector((state: any) => state.cart);
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
+  const authState = useSelector((state: any) => state.auth);
 
   // UI state
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [placed, setPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
+
+  
+const CURRENT_USER: User = authState?.user?.data;
+
 
   // Quantities (per cart item, editable on this page too)
   const [quantities, setQuantities] = useState<Record<string, number>>(
@@ -311,9 +266,9 @@ export default function PlaceOrder() {
           <p className="text-sm text-gray-500 mt-0.5">
             Ordering as{" "}
             <span className="font-medium text-gray-700">
-              {CURRENT_USER.userName}
+              {CURRENT_USER?.userName}
             </span>{" "}
-            · {CURRENT_USER.userEmail}
+            · {CURRENT_USER?.userEmail}
           </p>
         </div>
 
