@@ -33,7 +33,7 @@ export default function ProductCard({ product, onAddToCart }: Props) {
       {/* Thumbnail */}
       <div className="bg-gray-50 h-36 flex items-center justify-center text-5xl relative">
         <img
-          src={`http://localhost:3000/uploads/${product.image}`}
+          src={product.image}
           alt={product.productName}
           className="h-full w-full object-contain"
         />

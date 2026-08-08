@@ -107,7 +107,7 @@ export default function ProductDetail() {
             {/* Main image */}
             <div className="bg-white border border-gray-200 rounded-2xl flex items-center justify-center h-95 text-[130px] select-none">
               <img
-          src={`http://localhost:3000/uploads/${product.image}`}
+          src={product.image}
           alt={product.productName}
           className="h-full w-full object-contain"
         />

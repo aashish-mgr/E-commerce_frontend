@@ -51,3 +51,5 @@ export enum STATUS {
     Success = "success",
     Error = "error"
 }
+
+export type VerificationStatus = "verifying" | "success" | "failed";
