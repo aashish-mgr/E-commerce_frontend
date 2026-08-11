@@ -17,6 +17,7 @@ import Orders from './pages/Order.tsx'
 import OrderDetail from './pages/OrderDetail.tsx'
 import PlaceOrder from './pages/PlaceOrder.tsx'
 import PaymentCallback from './pages/PaymentCallback.tsx'
+import AuthComplete from './pages/AuthComplete.tsx'
 
 function App() {
   const dispatch = useDispatch();
@@ -45,6 +46,7 @@ function App() {
             <Route path= '/orderDetail/:id' element={<OrderDetail />} />
             <Route path= '/placeOrder' element= {<PlaceOrder />} />
             <Route path = '/paymentCallback' element= {<PaymentCallback />} />
+            <Route path = '/auth/complete' element= {<AuthComplete />} />
            </Routes>
         </BrowserRouter>
         </NavbarProvider>
