@@ -52,10 +52,10 @@ export default function Dashboard() {
     }
   }
 
-  const CURRENT_USER: User = authState.user?.data ;
+  const CURRENT_USER: User | null = authState.user ?? null;
   useEffect(() => {
     getProducts();
-    console.log(authState.user?.data);
+    console.log(authState.user);
   },[])
 
   

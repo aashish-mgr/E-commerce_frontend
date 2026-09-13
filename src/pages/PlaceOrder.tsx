@@ -110,7 +110,7 @@ export default function PlaceOrder() {
   const [orderId, setOrderId] = useState("");
 
   
-const CURRENT_USER: User = authState?.user?.data;
+const CURRENT_USER: User | null = authState?.user ?? null;
 
 
   // Quantities (per cart item, editable on this page too)
