@@ -3,48 +3,6 @@ import { authAPI, getImageUrl } from "../api";
 import { useParams } from "react-router-dom";
 import type { Order,OrderItem } from "../types";
 import { Link } from "react-router-dom";
-// ── Types ─────────────────────────────────────────────────────
-
-
-
-// ── Seed data ─────────────────────────────────────────────────
-
-// const ORDER: Order = {
-//   id: "ORD-7821",
-//   shippingAddress: "221B Baker Street, Kathmandu, Bagmati Province, Nepal",
-//   phoneNumber: 9812345678,
-//   totalAmount: 178,
-//   orderStatus: "shipped",
-//   createdAt: "2026-06-14T10:32:00Z",
-//   OrderDetails: [
-//     {
-//       id: "od-1",
-//       quantity: 1,
-//       orderId: "ORD-7821",
-//       Product: {
-//         id: "p-1",
-//         productName: "Wireless Headphones",
-//         price: 89,
-//         description: "Premium over-ear headphones with active noise cancellation and 30-hour battery life.",
-//         category: "Electronics",
-//         image: "🎧",
-//       },
-//     },
-//     {
-//       id: "od-2",
-//       quantity: 2,
-//       orderId: "ORD-7821",
-//       Product: {
-//         id: "p-2",
-//         name: "Leather Wallet",
-//         price: 45,
-//         description: "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots.",
-//         category: "Accessories",
-//         image: "👛",
-//       },
-//     },
-//   ],
-// };
 
 // ── Status styling ───────────────────────────────────────────
 
@@ -230,11 +188,9 @@ export default function OrderDetail() {
   const getOrderDetail = async () => {
     try{
       const res = await authAPI.get(`/order/getOrderDetail/${id}`);
-      console.log(res);
       setOrder(res.data?.data[0]);
     }
     catch(err) {
-      console.log(err);
     }
   }
 

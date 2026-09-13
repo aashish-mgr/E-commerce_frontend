@@ -9,18 +9,6 @@ import { API } from "../api/index"
 import { useNavbar } from "../context/NavbarContext";
 
 
-// const PRODUCTS: Product[] = [
-//   { id: 1,  name: "Wireless Headphones",  price: 89,  category: "Electronics", emoji: "🎧", rating: 4.5, inStock: true,  description: "Premium over-ear headphones with active noise cancellation and 30-hour battery life." },
-//   { id: 2,  name: "Running Shoes",        price: 120, category: "Footwear",    emoji: "👟", rating: 4.8, inStock: true,  description: "Lightweight, breathable shoes with responsive cushioning for long-distance runs." },
-//   { id: 3,  name: "Leather Wallet",       price: 45,  category: "Accessories", emoji: "👛", rating: 4.2, inStock: true,  description: "Slim bi-fold wallet crafted from genuine full-grain leather with 6 card slots." },
-//   { id: 4,  name: "Sunglasses",           price: 65,  category: "Accessories", emoji: "🕶️", rating: 4.0, inStock: false, description: "UV400 polarized lenses in a lightweight titanium frame. Ideal for all-day outdoor wear." },
-//   { id: 5,  name: "Mechanical Keyboard",  price: 149, category: "Electronics", emoji: "⌨️", rating: 4.7, inStock: true,  description: "TKL layout with tactile brown switches, per-key RGB backlighting, and aluminum body." },
-//   { id: 6,  name: "Yoga Mat",             price: 38,  category: "Sports",      emoji: "🧘", rating: 4.3, inStock: true,  description: "6mm thick non-slip mat made from eco-friendly TPE material. Includes carry strap." },
-//   { id: 7,  name: "Ceramic Coffee Mug",   price: 22,  category: "Home",        emoji: "☕", rating: 4.6, inStock: true,  description: "Hand-thrown 12oz ceramic mug with a comfortable handle. Microwave and dishwasher safe." },
-//   { id: 8,  name: "Smart Water Bottle",   price: 55,  category: "Sports",      emoji: "🍶", rating: 4.4, inStock: false, description: "Insulated stainless steel bottle that tracks hydration and glows to remind you to drink." },
-// ];
-
-
 const STATS = [
   { value: "50k+", label: "Happy Customers" },
   { value: "10k+", label: "Products" },
@@ -43,9 +31,8 @@ export default function LandingPage() {
   const openRegister = useCallback(() => setAuthMode("register"), []);
   const closeModal = useCallback(() => setAuthMode(""), []);
   const switchMode = useCallback(() => setAuthMode((m) => (m === "login" ? "register" : "login")), []);
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = () => {
     // Implement add to cart functionality here
-    console.log("Added to cart:", product);
   };
 
   const navbarData = useMemo(
@@ -83,7 +70,6 @@ export default function LandingPage() {
     if(authState.isAuthenticated) {
       closeModal();
       navigate('/dashboard');
-      console.log(authState.isAuthenticated);
     }
   }, [authState.isAuthenticated]);
 
@@ -138,7 +124,6 @@ export default function LandingPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Featured Products</h2>
           <p className="text-gray-500 mb-8">Hand-picked just for you</p>
 
-          ProductCard component used here — receives product as a prop
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {products.map((product: Product) => (
               <ProductCardts key={product.id} product={product} onAddToCart={handleAddToCart}/>

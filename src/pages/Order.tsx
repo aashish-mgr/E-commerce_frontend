@@ -5,62 +5,6 @@ import { useNavigate } from "react-router-dom";
 import type { Order } from "../types";
 import type { OrderStatus } from "../types";
 
-// ── Seed data ─────────────────────────────────────────────────
-
-// const ORDERS: Order[] = [
-//   {
-//     id: "ORD-7821",
-//     date: "June 14, 2026",
-//     status: "delivered",
-//     items: [
-//       { id: 1, name: "Wireless Headphones", emoji: "🎧", price: 89, quantity: 1 },
-//       { id: 2, name: "Leather Wallet",      emoji: "👛", price: 45, quantity: 2 },
-//     ],
-//   },
-//   {
-//     id: "ORD-7799",
-//     date: "June 10, 2026",
-//     status: "shipped",
-//     items: [
-//       { id: 3, name: "Running Shoes", emoji: "👟", price: 120, quantity: 1 },
-//     ],
-//   },
-//   {
-//     id: "ORD-7765",
-//     date: "June 3, 2026",
-//     status: "pending",
-//     items: [
-//       { id: 4, name: "Mechanical Keyboard", emoji: "⌨️", price: 149, quantity: 1 },
-//       { id: 5, name: "Ceramic Coffee Mug",  emoji: "☕", price: 22,  quantity: 3 },
-//     ],
-//   },
-//   {
-//     id: "ORD-7702",
-//     date: "May 28, 2026",
-//     status: "cancelled",
-//     items: [
-//       { id: 6, name: "Smart Water Bottle", emoji: "🍶", price: 55, quantity: 1 },
-//     ],
-//   },
-//   {
-//     id: "ORD-7654",
-//     date: "May 20, 2026",
-//     status: "delivered",
-//     items: [
-//       { id: 7, name: "Yoga Mat", emoji: "🧘", price: 38, quantity: 1 },
-//       { id: 8, name: "Sunglasses", emoji: "🕶️", price: 65, quantity: 1 },
-//     ],
-//   },
-//   {
-//     id: "ORD-7601",
-//     date: "May 12, 2026",
-//     status: "shipped",
-//     items: [
-//       { id: 9, name: "Wireless Headphones", emoji: "🎧", price: 89, quantity: 2 },
-//     ],
-//   },
-// ];
-
 const STATUS_TABS: { label: string; value: OrderStatus | "all" }[] = [
   { label: "All", value: "all" },
   { label: "Pending", value: "pending" },
@@ -273,16 +217,13 @@ export default function Orders() {
   const fetchOrders = async () => {
     try {
       const res = await authAPI.get("/order/getMyOrders");
-      console.log(res.data?.data);
       setOrders(res.data?.data);
     } catch (err) {
-      console.log(err);
     }
   };
 
   useEffect(() => {
     fetchOrders();
-    console.log(orders);
   }, []);
 
   const statusCounts = useMemo(() => {

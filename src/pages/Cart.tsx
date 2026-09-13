@@ -5,29 +5,6 @@ import { Link,useNavigate} from "react-router-dom";
 import { useDispatch,useSelector } from "react-redux";
 import { getCartItems,deleteCartItem } from "../store/cartSlice";
 
-// ── Types ─────────────────────────────────────────────────────
-
-// interface CartItem {
-//   id: number;
-//   name: string;
-//   brand: string;
-//   category: string;
-//   price: number;
-//   emoji: string;
-//   maxQty: number;
-//   quantity: number;
-//   selected: boolean;
-// }
-
-// ── Seed data ─────────────────────────────────────────────────
-
-// const INITIAL_ITEMS: Cart[] = [
-//   { id: 1, name: "Wireless Headphones",   brand: "SoundCore",  category: "Electronics", price: 89,  emoji: "🎧", maxQty: 10, quantity: 1, selected: true  },
-//   { id: 2, name: "Running Shoes",         brand: "StridePro",  category: "Footwear",    price: 120, emoji: "👟", maxQty: 5,  quantity: 2, selected: true  },
-//   { id: 3, name: "Leather Wallet",        brand: "CraftedCo",  category: "Accessories", price: 45,  emoji: "👛", maxQty: 8,  quantity: 1, selected: false },
-//   { id: 4, name: "Mechanical Keyboard",   brand: "TypeMaster", category: "Electronics", price: 149, emoji: "⌨️", maxQty: 4,  quantity: 1, selected: true  },
-// ];
-
 const SHIPPING_THRESHOLD = 50; // free shipping above this
 const TAX_RATE           = 0.08;
 const SHIPPING_FLAT      = 9.99;
@@ -191,16 +168,6 @@ export default function Cart() {
   const increment      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity < 15? { ...i, quantity: i.quantity + 1 } : i));
   const decrement      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity > 1 ? { ...i, quantity: i.quantity - 1 } : i));
 
-
-  // const getCartItems = async () => {
-  //   try {
-  //     const res = await authAPI.get('/cart/getMyCarts');
-  //     setItems(res.data?.data ?? []);
-  //   } catch (err) {
-  //     setItems([]);
-  //   }
-  // }
-
   useEffect(() => {
     dispatch(getCartItems() as any);
   }, []);
@@ -211,7 +178,6 @@ export default function Cart() {
   const placeOrder = () => {
     const selectedIds = selectedItems?.map( i => i.productId);
    
-    // dispatch(setCart(selectedItems));
     navigate(`/placeOrder?items=${selectedIds?.join(",")}`);
   }
 

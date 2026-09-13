@@ -76,23 +76,20 @@ const AuthModal = ({ mode, onClose, onSwitch }: any) => {
             type="button"
             onClick={() => {
               if (mode === "register") {
-                const result = dispatch(
+                dispatch(
                   registerUser({
                     userName: name,
                     userEmail: email,
                     userPassword: password,
                   }),
                 );
-
-                console.log(result);
               } else {
-                const result = dispatch(
+                dispatch(
                   loginUser({
                     userEmail: email,
                     userPassword: password,
                   }),
                 );
-                console.log(result);
               }
             }}
             className="w-full bg-gray-900 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-gray-700 transition-colors mt-1"

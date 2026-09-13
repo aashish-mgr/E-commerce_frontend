@@ -6,29 +6,6 @@ import { Link,useNavigate } from "react-router-dom";
 import { setCart } from "../store/cartSlice";
 import { useDispatch } from "react-redux";
 
-
-
-
-
-// const product = {
-//   name: "Wireless Noise-Cancelling Headphones",
-//   brand: "SoundCore",
-//   category: "Electronics",
-//   price: 89,
-//   originalPrice: 129,
-//   rating: 4.5,
-//   reviewCount: 248,
-//   emoji: "🎧",
-//   inStock: true,
-//   stockCount: 12,
-//   sku: "SC-WH-1000XM4",
-//   tags: ["Wireless", "Noise Cancelling", "Bluetooth 5.0", "30hr Battery"],
-//   description: `Experience music the way it was meant to be heard. The SoundCore WH-1000XM4 
-//   delivers industry-leading noise cancellation powered by our proprietary HD Noise Cancelling 
-//   Processor, letting you focus on what matters most.`,
-  
-// };
-
 export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -78,7 +55,6 @@ export default function ProductDetail() {
        },
     ]));
    const selectedIds = [product.id];
-   console.log(selectedIds);
     // dispatch(setCart(selectedItems));
     navigate(`/placeOrder?items=${selectedIds?.join(",")}`);
   }

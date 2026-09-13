@@ -130,7 +130,6 @@ const CURRENT_USER: User | null = authState?.user ?? null;
       const filteredItems = cart.filter((item) =>
         selectedIds.includes(item.productId),
       );
-      console.log("Filtered Items:", filteredItems);
       if (filteredItems.length !== 0) {
         setCartItems(filteredItems);
         dispatch(setCart(filteredItems));
@@ -138,7 +137,6 @@ const CURRENT_USER: User | null = authState?.user ?? null;
         setCartItems(cartState.cart);
       }
     };
-    console.log("Selected IDs:", selectedIds);
     fetchCart();
   }, []);
 
@@ -148,12 +146,6 @@ const CURRENT_USER: User | null = authState?.user ?? null;
       Object.fromEntries(cartItems.map((c) => [c.id, c.quantity])),
     );
   }, [cartItems]);
-
-  //  useEffect(() => {
-  //   console.log(cartState.cart);
-  //   setCartItems(cartState.cart);
-
-  //  }, [cartState])
 
   const updateQty = (id: string, delta: number) => {
     setQuantities((prev) => ({
@@ -200,7 +192,6 @@ const CURRENT_USER: User | null = authState?.user ?? null;
       });
 
       if (res.status === 200) {
-        console.log(res);
          cartItems.map(c => dispatch(deleteCartItem(c.id) as any));
         if (payment === "khalti") {
           window.location.href = res.data.response;
@@ -228,7 +219,6 @@ const CURRENT_USER: User | null = authState?.user ?? null;
         return;
       }
     } catch (error) {
-      console.log(error);
       alert("Failed to place order. Please try again.");
       setErrors((p) => ({
         ...p,
@@ -240,7 +230,6 @@ const CURRENT_USER: User | null = authState?.user ?? null;
   };
 
   const handleSubmit = () => {
-    console.log(cartState.cart);
     if (!validate()) return;
     setLoading(true);
     createOrder();

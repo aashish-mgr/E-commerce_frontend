@@ -27,7 +27,6 @@ const PaymentCallback = () => {
 
         if (res.status === 200) {
           setStatus('success');
-          console.log(res);
           setTimeout(() => navigate(`/orderDetail/${res.data?.data?.Order?.id}`), 1500);
         } else {
           setStatus('failed');
