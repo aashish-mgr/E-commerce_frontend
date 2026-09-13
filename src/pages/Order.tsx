@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { authAPI } from "../api";
+import { authAPI, getImageUrl } from "../api";
 import { useNavigate } from "react-router-dom";
 // ── Types ─────────────────────────────────────────────────────
 import type { Order } from "../types";
@@ -183,7 +183,7 @@ const navigate = useNavigate();
               {/* Image */}
               <div className="w-14 h-14 shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-2xl">
                 <img
-                  src={`http://localhost:3000/uploads/${item.Product.image}`}
+                  src={getImageUrl(item.Product.image)}
                   alt={item.Product.productName}
                   className="h-full w-full object-contain"
                 />

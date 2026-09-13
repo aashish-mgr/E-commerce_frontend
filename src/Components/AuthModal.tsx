@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { loginUser,  registerUser } from "../store/authSlice";
+import { API_BASE } from "../api";
 
 const AuthModal = ({ mode, onClose, onSwitch }: any) => {
   const dispatch = useDispatch<any>();
@@ -10,7 +11,7 @@ const AuthModal = ({ mode, onClose, onSwitch }: any) => {
 
   const handleGoogleLogin = () => {
   window.location.href =
-    "http://localhost:3000/auth/google";
+    `${API_BASE}/auth/google`;
 };
 
   return (

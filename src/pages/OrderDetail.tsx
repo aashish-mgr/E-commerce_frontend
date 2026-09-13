@@ -1,5 +1,5 @@
 import { useState,useEffect } from "react";
-import { authAPI } from "../api";
+import { authAPI, getImageUrl } from "../api";
 import { useParams } from "react-router-dom";
 import type { Order,OrderItem } from "../types";
 import { Link } from "react-router-dom";
@@ -172,7 +172,7 @@ function OrderItemRow({ item }: { item: OrderItem }) {
         {/* Image */}
         <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-3xl sm:text-4xl">
           <img
-          src={`http://localhost:3000/uploads/${item.Product.image}`}
+          src={getImageUrl(item.Product.image)}
           alt={item.Product.productName}
           className="h-full w-full object-contain"
         />

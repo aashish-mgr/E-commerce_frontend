@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import type { User, Cart } from "../types";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { authAPI } from "../api";
+import { authAPI, getImageUrl } from "../api";
 import { useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { setCart } from "../store/cartSlice";
@@ -431,7 +431,7 @@ const CURRENT_USER: User | null = authState?.user ?? null;
                       {/* Image */}
                       <div className="w-12 h-12 shrink-0 bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-center text-xl">
                         <img
-                          src={`http://localhost:3000/uploads/${item.Product.image}`}
+                          src={getImageUrl(item.Product.image)}
                           alt={item.Product.productName}
                           className="h-full w-full object-contain"
                         />

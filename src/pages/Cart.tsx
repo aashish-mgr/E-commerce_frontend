@@ -1,4 +1,5 @@
 import { useState,useEffect } from "react";
+import { getImageUrl } from "../api";
 import type { Cart } from "../types";
 import { Link,useNavigate} from "react-router-dom";
 import { useDispatch,useSelector } from "react-redux";
@@ -102,7 +103,7 @@ function CartItemRow({
       {/* Thumbnail */}
       <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-3xl sm:text-4xl select-none">
         <img
-          src={`http://localhost:3000/uploads/${item.Product.image}`}
+          src={getImageUrl(item.Product.image)}
           alt={item.Product.productName}
           className="h-full w-full object-contain"
         />
