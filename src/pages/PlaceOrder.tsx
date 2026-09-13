@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import type { User, Cart } from "../types";
 import { useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { authAPI } from "../api";
 import { useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
@@ -134,14 +134,20 @@ const CURRENT_USER: User = authState?.user?.data;
       if (filteredItems.length !== 0) {
         setCartItems(filteredItems);
         dispatch(setCart(filteredItems));
-      } else {
+      } else if (cartState.cart) {
         setCartItems(cartState.cart);
-        return;
       }
     };
     console.log("Selected IDs:", selectedIds);
     fetchCart();
   }, []);
+
+  useEffect(() => {
+    if (cartItems.length === 0) return;
+    setQuantities(
+      Object.fromEntries(cartItems.map((c) => [c.id, c.quantity])),
+    );
+  }, [cartItems]);
 
   //  useEffect(() => {
   //   console.log(cartState.cart);
@@ -179,7 +185,10 @@ const CURRENT_USER: User = authState?.user?.data;
 
   const createOrder = async () => {
     try {
-      console.log(cartState.cart);
+      const items = cartItems.map((c) => ({
+        productId: c.productId,
+        quantity: quantities[c.id] ?? c.quantity,
+      }));
       const res = await authAPI.post("/order/create", {
         phoneNumber: phone,
         shippingAddress: address,
@@ -187,7 +196,7 @@ const CURRENT_USER: User = authState?.user?.data;
         paymentDetails: {
           paymentMethod: payment,
         },
-        items: cartState.cart,
+        items,
       });
 
       if (res.status === 200) {
