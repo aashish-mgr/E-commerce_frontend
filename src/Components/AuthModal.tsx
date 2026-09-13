@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { loginUser,  registerUser } from "../store/authSlice";
-import { redirect } from "react-router-dom";
 
 const AuthModal = ({ mode, onClose, onSwitch }: any) => {
   const dispatch = useDispatch<any>();

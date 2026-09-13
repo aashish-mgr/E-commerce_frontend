@@ -1,8 +1,6 @@
 import { useState,useEffect } from "react";
-import { authAPI } from "../api";
 import type { Cart } from "../types";
 import { Link,useNavigate} from "react-router-dom";
-import { setCart } from "../store/cartSlice";
 import { useDispatch,useSelector } from "react-redux";
 import { getCartItems,deleteCartItem } from "../store/cartSlice";
 

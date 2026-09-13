@@ -11,17 +11,10 @@ export default function ProductCard({ product, onAddToCart }: Props) {
   const [added, setAdded] = useState(false);
   const navigate = useNavigate();
 
-  // const handleAdd = () => {
-  //   if (!product.inStock) return;
-  //   onAddToCart(product);
-  //   setAdded(true);
-  //   setTimeout(() => setAdded(false), 1500);
-  // };
   const handleAdd = () => {
     onAddToCart(product);
     setAdded(true);
-
-  }
+  };
 
   const handleProduct = (id: string) => {
      navigate(`/product/${id}`);
@@ -61,16 +54,15 @@ export default function ProductCard({ product, onAddToCart }: Props) {
         {/* Price + button */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <span className="font-bold text-gray-900 text-lg">Rs.{product.productPrice}</span>
-          {/* <button
-            onClick= {handleAdd}
-            
+          <button
+            onClick={handleAdd}
             className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${ added
                 ? "bg-green-600 text-white"
                 : "bg-gray-900 text-white hover:bg-gray-700"
                 }` }
           >
             {added ? "Added ✓" : "Add to Cart"}
-          </button> */}
+          </button>
         </div>
       </div>
     </div>
