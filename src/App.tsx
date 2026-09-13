@@ -1,7 +1,4 @@
-
 import './App.css'
-import {Provider} from 'react-redux'
-import store from './store/store'
 import { BrowserRouter,Route,Routes } from 'react-router-dom'
 import LandingPage from './pages/LandingPage.tsx'
 import Dashboard from './pages/Dashboard.tsx'
@@ -12,12 +9,14 @@ import { useDispatch } from 'react-redux'
 import ProductDetail from './Components/ProductDetail.tsx'
 import NavbarProvider from './context/NavbarContext.tsx'
 import Navbar from './Components/Navbar.tsx'
+import ProtectedRoute from './Components/ProtectedRoute.tsx'
 import Cart from './pages/Cart.tsx'
 import Orders from './pages/Order.tsx'
 import OrderDetail from './pages/OrderDetail.tsx'
 import PlaceOrder from './pages/PlaceOrder.tsx'
 import PaymentCallback from './pages/PaymentCallback.tsx'
 import AuthComplete from './pages/AuthComplete.tsx'
+import Login from './pages/Login.tsx'
 
 function App() {
   const dispatch = useDispatch();
@@ -31,30 +30,23 @@ function App() {
   }, [dispatch]);
 
   return (
-    <>
-      <Provider store={store}>
-        <NavbarProvider>
-         
-        <BrowserRouter> 
-          <Navbar />
-          <Routes>
-            <Route path='/' element={<LandingPage/>} />
-            <Route path='/dashboard' element={<Dashboard/>} />
-            <Route path='/product/:id' element={<ProductDetail />} />
-            <Route path='/cart' element={<Cart />} />
-            <Route path= '/orders' element={<Orders />} />
-            <Route path= '/orderDetail/:id' element={<OrderDetail />} />
-            <Route path= '/placeOrder' element= {<PlaceOrder />} />
-            <Route path = '/paymentCallback' element= {<PaymentCallback />} />
-            <Route path = '/auth/complete' element= {<AuthComplete />} />
-           </Routes>
-        </BrowserRouter>
-        </NavbarProvider>
-
-      </Provider>
-    
-    
-    </>
+    <NavbarProvider>
+      <BrowserRouter>
+        <Navbar />
+        <Routes>
+          <Route path='/' element={<LandingPage/>} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path='/product/:id' element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
+          <Route path='/cart' element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path='/orders' element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path='/orderDetail/:id' element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+          <Route path='/placeOrder' element={<ProtectedRoute><PlaceOrder /></ProtectedRoute>} />
+          <Route path='/paymentCallback' element={<ProtectedRoute><PaymentCallback /></ProtectedRoute>} />
+          <Route path='/auth/complete' element={<AuthComplete />} />
+        </Routes>
+      </BrowserRouter>
+    </NavbarProvider>
   )
 }
 
