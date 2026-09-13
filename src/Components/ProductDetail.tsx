@@ -221,7 +221,7 @@ export default function ProductDetail() {
               {/* Reassurance strip */}
               <div className="grid grid-cols-3 gap-2 mt-2">
                 {[
-                  { icon: "🚚", label: "Free Delivery",   sub: "Orders over $50" },
+                  { icon: "🚚", label: "Free Delivery",   sub: "Orders over Rs. 50" },
                   { icon: "↩️", label: "Easy Returns",    sub: "30-day window" },
                   { icon: "🔒", label: "Secure Payment",  sub: "SSL encrypted" },
                 ].map(({ icon, label, sub }) => (

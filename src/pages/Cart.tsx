@@ -324,7 +324,7 @@ export default function Cart() {
                       </span>{" "}
                       more for free shipping
                     </span>
-                    <span className="text-xs text-gray-400">🚚 Free over ${SHIPPING_THRESHOLD}</span>
+                    <span className="text-xs text-gray-400">🚚 Free over Rs.{SHIPPING_THRESHOLD}</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-1.5">
                     <div

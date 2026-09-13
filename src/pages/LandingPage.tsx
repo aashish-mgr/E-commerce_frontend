@@ -24,7 +24,7 @@ import { useNavbar } from "../context/NavbarContext";
 const STATS = [
   { value: "50k+", label: "Happy Customers" },
   { value: "10k+", label: "Products" },
-  { value: "Free", label: "Shipping over $50" },
+  { value: "Free", label: "Shipping over Rs. 50" },
   { value: "24/7", label: "Support" },
 ];
 
@@ -103,7 +103,7 @@ export default function LandingPage() {
           </h1>
           <p className="text-gray-500 text-lg max-w-xl mx-auto mb-8">
             Discover thousands of quality products at unbeatable prices.
-            Free shipping on orders over $50.
+            Free shipping on orders over Rs. 50.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <a

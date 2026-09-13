@@ -61,7 +61,7 @@ const STATUS_STEPS = ["pending", "shipped", "delivered"];
 
 function formatPrice(n: number | string) {
   const value = typeof n === "number" ? n : Number(n);
-  return isNaN(value) ? "$0.00" : `$${value.toFixed(2)}`;
+  return isNaN(value) ? "Rs. 0.00" : `Rs. ${value.toFixed(2)}`;
 }
 
 function formatDate(iso: string ) {
