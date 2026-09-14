@@ -21,7 +21,8 @@ interface User{
 interface RegisterData {
      userName: string, 
      userEmail: string,
-     userPassword: string
+     userPassword: string,
+     userRole: string
 }
 
 interface LoginData {

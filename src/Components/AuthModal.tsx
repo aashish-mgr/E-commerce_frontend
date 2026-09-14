@@ -8,6 +8,7 @@ const AuthModal = ({ mode, onClose, onSwitch }: any) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("customer");
 
   const handleGoogleLogin = () => {
   window.location.href =
@@ -42,13 +43,31 @@ const AuthModal = ({ mode, onClose, onSwitch }: any) => {
         {/* Fields */}
         <div className="flex flex-col gap-3">
           {mode === "register" && (
-            <input
-              type="text"
-              placeholder="Full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition-colors"
-            />
+            <>
+              <div className="flex gap-2">
+                {["customer", "vendor"].map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRole(r)}
+                    className={`flex-1 py-2 rounded-lg text-sm font-semibold capitalize border transition-colors ${
+                      role === r
+                        ? "bg-gray-900 text-white border-gray-900"
+                        : "border-gray-200 text-gray-600 hover:border-gray-900"
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="Full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition-colors"
+              />
+            </>
           )}
           <input
             type="email"
@@ -81,6 +100,7 @@ const AuthModal = ({ mode, onClose, onSwitch }: any) => {
                     userName: name,
                     userEmail: email,
                     userPassword: password,
+                    userRole: role,
                   }),
                 );
               } else {
