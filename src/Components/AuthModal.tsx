@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { loginUser,  registerUser } from "../store/authSlice";
 import { API_BASE } from "../api";
 
-const AuthModal = ({ mode, onClose, onSwitch }: any) => {
+const AuthModal = ({ mode, onClose, onSwitch, onLogin }: any) => {
   const dispatch = useDispatch<any>();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -103,6 +103,8 @@ const AuthModal = ({ mode, onClose, onSwitch }: any) => {
                     userRole: role,
                   }),
                 );
+              } else if (onLogin) {
+                onLogin(email, password);
               } else {
                 dispatch(
                   loginUser({

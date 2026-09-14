@@ -11,8 +11,13 @@ export default function AuthComplete() {
   useEffect(() => {
     dispatch(getUserProfile())
       .unwrap()
-      .then(() => navigate('/dashboard', { replace: true }))
-      .catch(() => navigate('/login?error=session_failed', { replace: true }));
+      .then((res: any) =>
+        navigate(
+          res?.data?.userRole === "vendor" ? "/vendor/dashboard" : "/dashboard",
+          { replace: true },
+        ),
+      )
+      .catch(() => navigate("/login?error=session_failed", { replace: true }));
   }, [dispatch, navigate]);
 
   return <div>Signing you in…</div>; // spinner/loading UI

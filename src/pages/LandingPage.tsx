@@ -69,7 +69,7 @@ export default function LandingPage() {
   useEffect(() => {
     if(authState.isAuthenticated) {
       closeModal();
-      navigate('/dashboard');
+      navigate(authState.user?.userRole === "vendor" ? '/vendor/dashboard' : '/dashboard');
     }
   }, [authState.isAuthenticated]);
 

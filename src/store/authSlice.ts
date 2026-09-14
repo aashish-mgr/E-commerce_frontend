@@ -96,8 +96,7 @@ export function loginUser(userData: LoginData) {
           dispatch(setStatus(AuthStatus.Success));
           dispatch(setUserData(response.data?.data ?? null));
           dispatch(setAuthenticated(true));
-         
-          alert("Login Successful!");
+          return response.data?.data;
        }
        else {
          dispatch(setStatus(AuthStatus.Error));
@@ -109,6 +108,7 @@ export function loginUser(userData: LoginData) {
         alert("Login Failed! Please check your credentials.");
     }
 
+    return null;
     }
 }
 
