@@ -2,6 +2,7 @@ import './App.css'
 import { BrowserRouter,Route,Routes } from 'react-router-dom'
 import LandingPage from './pages/LandingPage.tsx'
 import Dashboard from './pages/Dashboard.tsx'
+import VendorDashboard from './pages/VendorDashboard.tsx'
 import { useEffect } from 'react'
 import { getUserProfile } from './store/authSlice.ts'
 import { useDispatch } from 'react-redux'
@@ -10,6 +11,7 @@ import ProductDetail from './Components/ProductDetail.tsx'
 import NavbarProvider from './context/NavbarContext.tsx'
 import Navbar from './Components/Navbar.tsx'
 import ProtectedRoute from './Components/ProtectedRoute.tsx'
+import VendorRoute from './Components/VendorRoute.tsx'
 import Cart from './pages/Cart.tsx'
 import Orders from './pages/Order.tsx'
 import OrderDetail from './pages/OrderDetail.tsx'
@@ -37,6 +39,7 @@ function App() {
           <Route path='/' element={<LandingPage/>} />
           <Route path='/login' element={<Login />} />
           <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path='/vendor/dashboard' element={<VendorRoute><VendorDashboard /></VendorRoute>} />
           <Route path='/product/:id' element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
           <Route path='/cart' element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path='/orders' element={<ProtectedRoute><Orders /></ProtectedRoute>} />

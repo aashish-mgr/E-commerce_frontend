@@ -8,11 +8,16 @@ export default function Login() {
   const isAuthenticated = useSelector(
     (state: any) => state.auth.isAuthenticated,
   );
+  const userRole = useSelector((state: any) => state.auth.user?.userRole);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/dashboard", { replace: true });
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated) {
+      navigate(userRole === "vendor" ? "/vendor/dashboard" : "/dashboard", {
+        replace: true,
+      });
+    }
+  }, [isAuthenticated, userRole, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
