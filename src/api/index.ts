@@ -11,7 +11,6 @@ export const getImageUrl = (image?: string) => {
 const API = axios.create({
     baseURL: API_BASE,
     headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
 })
@@ -19,7 +18,6 @@ const API = axios.create({
 const authAPI = axios.create({
   baseURL: API_BASE,
   headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
   withCredentials: true,
