@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { authAPI } from "../api";
-import VendorOverview from "../Components/vendor/VendorOverview";
+import VendorDashboardHome from "../Components/vendor/VendorDashboardHome";
 import VendorProducts from "../Components/vendor/VendorProducts";
 import VendorOrders from "../Components/vendor/VendorOrders";
 import VendorProductModal from "../Components/vendor/VendorProductModal";
@@ -68,23 +68,6 @@ export default function VendorDashboard() {
     fetchAll();
   }, [fetchAll]);
 
-  const stats = useMemo(() => {
-    const uniqueOrders = new Set(orderDetails.map((od) => od.Order.id));
-    const revenue = orderDetails.reduce(
-      (sum, od) => sum + Number(od.Product.productPrice) * od.quantity,
-      0,
-    );
-    const pending = orderDetails.filter(
-      (od) => od.Order.orderStatus === "pending",
-    ).length;
-    return {
-      productCount: products.length,
-      orderCount: uniqueOrders.size,
-      revenue,
-      pendingCount: pending,
-    };
-  }, [products, orderDetails]);
-
   const openAddProduct = () => {
     setEditingProduct(null);
     setForm(emptyProductForm);
@@ -99,6 +82,7 @@ export default function VendorDashboard() {
       productDescription: product.productDescription,
       productPrice: product.productPrice,
       categoryId: product.categoryId,
+      stock: product.stock ?? 0,
     });
     setImageFile(null);
     setShowProductModal(true);
@@ -116,7 +100,8 @@ export default function VendorDashboard() {
       !form.productName ||
       !form.productDescription ||
       !form.productPrice ||
-      !form.categoryId
+      !form.categoryId ||
+      form.stock < 0
     ) {
       showToast("Please fill all the fields");
       return;
@@ -128,6 +113,7 @@ export default function VendorDashboard() {
       formData.append("productDescription", form.productDescription);
       formData.append("productPrice", form.productPrice);
       formData.append("categoryId", form.categoryId);
+      formData.append("stock", String(form.stock));
       if (imageFile) formData.append("image", imageFile);
 
       if (editingProduct) {
@@ -242,7 +228,15 @@ export default function VendorDashboard() {
           </div>
         </div>
 
-        {tab === "overview" && <VendorOverview stats={stats} />}
+        {tab === "overview" && (
+        <VendorDashboardHome
+          products={products}
+          orderDetails={orderDetails}
+          onAddProduct={openAddProduct}
+          onViewAllOrders={() => setTab("orders")}
+          onViewProducts={() => setTab("products")}
+        />
+      )}
 
         {tab === "products" && (
           <VendorProducts

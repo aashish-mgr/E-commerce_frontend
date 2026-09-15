@@ -10,6 +10,7 @@ export interface VendorProduct {
   productPrice: string;
   image: string;
   categoryId: string;
+  stock: number;
   Category?: Category;
 }
 
@@ -21,6 +22,7 @@ export interface VendorOrderDetail {
     productName: string;
     productPrice: string;
     image: string;
+    stock: number;
   };
   Order: {
     id: string;
@@ -48,6 +50,7 @@ export const emptyProductForm = {
   productDescription: "",
   productPrice: "",
   categoryId: "",
+  stock: 0,
 };
 
 export type ProductForm = typeof emptyProductForm;

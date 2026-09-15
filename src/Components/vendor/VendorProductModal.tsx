@@ -187,7 +187,7 @@ export default function VendorProductModal({
             />
           </div>
 
-          {/* Price & Category */}
+          {/* Price, Stock & Category */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
@@ -207,6 +207,19 @@ export default function VendorProductModal({
               </div>
             </div>
             <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Stock (units)
+              </label>
+              <input
+                type="number"
+                min={0}
+                placeholder="0"
+                value={form.stock}
+                onChange={(e) => onFormChange({ ...form, stock: Math.max(0, Math.floor(Number(e.target.value) || 0)) })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+              />
+            </div>
+            <div className="col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                 Category
               </label>
