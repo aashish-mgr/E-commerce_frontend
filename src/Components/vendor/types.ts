@@ -35,6 +35,11 @@ export interface VendorOrderDetail {
       paymentMethod: string;
       paymentStatus: string;
     };
+    User?: {
+      id: string;
+      userName: string;
+      userEmail: string;
+    };
   };
 }
 

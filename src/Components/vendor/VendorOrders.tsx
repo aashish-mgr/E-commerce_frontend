@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { paymentStyles, statusStyles } from "./types";
 import type { VendorOrderDetail } from "./types";
 
@@ -40,6 +41,7 @@ export default function VendorOrders({
 }) {
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
+  const navigate = useNavigate();
 
   const statuses = ["pending", "shipped", "delivered", "cancelled"];
   const statusFilters = ["all", "pending", "shipped", "delivered", "cancelled"];
@@ -160,12 +162,16 @@ export default function VendorOrders({
                   return (
                     <tr key={od.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                       <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => navigate(`/vendor/order/${order.id}`)}
+                          className="flex items-center gap-3 text-left group"
+                          title="View order details"
+                        >
                           <ProductThumb image={od.Product.image} name={od.Product.productName} />
-                          <p className="font-medium text-gray-900 text-sm">
+                          <span className="font-medium text-gray-900 text-sm group-hover:text-indigo-600 transition-colors">
                             {od.Product.productName}
-                          </p>
-                        </div>
+                          </span>
+                        </button>
                       </td>
                       <td className="px-5 py-3.5 text-gray-600 font-medium">{od.quantity}</td>
                       <td className="px-5 py-3.5">
@@ -193,6 +199,17 @@ export default function VendorOrders({
                       </td>
                       <td className="px-5 py-3.5">
                         <div className="flex gap-1.5 items-center">
+                          <button
+                            onClick={() => navigate(`/vendor/order/${order.id}`)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            title="View order details"
+                          >
+                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            View
+                          </button>
                           <select
                             value={order.orderStatus}
                             onChange={(e) => onUpdateStatus(order.id, e.target.value)}

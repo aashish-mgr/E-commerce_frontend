@@ -3,6 +3,7 @@ import { BrowserRouter,Route,Routes } from 'react-router-dom'
 import LandingPage from './pages/LandingPage.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 import VendorDashboard from './pages/VendorDashboard.tsx'
+import VendorOrderDetail from './pages/VendorOrderDetail.tsx'
 import { useEffect } from 'react'
 import { getUserProfile } from './store/authSlice.ts'
 import { useDispatch } from 'react-redux'
@@ -40,6 +41,7 @@ function App() {
           <Route path='/login' element={<Login />} />
           <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path='/vendor/dashboard' element={<VendorRoute><VendorDashboard /></VendorRoute>} />
+          <Route path='/vendor/order/:orderId' element={<VendorRoute><VendorOrderDetail /></VendorRoute>} />
           <Route path='/product/:id' element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
           <Route path='/cart' element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path='/orders' element={<ProtectedRoute><Orders /></ProtectedRoute>} />
