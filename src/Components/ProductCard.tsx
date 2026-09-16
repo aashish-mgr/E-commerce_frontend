@@ -51,17 +51,25 @@ export default function ProductCard({ product, onAddToCart }: Props) {
 
         
 
+        {/* Units available */}
+        <span className={`text-xs font-medium mb-2 ${product.stock != null && product.stock > 0 ? "text-green-600" : "text-red-500"}`}>
+          {product.stock != null && product.stock > 0 ? `${product.stock} units available` : "Out of stock"}
+        </span>
+
         {/* Price + button */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <span className="font-bold text-gray-900 text-lg">Rs.{product.productPrice}</span>
           <button
             onClick={handleAdd}
+            disabled={product.stock != null && product.stock <= 0}
             className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${ added
                 ? "bg-green-600 text-white"
-                : "bg-gray-900 text-white hover:bg-gray-700"
+                : product.stock != null && product.stock <= 0
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gray-900 text-white hover:bg-gray-700"
                 }` }
           >
-            {added ? "Added ✓" : "Add to Cart"}
+            {added ? "Added ✓" : product.stock != null && product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
           </button>
         </div>
       </div>
