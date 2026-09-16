@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { authAPI } from "../api";
 import VendorDashboardHome from "../Components/vendor/VendorDashboardHome";
 import VendorProducts from "../Components/vendor/VendorProducts";
@@ -13,7 +14,12 @@ type Tab = "overview" | "products" | "orders";
 
 export default function VendorDashboard() {
   const user = useSelector((state: any) => state.auth.user);
-  const [tab, setTab] = useState<Tab>("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab: Tab =
+    searchParams.get("tab") === "products" || searchParams.get("tab") === "orders"
+      ? (searchParams.get("tab") as Tab)
+      : "overview";
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [products, setProducts] = useState<VendorProduct[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orderDetails, setOrderDetails] = useState<VendorOrderDetail[]>([]);
@@ -25,6 +31,11 @@ export default function VendorDashboard() {
   const [form, setForm] = useState<ProductForm>(emptyProductForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const changeTab = (next: Tab) => {
+    setTab(next);
+    setSearchParams(next === "overview" ? {} : { tab: next }, { replace: true });
+  };
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -240,7 +251,7 @@ export default function VendorDashboard() {
             {(["overview", "products", "orders"] as Tab[]).map((t) => (
               <button
                 key={t}
-                onClick={() => setTab(t)}
+                onClick={() => changeTab(t)}
                 className={`px-5 py-2.5 rounded-lg text-sm font-semibold capitalize transition-all duration-200 ${
                   tab === t
                     ? "bg-gray-900 text-white shadow-sm"
@@ -258,8 +269,8 @@ export default function VendorDashboard() {
           products={products}
           orderDetails={orderDetails}
           onAddProduct={openAddProduct}
-          onViewAllOrders={() => setTab("orders")}
-          onViewProducts={() => setTab("products")}
+          onViewAllOrders={() => changeTab("orders")}
+          onViewProducts={() => changeTab("products")}
         />
       )}
 
