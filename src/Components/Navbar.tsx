@@ -9,7 +9,6 @@ type Role = "customer" | "vendor";
 
 const customerLinks = [
   { label: "Home", to: "/" },
-  { label: "Shop", to: "/dashboard" },
   { label: "Orders", to: "/orders" },
 ];
 
