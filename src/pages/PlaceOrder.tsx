@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { setCart } from "../store/cartSlice";
 import OrderSuccess from "../Components/OrderSuccess";
 import { deleteCartItem } from "../store/cartSlice";
+import { toast } from "../lib/toast";
 // ── Types (your exact interfaces) ────────────────────────────
 
 // ── Seed data ─────────────────────────────────────────────────
@@ -198,7 +199,7 @@ const CURRENT_USER: User | null = authState?.user ?? null;
           
           const pidx = searchParams.get("pidx");
           if (!pidx) {
-            alert("Payment failed or cancelled.");
+            toast.error("Payment failed or cancelled.");
           }
          
          
@@ -219,7 +220,7 @@ const CURRENT_USER: User | null = authState?.user ?? null;
         return;
       }
     } catch (error) {
-      alert("Failed to place order. Please try again.");
+      toast.error("Failed to place order. Please try again.");
       setErrors((p) => ({
         ...p,
         form: "Failed to place order. Please try again.",

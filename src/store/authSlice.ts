@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import {API,authAPI} from '../api/index';
+import { toast } from "../lib/toast";
 
 
 
@@ -73,7 +74,7 @@ export function registerUser(userData: RegisterData) {
        const response =await API.post("/auth/register",userData);
        if(response.status === 200) {
           dispatch(setStatus(AuthStatus.Success));
-          alert("Registration Successful! Please Login.");
+          toast.success("Registration Successful! Please Login.");
        }
        else {
          dispatch(setStatus(AuthStatus.Error));
@@ -100,12 +101,12 @@ export function loginUser(userData: LoginData) {
        }
        else {
          dispatch(setStatus(AuthStatus.Error));
-         alert("Login Failed! Please check your credentials.");
+         toast.error("Login Failed! Please check your credentials.");
        }
     }
     catch(error) {
         dispatch(setStatus(AuthStatus.Error));
-        alert("Login Failed! Please check your credentials.");
+        toast.error("Login Failed! Please check your credentials.");
     }
 
     return null;
@@ -120,7 +121,7 @@ export function LogoutUser() {
         dispatch(setUserData(null));
         dispatch(setAuthenticated(false));
    
-        alert("Logged out successfully!");
+        toast.success("Logged out successfully!");
     }
 }
 

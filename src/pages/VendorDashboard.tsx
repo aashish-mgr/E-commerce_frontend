@@ -7,6 +7,7 @@ import VendorOrders from "../Components/vendor/VendorOrders";
 import VendorProductModal from "../Components/vendor/VendorProductModal";
 import { emptyProductForm } from "../Components/vendor/types";
 import type { Category, VendorOrderDetail, VendorProduct, ProductForm } from "../Components/vendor/types";
+import { toast } from "../lib/toast";
 
 type Tab = "overview" | "products" | "orders";
 
@@ -17,7 +18,6 @@ export default function VendorDashboard() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [orderDetails, setOrderDetails] = useState<VendorOrderDetail[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
 
   // Product modal state
   const [showProductModal, setShowProductModal] = useState(false);
@@ -25,11 +25,6 @@ export default function VendorDashboard() {
   const [form, setForm] = useState<ProductForm>(emptyProductForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const showToast = useCallback((message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 3000);
-  }, []);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -103,7 +98,7 @@ export default function VendorDashboard() {
       !form.categoryId ||
       form.stock < 0
     ) {
-      showToast("Please fill all the fields");
+      toast.info("Please fill all the fields");
       return;
     }
     setSaving(true);
@@ -116,67 +111,97 @@ export default function VendorDashboard() {
       formData.append("stock", String(form.stock));
       if (imageFile) formData.append("image", imageFile);
 
-      if (editingProduct) {
-        await authAPI.patch(`/product/update/${editingProduct.id}`, formData);
-        showToast("Product updated successfully");
-      } else {
-        await authAPI.post("/product/create", formData);
-        showToast("Product added successfully");
-      }
+      await toast.promise(
+        editingProduct
+          ? authAPI.patch(`/product/update/${editingProduct.id}`, formData)
+          : authAPI.post("/product/create", formData),
+        {
+          loading: editingProduct ? "Updating product..." : "Adding product...",
+          success: editingProduct ? "Product updated successfully" : "Product added successfully",
+          error: "Failed to save product",
+        }
+      ).unwrap();
       closeProductModal();
       await fetchProducts();
     } catch (error) {
       console.error("Error saving product:", error);
-      showToast("Failed to save product");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteProduct = async (product: VendorProduct) => {
-    if (!window.confirm(`Delete "${product.productName}"?`)) return;
-    try {
-      await authAPI.delete(`/product/delete/${product.id}`);
-      showToast("Product deleted successfully");
-      await fetchProducts();
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      showToast("Failed to delete product");
-    }
+  const handleDeleteProduct = (product: VendorProduct) => {
+    toast.confirm(`Delete "${product.productName}"?`, {
+      label: "Delete",
+      onClick: async () => {
+          try {
+            await toast.promise(
+              authAPI.delete(`/product/delete/${product.id}`),
+              {
+                loading: "Deleting product...",
+                success: "Product deleted successfully",
+                error: "Failed to delete product",
+              }
+            ).unwrap();
+            await fetchProducts();
+          } catch (error) {
+            console.error("Error deleting product:", error);
+          }
+    },
+    });
   };
 
   const handleUpdateOrderStatus = async (orderId: string, orderStatus: string) => {
     try {
-      await authAPI.patch(`/order/updateOrderStatus/${orderId}`, { orderStatus });
-      showToast("Order status updated");
+      await toast.promise(
+        authAPI.patch(`/order/updateOrderStatus/${orderId}`, { orderStatus }),
+        {
+          loading: "Updating order status...",
+          success: "Order status updated",
+          error: "Failed to update order status",
+        }
+      ).unwrap();
       await fetchOrders();
     } catch (error) {
       console.error("Error updating order status:", error);
-      showToast("Failed to update order status");
     }
   };
 
   const handleUpdatePaymentStatus = async (orderId: string, paymentStatus: string) => {
     try {
-      await authAPI.patch(`/order/updatePaymentStatus/${orderId}`, { paymentStatus });
-      showToast("Payment status updated");
+      await toast.promise(
+        authAPI.patch(`/order/updatePaymentStatus/${orderId}`, { paymentStatus }),
+        {
+          loading: "Updating payment status...",
+          success: "Payment status updated",
+          error: "Failed to update payment status",
+        }
+      ).unwrap();
       await fetchOrders();
     } catch (error) {
       console.error("Error updating payment status:", error);
-      showToast("Failed to update payment status");
     }
   };
 
-  const handleDeleteOrder = async (orderId: string) => {
-    if (!window.confirm("Delete this order?")) return;
-    try {
-      await authAPI.delete(`/order/deleteOrder/${orderId}`);
-      showToast("Order deleted");
-      await fetchOrders();
-    } catch (error) {
-      console.error("Error deleting order:", error);
-      showToast("Failed to delete order");
-    }
+  const handleDeleteOrder = (orderId: string) => {
+    toast.confirm("Delete this order?", {
+      label: "Delete",
+      onClick: async () => {
+          try {
+            await toast.promise(
+              authAPI.delete(`/order/deleteOrder/${orderId}`),
+              {
+                loading: "Deleting order...",
+                success: "Order deleted",
+                error: "Failed to delete order",
+              }
+            ).unwrap();
+            await fetchOrders();
+          } catch (error) {
+            console.error("Error deleting order:", error);
+          }
+    },
+    });
   };
 
   if (loading) {
@@ -270,18 +295,6 @@ export default function VendorDashboard() {
           onSave={handleSaveProduct}
           onClose={closeProductModal}
         />
-      )}
-
-      {/* Toast */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 animate-[slideUp_0.3s_ease]">
-          <div className="bg-gray-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2">
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-            {toast}
-          </div>
-        </div>
       )}
     </div>
   );

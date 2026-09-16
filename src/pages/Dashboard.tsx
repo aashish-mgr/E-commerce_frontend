@@ -7,19 +7,13 @@ import {useSelector} from 'react-redux'
 import { API } from "../api/index"
 import { useNavbar } from "../context/NavbarContext";
 import { useNavigate } from "react-router-dom";
-
-// ── Toast notification ────────────────────────────────────────
-interface Toast {
-  id: number;
-  message: string;
-}
+import { toast } from "../lib/toast";
 
 // ── Dashboard ─────────────────────────────────────────────────
 export default function Dashboard() {
   const [cartCount, setCartCount]           = useState(0);
   const [search, setSearch]                 = useState("");
   const [selectedCategory, setCategory]     = useState("All");
-  const [toasts, setToasts]                 = useState<Toast[]>([]);
   const authState = useSelector( (state: any) => state.auth);
   const [products, setProducts] = useState<Product[]>([]);
   const {setNavbarData} = useNavbar();
@@ -63,17 +57,10 @@ export default function Dashboard() {
     });
   }, [search, selectedCategory, products]);
 
-  // Show a short toast notification
-  const showToast = useCallback((message: string) => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 2500);
-  }, []);
-
-  const handleAddToCart = useCallback((product: Product) => {
+const handleAddToCart = useCallback((product: Product) => {
     setCartCount((n) => n + 1);
-    showToast(`"${product.productName}" added to cart`);
-  }, [showToast]);
+    toast.success(`"${product.productName}" added to cart`);
+  }, []);
 
   const handleCartClick = useCallback(() => {
     navigate("/cart");
@@ -84,8 +71,8 @@ export default function Dashboard() {
   }, []);
 
   const handleProfileClick = useCallback(() => {
-    showToast("User profile coming soon!");
-  }, [showToast]);
+    toast.info("User profile coming soon!");
+  }, []);
 
   const navbarData = useMemo(
     () => ({
@@ -186,17 +173,6 @@ export default function Dashboard() {
         )}
       </main>
 
-      {/* Toast notifications */}
-      <div className="fixed bottom-5 right-5 flex flex-col gap-2 z-50">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className="bg-gray-900 text-white text-sm px-4 py-2.5 rounded-xl shadow-lg animate-[fadeIn_0.2s_ease]"
-          >
-            {toast.message}
-          </div>
-        ))}
-      </div>
       {/* footer */}
         <Footer />
 

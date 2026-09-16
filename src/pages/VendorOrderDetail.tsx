@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { authAPI } from "../api";
 import { paymentStyles, statusStyles } from "../Components/vendor/types";
 import type { VendorOrderDetail } from "../Components/vendor/types";
+import { toast } from "../lib/toast";
 
 export default function VendorOrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -10,12 +11,6 @@ export default function VendorOrderDetailPage() {
   const [items, setItems] = useState<VendorOrderDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-
-  const showToast = useCallback((message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 3000);
-  }, []);
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -39,12 +34,17 @@ export default function VendorOrderDetailPage() {
     if (!orderId) return;
     setSaving(true);
     try {
-      await authAPI.patch(`/order/updateOrderStatus/${orderId}`, { orderStatus: status });
-      showToast("Order status updated");
+      await toast.promise(
+        authAPI.patch(`/order/updateOrderStatus/${orderId}`, { orderStatus: status }),
+        {
+          loading: "Updating order status...",
+          success: "Order status updated",
+          error: "Failed to update status",
+        }
+      ).unwrap();
       await fetchDetail();
     } catch (error) {
       console.error("Error updating order status:", error);
-      showToast("Failed to update status");
     } finally {
       setSaving(false);
     }
@@ -54,30 +54,44 @@ export default function VendorOrderDetailPage() {
     if (!orderId || !payment) return;
     setSaving(true);
     try {
-      await authAPI.patch(`/order/updatePaymentStatus/${orderId}`, {
-        paymentStatus: payment.paymentStatus === "paid" ? "unpaid" : "paid",
-      });
-      showToast("Payment status updated");
+      await toast.promise(
+        authAPI.patch(`/order/updatePaymentStatus/${orderId}`, {
+          paymentStatus: payment.paymentStatus === "paid" ? "unpaid" : "paid",
+        }),
+        {
+          loading: "Updating payment status...",
+          success: "Payment status updated",
+          error: "Failed to update payment status",
+        }
+      ).unwrap();
       await fetchDetail();
     } catch (error) {
       console.error("Error updating payment status:", error);
-      showToast("Failed to update payment status");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!orderId) return;
-    if (!window.confirm("Delete this order?")) return;
-    try {
-      await authAPI.delete(`/order/deleteOrder/${orderId}`);
-      showToast("Order deleted");
-      navigate("/vendor/dashboard", { replace: true });
-    } catch (error) {
-      console.error("Error deleting order:", error);
-      showToast("Failed to delete order");
-    }
+    toast.confirm("Delete this order?", {
+      label: "Delete",
+      onClick: async () => {
+          try {
+            await toast.promise(
+              authAPI.delete(`/order/deleteOrder/${orderId}`),
+              {
+                loading: "Deleting order...",
+                success: "Order deleted",
+                error: "Failed to delete order",
+              }
+            ).unwrap();
+            navigate("/vendor/dashboard", { replace: true });
+          } catch (error) {
+            console.error("Error deleting order:", error);
+          }
+    },
+    });
   };
 
   if (loading) {
@@ -328,18 +342,6 @@ export default function VendorOrderDetailPage() {
           </div>
         </div>
       </main>
-
-      {/* Toast */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 animate-[slideUp_0.3s_ease]">
-          <div className="bg-gray-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2">
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-            {toast}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
