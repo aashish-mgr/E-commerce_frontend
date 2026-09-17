@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { authAPI, getImageUrl } from "../api";
 import { useNavigate } from "react-router-dom";
 import { showErrorToast } from "../lib/toast";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import Pagination from "../Components/Pagination";
 // ── Types ─────────────────────────────────────────────────────
-import type { Order } from "../types";
-import type { OrderStatus } from "../types";
+import type { Order, OrderStatus, PaginationMeta } from "../types";
 
 const STATUS_TABS: { label: string; value: OrderStatus | "all" }[] = [
   { label: "All", value: "all" },
@@ -214,11 +215,21 @@ export default function Orders() {
   const [search, setSearch] = useState("");
   const [activeStatus, setActiveStatus] = useState<OrderStatus | "all">("all");
   const [orders, setOrders] = useState<Order[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
+  const debouncedSearch = useDebouncedValue(search);
 
   const fetchOrders = async () => {
     try {
-      const res = await authAPI.get("/order/getMyOrders");
+      const params: Record<string, string | number> = {
+        page,
+        limit: 5,
+        status: activeStatus,
+      };
+      if (debouncedSearch) params.search = debouncedSearch;
+      const res = await authAPI.get("/order/getMyOrders", { params });
       setOrders(res.data?.data);
+      setPagination(res.data?.pagination);
     } catch (err) {
       showErrorToast(err, "Failed to load orders.");
     }
@@ -226,33 +237,19 @@ export default function Orders() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [page, activeStatus, debouncedSearch]);
 
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: orders.length };
-    for (const tab of STATUS_TABS) {
-      if (tab.value !== "all") {
-        counts[tab.value] = orders.filter(
-          (o) => o.orderStatus === tab.value,
-        ).length;
-      }
-    }
-    return counts;
-  }, [orders]);
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
 
-  const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      const matchesStatus =
-        activeStatus === "all" || order.orderStatus === activeStatus;
-      const query = search.toLowerCase();
-      const matchesSearch =
-        order.id.toLowerCase().includes(query) ||
-        order.OrderDetails.some((item) =>
-          item.Product.productName.toLowerCase().includes(query),
-        );
-      return matchesStatus && matchesSearch;
-    });
-  }, [orders, search, activeStatus]);
+  const handleStatusChange = (value: OrderStatus | "all") => {
+    setActiveStatus(value);
+    setPage(1);
+  };
+
+  const filteredOrders = orders;
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -283,7 +280,7 @@ export default function Orders() {
             type="text"
             placeholder="Search by order ID or product name..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-3 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
           />
           {search && (
@@ -311,7 +308,7 @@ export default function Orders() {
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}
-              onClick={() => setActiveStatus(tab.value)}
+              onClick={() => handleStatusChange(tab.value)}
               className={`flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
                 activeStatus === tab.value
                   ? "bg-gray-900 text-white"
@@ -319,34 +316,22 @@ export default function Orders() {
               }`}
             >
               {tab.label}
-              <span
-                className={`text-[10px] font-semibold rounded-full w-5 h-5 flex items-center justify-center ${
-                  activeStatus === tab.value
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-500"
-                }`}
-              >
-                {statusCounts[tab.value]}
-              </span>
             </button>
           ))}
         </div>
 
-        {/* Results count */}
-        {filteredOrders.length > 0 && (
-          <p className="text-sm text-gray-400 mb-4">
-            Showing {filteredOrders.length} order
-            {filteredOrders.length > 1 ? "s" : ""}
-          </p>
-        )}
-
         {/* Orders list */}
         {filteredOrders.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            {filteredOrders.map((order) => (
-              <OrderCard key={order.id} order={order} />
-            ))}
-          </div>
+          <>
+            <div className="flex flex-col gap-4">
+              {filteredOrders.map((order) => (
+                <OrderCard key={order.id} order={order} />
+              ))}
+            </div>
+            {pagination && (
+              <Pagination pagination={pagination} onPageChange={setPage} />
+            )}
+          </>
         ) : (
           <div className="bg-white border border-gray-200 rounded-2xl py-20 flex flex-col items-center text-center">
             <div className="text-5xl mb-4">📦</div>
@@ -361,8 +346,8 @@ export default function Orders() {
             {(search || activeStatus !== "all") && (
               <button
                 onClick={() => {
-                  setSearch("");
-                  setActiveStatus("all");
+                  handleSearchChange("");
+                  handleStatusChange("all");
                 }}
                 className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-700 transition-colors"
               >

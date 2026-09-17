@@ -9,6 +9,8 @@ import VendorProductModal from "../Components/vendor/VendorProductModal";
 import { emptyProductForm } from "../Components/vendor/types";
 import type { Category, VendorOrderDetail, VendorProduct, ProductForm } from "../Components/vendor/types";
 import { toast } from "../lib/toast";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import type { PaginationMeta } from "../types";
 
 type Tab = "overview" | "products" | "orders";
 
@@ -25,6 +27,24 @@ export default function VendorDashboard() {
   const [orderDetails, setOrderDetails] = useState<VendorOrderDetail[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Overview data (unpaginated, for dashboard metrics)
+  const [allProducts, setAllProducts] = useState<VendorProduct[]>([]);
+  const [allOrderDetails, setAllOrderDetails] = useState<VendorOrderDetail[]>([]);
+
+  // Product listing state
+  const [productPage, setProductPage] = useState(1);
+  const [productSearch, setProductSearch] = useState("");
+  const [productCategory, setProductCategory] = useState("All");
+  const [productsPagination, setProductsPagination] = useState<PaginationMeta | null>(null);
+  const debouncedProductSearch = useDebouncedValue(productSearch);
+
+  // Order listing state
+  const [orderPage, setOrderPage] = useState(1);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState("all");
+  const [ordersPagination, setOrdersPagination] = useState<PaginationMeta | null>(null);
+  const debouncedOrderSearch = useDebouncedValue(orderSearch);
+
   // Product modal state
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<VendorProduct | null>(null);
@@ -39,8 +59,24 @@ export default function VendorDashboard() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await authAPI.get("/product/getMyProducts");
+      const params: Record<string, string | number> = { page: productPage, limit: 8 };
+      if (debouncedProductSearch) params.search = debouncedProductSearch;
+      const category = categories.find((c) => c.categoryName === productCategory);
+      if (category) params.categoryId = category.id;
+      const response = await authAPI.get("/product/getMyProducts", { params });
       setProducts(response.data.data);
+      setProductsPagination(response.data.pagination);
+    } catch (error) {
+      console.error("Error fetching my products:", error);
+    }
+  }, [productPage, debouncedProductSearch, productCategory, categories]);
+
+  const fetchOverviewProducts = useCallback(async () => {
+    try {
+      const response = await authAPI.get("/product/getMyProducts", {
+        params: { limit: 100 },
+      });
+      setAllProducts(response.data.data);
     } catch (error) {
       console.error("Error fetching my products:", error);
     }
@@ -57,8 +93,23 @@ export default function VendorDashboard() {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const response = await authAPI.get("/order/getVendorOrders");
+      const params: Record<string, string | number> = { page: orderPage, limit: 8 };
+      if (orderStatusFilter !== "all") params.status = orderStatusFilter;
+      if (debouncedOrderSearch) params.search = debouncedOrderSearch;
+      const response = await authAPI.get("/order/getVendorOrders", { params });
       setOrderDetails(response.data.data);
+      setOrdersPagination(response.data.pagination);
+    } catch (error) {
+      console.error("Error fetching vendor orders:", error);
+    }
+  }, [orderPage, orderStatusFilter, debouncedOrderSearch]);
+
+  const fetchOverviewOrders = useCallback(async () => {
+    try {
+      const response = await authAPI.get("/order/getVendorOrders", {
+        params: { limit: 100 },
+      });
+      setAllOrderDetails(response.data.data);
     } catch (error) {
       console.error("Error fetching vendor orders:", error);
     }
@@ -66,13 +117,47 @@ export default function VendorDashboard() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchProducts(), fetchCategories(), fetchOrders()]);
+    await Promise.all([
+      fetchProducts(),
+      fetchCategories(),
+      fetchOrders(),
+      fetchOverviewProducts(),
+      fetchOverviewOrders(),
+    ]);
     setLoading(false);
-  }, [fetchProducts, fetchCategories, fetchOrders]);
+  }, [fetchProducts, fetchCategories, fetchOrders, fetchOverviewProducts, fetchOverviewOrders]);
 
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
+
+  const handleProductSearchChange = useCallback((value: string) => {
+    setProductSearch(value);
+    setProductPage(1);
+  }, []);
+
+  const handleProductCategoryChange = useCallback((value: string) => {
+    setProductCategory(value);
+    setProductPage(1);
+  }, []);
+
+  const handleOrderSearchChange = useCallback((value: string) => {
+    setOrderSearch(value);
+    setOrderPage(1);
+  }, []);
+
+  const handleOrderStatusChange = useCallback((value: string) => {
+    setOrderStatusFilter(value);
+    setOrderPage(1);
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const openAddProduct = () => {
     setEditingProduct(null);
@@ -133,7 +218,7 @@ export default function VendorDashboard() {
         }
       ).unwrap();
       closeProductModal();
-      await fetchProducts();
+      await Promise.all([fetchProducts(), fetchOverviewProducts()]);
     } catch (error) {
       console.error("Error saving product:", error);
     } finally {
@@ -154,7 +239,7 @@ export default function VendorDashboard() {
                 error: "Failed to delete product",
               }
             ).unwrap();
-            await fetchProducts();
+            await Promise.all([fetchProducts(), fetchOverviewProducts()]);
           } catch (error) {
             console.error("Error deleting product:", error);
           }
@@ -172,7 +257,7 @@ export default function VendorDashboard() {
           error: "Failed to update order status",
         }
       ).unwrap();
-      await fetchOrders();
+      await Promise.all([fetchOrders(), fetchOverviewOrders()]);
     } catch (error) {
       console.error("Error updating order status:", error);
     }
@@ -188,7 +273,7 @@ export default function VendorDashboard() {
           error: "Failed to update payment status",
         }
       ).unwrap();
-      await fetchOrders();
+      await Promise.all([fetchOrders(), fetchOverviewOrders()]);
     } catch (error) {
       console.error("Error updating payment status:", error);
     }
@@ -207,7 +292,7 @@ export default function VendorDashboard() {
                 error: "Failed to delete order",
               }
             ).unwrap();
-            await fetchOrders();
+            await Promise.all([fetchOrders(), fetchOverviewOrders()]);
           } catch (error) {
             console.error("Error deleting order:", error);
           }
@@ -266,8 +351,8 @@ export default function VendorDashboard() {
 
         {tab === "overview" && (
         <VendorDashboardHome
-          products={products}
-          orderDetails={orderDetails}
+          products={allProducts}
+          orderDetails={allOrderDetails}
           onAddProduct={openAddProduct}
           onViewAllOrders={() => changeTab("orders")}
           onViewProducts={() => changeTab("products")}
@@ -277,6 +362,13 @@ export default function VendorDashboard() {
         {tab === "products" && (
           <VendorProducts
             products={products}
+            pagination={productsPagination}
+            categories={["All", ...categories.map((c) => c.categoryName)]}
+            search={productSearch}
+            selectedCategory={productCategory}
+            onSearchChange={handleProductSearchChange}
+            onCategoryChange={handleProductCategoryChange}
+            onPageChange={setProductPage}
             onAdd={openAddProduct}
             onEdit={openEditProduct}
             onDelete={handleDeleteProduct}
@@ -286,6 +378,12 @@ export default function VendorDashboard() {
         {tab === "orders" && (
           <VendorOrders
             orderDetails={orderDetails}
+            pagination={ordersPagination}
+            orderSearch={orderSearch}
+            orderStatusFilter={orderStatusFilter}
+            onSearchChange={handleOrderSearchChange}
+            onStatusChange={handleOrderStatusChange}
+            onPageChange={setOrderPage}
             onUpdateStatus={handleUpdateOrderStatus}
             onUpdatePayment={handleUpdatePaymentStatus}
             onDelete={handleDeleteOrder}

@@ -1,42 +1,34 @@
-import { useMemo, useState } from "react";
-import VendorProductCard from "./VendorProductCard";
 import type { VendorProduct } from "./types";
+import type { PaginationMeta } from "../../types";
+import VendorProductCard from "./VendorProductCard";
+import Pagination from "../Pagination";
 
 export default function VendorProducts({
   products,
+  categories,
+  search,
+  selectedCategory,
+  pagination,
+  onSearchChange,
+  onCategoryChange,
+  onPageChange,
   onAdd,
   onEdit,
   onDelete,
 }: {
   products: VendorProduct[];
+  categories: string[];
+  search: string;
+  selectedCategory: string;
+  pagination: PaginationMeta | null;
+  onSearchChange: (value: string) => void;
+  onCategoryChange: (value: string) => void;
+  onPageChange: (page: number) => void;
   onAdd: () => void;
   onEdit: (p: VendorProduct) => void;
   onDelete: (p: VendorProduct) => void;
 }) {
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-
-  const productCategories = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach((p) => {
-      if (p.Category?.categoryName) set.add(p.Category.categoryName);
-    });
-    return ["All", ...Array.from(set)];
-  }, [products]);
-
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const q = search.toLowerCase();
-      const matchesSearch =
-        !q ||
-        p.productName.toLowerCase().includes(q) ||
-        p.productDescription.toLowerCase().includes(q) ||
-        p.Category?.categoryName?.toLowerCase().includes(q);
-      const matchesCategory =
-        selectedCategory === "All" || p.Category?.categoryName === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [search, selectedCategory, products]);
+  const total = pagination?.total ?? products.length;
 
   return (
     <div className="space-y-5">
@@ -76,12 +68,12 @@ export default function VendorProducts({
               type="text"
               placeholder="Search by name, description, or category..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 bg-gray-50 focus:bg-white"
             />
             {search && (
               <button
-                onClick={() => setSearch("")}
+                onClick={() => onSearchChange("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -94,10 +86,10 @@ export default function VendorProducts({
 
           {/* Category Filter */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-            {productCategories.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => onCategoryChange(cat)}
                 className={`text-xs px-3.5 py-2 rounded-lg font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                   selectedCategory === cat
                     ? "bg-gray-900 text-white shadow-sm"
@@ -113,14 +105,14 @@ export default function VendorProducts({
         {/* Results count */}
         <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
           <span>
-            Showing <span className="font-semibold text-gray-700">{filteredProducts.length}</span> of{" "}
-            <span className="font-semibold text-gray-700">{products.length}</span> products
+            Showing <span className="font-semibold text-gray-700">{products.length}</span> of{" "}
+            <span className="font-semibold text-gray-700">{total}</span> products
           </span>
           {(search || selectedCategory !== "All") && (
             <button
               onClick={() => {
-                setSearch("");
-                setSelectedCategory("All");
+                onSearchChange("");
+                onCategoryChange("All");
               }}
               className="text-indigo-600 hover:text-indigo-700 font-medium"
             >
@@ -131,9 +123,9 @@ export default function VendorProducts({
       </div>
 
       {/* Product Grid */}
-      {filteredProducts.length === 0 ? (
+      {products.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 py-20 text-center">
-          {products.length === 0 ? (
+          {total === 0 ? (
             <>
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
                 <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" className="text-gray-400">
@@ -167,16 +159,19 @@ export default function VendorProducts({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filteredProducts.map((product) => (
-            <VendorProductCard
-              key={product.id}
-              product={product}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {products.map((product) => (
+              <VendorProductCard
+                key={product.id}
+                product={product}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
+          {pagination && <Pagination pagination={pagination} onPageChange={onPageChange} />}
+        </>
       )}
     </div>
   );

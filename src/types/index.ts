@@ -8,6 +8,7 @@ export interface Product {
   Category: Category;
 }
 export interface Category {
+  id: string;
   categoryName: string;
 }
 
@@ -54,3 +55,12 @@ export enum STATUS {
 }
 
 export type VerificationStatus = "verifying" | "success" | "failed";
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}

@@ -4,9 +4,10 @@ import ProductCardts from "../Components/ProductCard";
 import AuthModal from "../Components/AuthModal";
 import { useSelector} from 'react-redux'
 import {useNavigate} from 'react-router-dom'
-import type { Product } from "../types";
+import type { Product, PaginationMeta } from "../types";
 import { API } from "../api/index"
 import { useNavbar } from "../context/NavbarContext";
+import Pagination from "../Components/Pagination";
 
 
 const STATS = [
@@ -24,7 +25,9 @@ export default function LandingPage() {
   const [authMode, setAuthMode] = useState(""); // "login" | "register" | null
   const authState = useSelector( (state: any) => state.auth);
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const {setNavbarData} = useNavbar();
  
   const openLogin = useCallback(() => setAuthMode("login"), []);
@@ -45,11 +48,9 @@ export default function LandingPage() {
 
   const getProducts = async () => {
     try {
-      const response = await API.get('/product/getAll');  
-      
-      
+      const response = await API.get('/product/getAll', { params: { page, limit: 8 } });
       setProducts(response.data.data);
-     
+      setPagination(response.data.pagination);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
@@ -58,7 +59,7 @@ export default function LandingPage() {
   useEffect(() => {
     getProducts();
    
-  },[])
+  },[page])
 
   useEffect(() => {
     setNavbarData(navbarData);
@@ -129,6 +130,9 @@ export default function LandingPage() {
               <ProductCardts key={product.id} product={product} onAddToCart={handleAddToCart}/>
             ))}
           </div>
+          {pagination && (
+            <Pagination pagination={pagination} onPageChange={setPage} />
+          )}
         </section>
 
         {/* ── Promo Banner ─────────────────────────────── */}

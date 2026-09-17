@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ProductCard from "../Components/ProductCard";
 import FilterBar from "../Components/FilterBar";
-import type { Product, User } from "../types";
+import type { Product, User, Category, PaginationMeta } from "../types";
 import Footer from "../Components/Footer"
 import {useSelector} from 'react-redux'
 import { API } from "../api/index"
 import { useNavbar } from "../context/NavbarContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "../lib/toast";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import Pagination from "../Components/Pagination";
 
 // ── Dashboard ─────────────────────────────────────────────────
 export default function Dashboard() {
@@ -16,46 +18,60 @@ export default function Dashboard() {
   const [selectedCategory, setCategory]     = useState("All");
   const authState = useSelector( (state: any) => state.auth);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories]         = useState<Category[]>([]);
+  const [pagination, setPagination]         = useState<PaginationMeta | null>(null);
+  const [page, setPage]                     = useState(1);
+  const debouncedSearch = useDebouncedValue(search);
   const {setNavbarData} = useNavbar();
   const navigate = useNavigate();
 
-   const getProducts = async () => {
+   const getProducts = useCallback(async () => {
     try {
-      const response = await API.get('/product/getAll');  
-      
-      
+      const params: Record<string, string | number> = { page, limit: 12 };
+      if (debouncedSearch) params.search = debouncedSearch;
+      const category = categories.find((c) => c.categoryName === selectedCategory);
+      if (category) params.categoryId = category.id;
+
+      const response = await API.get('/product/getAll', { params });
       setProducts(response.data.data);
-     
+      setPagination(response.data.pagination);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
-  }
+  }, [page, debouncedSearch, selectedCategory, categories]);
+
+  const getCategories = useCallback(async () => {
+    try {
+      const response = await API.get('/category/getAll');
+      setCategories(response.data.data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  }, []);
 
   const CURRENT_USER: User | null = authState.user ?? null;
   useEffect(() => {
     getProducts();
-  },[])
+  }, [getProducts]);
 
-  
+  useEffect(() => {
+    getCategories();
+  }, [getCategories]);
 
-  const CATEGORIES = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach((p) => set.add(p.Category?.categoryName));
-    return ["All", ...Array.from(set)];
-  }, [products]);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
 
-  // Filter products based on search + category
-  const filteredProducts = useMemo(() => {
-    return products.filter((p: Product) => {
-      const matchesSearch =
-        p.productName.toLowerCase().includes(search.toLowerCase()) ||
-        p.productDescription.toLowerCase().includes(search.toLowerCase()) ||
-        p.Category.categoryName.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "All" || p.Category.categoryName === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [search, selectedCategory, products]);
+  const handleCategoryChange = useCallback((value: string) => {
+    setCategory(value);
+    setPage(1);
+  }, []);
+
+  const CATEGORIES = useMemo(
+    () => ["All", ...categories.map((c) => c.categoryName)],
+    [categories]
+  );
 
 const handleAddToCart = useCallback((product: Product) => {
     setCartCount((n) => n + 1);
@@ -102,8 +118,8 @@ const handleAddToCart = useCallback((product: Product) => {
             search={search}
             selectedCategory={selectedCategory}
             categories={CATEGORIES}
-            onSearchChange={setSearch}
-            onCategoryChange={setCategory}
+            onSearchChange={handleSearchChange}
+            onCategoryChange={handleCategoryChange}
           />
         </div>
 
@@ -148,13 +164,13 @@ const handleAddToCart = useCallback((product: Product) => {
 
 
         {/* Product grid */}
-        {filteredProducts.length > 0 ? (
+        {products.length > 0 ? (
           <>
             <p className="text-sm text-gray-500 mb-4">
-              Showing {filteredProducts.length} of {products.length} products
+              Showing {products.length} of {pagination?.total ?? products.length} products
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {filteredProducts.map((product: Product) => (
+              {products.map((product: Product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
@@ -163,6 +179,9 @@ const handleAddToCart = useCallback((product: Product) => {
                 />
               ))}
             </div>
+            {pagination && (
+              <Pagination pagination={pagination} onPageChange={setPage} />
+            )}
           </>
         ) : (
           <div className="text-center py-20 text-gray-400">
