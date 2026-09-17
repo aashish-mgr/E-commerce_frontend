@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import type { VerificationStatus } from '../types';
 import {authAPI } from '../api';
+import { showErrorToast } from '../lib/toast';
 
 
 const PaymentCallback = () => {
@@ -31,7 +32,8 @@ const PaymentCallback = () => {
         } else {
           setStatus('failed');
         }
-      } catch {
+      } catch (error) {
+        showErrorToast(error, "Payment verification failed.");
         setStatus('failed');
       }
     };

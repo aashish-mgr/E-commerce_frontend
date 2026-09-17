@@ -5,6 +5,7 @@ import type { Product } from "../types";
 import { Link,useNavigate } from "react-router-dom";
 import { setCart } from "../store/cartSlice";
 import { useDispatch } from "react-redux";
+import { toast, showErrorToast } from "../lib/toast";
 
 export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
@@ -21,20 +22,28 @@ export default function ProductDetail() {
 
   const getProduct = async () => {
     if (!id) return;
-    const res = await authAPI.get(`/product/getSingle/${id}`);
-    setProduct(res.data?.data ?? null);
+    try {
+      const res = await authAPI.get(`/product/getSingle/${id}`);
+      setProduct(res.data?.data ?? null);
+    } catch (error) {
+      showErrorToast(error, "Failed to load product.");
+    }
   };
 
   const addToCart = async (q: number) => {
     if (!id) return;
-    const res = await authAPI.post('cart/addToCart', {
-      quantity: q,
-      productId: id
-    })
-    if(res.status === 200) {
-      setAdded(true);
+    try {
+      const res = await authAPI.post('/cart/addToCart', {
+        quantity: q,
+        productId: id
+      })
+      if(res.status === 200) {
+        setAdded(true);
+        toast.success("Added to cart.");
+      }
+    } catch (error) {
+      showErrorToast(error, "Failed to add to cart.");
     }
-    
   }
 
   useEffect(() => {

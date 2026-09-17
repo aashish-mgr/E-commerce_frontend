@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { authAPI, getImageUrl } from "../api";
 import { useNavigate } from "react-router-dom";
+import { showErrorToast } from "../lib/toast";
 // ── Types ─────────────────────────────────────────────────────
 import type { Order } from "../types";
 import type { OrderStatus } from "../types";
@@ -219,6 +220,7 @@ export default function Orders() {
       const res = await authAPI.get("/order/getMyOrders");
       setOrders(res.data?.data);
     } catch (err) {
+      showErrorToast(err, "Failed to load orders.");
     }
   };
 

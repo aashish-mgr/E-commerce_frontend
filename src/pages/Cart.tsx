@@ -4,7 +4,7 @@ import type { Cart } from "../types";
 import { Link,useNavigate} from "react-router-dom";
 import { useDispatch,useSelector } from "react-redux";
 import { getCartItems,deleteCartItem } from "../store/cartSlice";
-import { toast } from "../lib/toast";
+import { showErrorToast } from "../lib/toast";
 
 const SHIPPING_THRESHOLD = 50; // free shipping above this
 const TAX_RATE           = 0.08;
@@ -188,7 +188,7 @@ export default function Cart() {
       await dispatch(deleteCartItem(id) as any);
       await dispatch(getCartItems()as any);
     } catch (err) {
-      toast.error("Something went wrong");
+      showErrorToast(err, "Something went wrong");
     }
   }
 

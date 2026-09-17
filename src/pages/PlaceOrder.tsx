@@ -8,7 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { setCart } from "../store/cartSlice";
 import OrderSuccess from "../Components/OrderSuccess";
 import { deleteCartItem } from "../store/cartSlice";
-import { toast } from "../lib/toast";
+import { toast, getServerMessage, showErrorToast } from "../lib/toast";
 // ── Types (your exact interfaces) ────────────────────────────
 
 // ── Seed data ─────────────────────────────────────────────────
@@ -220,10 +220,11 @@ const CURRENT_USER: User | null = authState?.user ?? null;
         return;
       }
     } catch (error) {
-      toast.error("Failed to place order. Please try again.");
+      const msg = getServerMessage(error, "Failed to place order. Please try again.");
+      showErrorToast(error, msg);
       setErrors((p) => ({
         ...p,
-        form: "Failed to place order. Please try again.",
+        form: msg,
       }));
       setLoading(false);
       return;

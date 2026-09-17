@@ -3,6 +3,7 @@ import { authAPI, getImageUrl } from "../api";
 import { useParams } from "react-router-dom";
 import type { Order,OrderItem } from "../types";
 import { Link } from "react-router-dom";
+import { toast, showErrorToast } from "../lib/toast";
 
 // ── Status styling ───────────────────────────────────────────
 
@@ -191,6 +192,7 @@ export default function OrderDetail() {
       setOrder(res.data?.data[0]);
     }
     catch(err) {
+      showErrorToast(err, "Failed to load order details.");
     }
   }
 
@@ -201,9 +203,14 @@ export default function OrderDetail() {
   
 
   const cancelOrder = async () => {
-    const res = await authAPI.patch(`/order/cancelOrder/${id}`);
-    if(res.status === 200) {
-      getOrderDetail();
+    try {
+      const res = await authAPI.patch(`/order/cancelOrder/${id}`);
+      if(res.status === 200) {
+        toast.success("Order cancelled successfully.");
+        getOrderDetail();
+      }
+    } catch (err) {
+      showErrorToast(err, "Failed to cancel order.");
     }
   }
 

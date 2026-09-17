@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import {API,authAPI} from '../api/index';
-import { toast } from "../lib/toast";
+import { API,authAPI } from '../api/index';
+import { toast, showErrorToast } from '../lib/toast';
 
 
 
@@ -82,6 +82,7 @@ export function registerUser(userData: RegisterData) {
     }
     catch(error) {
         dispatch(setStatus(AuthStatus.Error));
+        showErrorToast(error, "Registration failed. Please try again.");
     }
 
     }
@@ -106,7 +107,7 @@ export function loginUser(userData: LoginData) {
     }
     catch(error) {
         dispatch(setStatus(AuthStatus.Error));
-        toast.error("Login Failed! Please check your credentials.");
+        showErrorToast(error, "Login failed. Please check your credentials.");
     }
 
     return null;
