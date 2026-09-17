@@ -86,17 +86,12 @@ const handleAddToCart = useCallback((product: Product) => {
     navigate('/orders');
   }, []);
 
-  const handleProfileClick = useCallback(() => {
-    toast.info("User profile coming soon!");
-  }, []);
-
   const navbarData = useMemo(
     () => ({
       user: CURRENT_USER,
       cartCount,
-      onProfileClick: handleProfileClick,
     }),
-    [CURRENT_USER, cartCount, handleOrderHistoryClick, handleProfileClick]
+    [CURRENT_USER, cartCount, handleOrderHistoryClick]
   );
 
   useEffect(() => {

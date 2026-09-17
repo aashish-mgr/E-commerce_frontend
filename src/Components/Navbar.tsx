@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getUserProfile, LogoutUser } from "../store/authSlice";
 import { useNavbar } from "../context/NavbarContext";
-import { toast } from "../lib/toast";
+import { getImageUrl } from "../api/index";
 
 type Role = "customer" | "vendor";
 
@@ -58,8 +58,10 @@ export default function Navbar() {
 
   const openLogin = () => (navbarData.onLogin?.() ?? navigate("/login"));
   const openRegister = () => (navbarData.onRegister?.() ?? navigate("/login"));
-  const handleProfileClick = () =>
-    navbarData.onProfileClick?.() ?? toast.info("User profile coming soon!");
+  const handleProfileClick = () => {
+    closeMenus();
+    navigate("/profile");
+  };
 
   const isActive = (to: string) => {
     if (location.pathname !== "/vendor/dashboard") return location.pathname === to;
@@ -98,6 +100,18 @@ export default function Navbar() {
   }, []);
 
   const avatarInitial = user?.userName?.[0]?.toUpperCase() ?? "?";
+  const avatarSrc = user?.avatar ? getImageUrl(user.avatar) : "";
+  const avatarContent = avatarSrc ? (
+    <img
+      src={avatarSrc}
+      alt={user?.userName ?? "User"}
+      className="w-8 h-8 rounded-full object-cover"
+    />
+  ) : (
+    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-semibold text-indigo-700">
+      {avatarInitial}
+    </div>
+  );
 
   return (
     <nav className="border-b border-gray-200 sticky top-0 bg-white z-40">
@@ -145,9 +159,7 @@ export default function Navbar() {
                 onClick={() => setDropdownOpen((o) => !o)}
                 className="flex items-center gap-2 hover:bg-gray-100 pl-1.5 pr-3 py-1.5 rounded-lg transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-semibold text-indigo-700">
-                  {avatarInitial}
-                </div>
+                {avatarContent}
                 <span className="hidden lg:block text-sm font-medium text-gray-700">{user?.userName}</span>
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <polyline points="6 9 12 15 18 9" />
@@ -170,6 +182,12 @@ export default function Navbar() {
                   >
                     View Store
                   </Link>
+                  <button
+                    onClick={handleProfileClick}
+                    className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                  >
+                    My Profile
+                  </button>
                   <div className="border-t border-gray-100 my-1" />
                   <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 transition-colors">
                     Sign Out
@@ -204,9 +222,7 @@ export default function Navbar() {
                   onClick={() => setDropdownOpen((o) => !o)}
                   className="flex items-center gap-2 hover:bg-gray-100 pl-1.5 pr-3 py-1.5 rounded-lg transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-semibold text-indigo-700">
-                    {avatarInitial}
-                  </div>
+                  {avatarContent}
                   <span className="hidden lg:block text-sm font-medium text-gray-700">{user?.userName}</span>
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <polyline points="6 9 12 15 18 9" />
@@ -216,7 +232,7 @@ export default function Navbar() {
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1 text-sm z-50">
                     <button
-                      onClick={() => { handleProfileClick(); setDropdownOpen(false); }}
+                      onClick={handleProfileClick}
                       className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                     >
                       My Profile
@@ -297,13 +313,22 @@ export default function Navbar() {
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <path d="M16 10a4 4 0 01-8 0" />
               </svg>
-              Cart
+               Cart
               {cartCount > 0 && (
                 <span className="bg-indigo-600 text-white text-[10px] font-bold rounded-full min-w-4 h-4 flex items-center justify-center px-1">
                   {cartCount}
                 </span>
               )}
             </Link>
+          )}
+
+          {isAuthenticated && (
+            <button
+              onClick={handleProfileClick}
+              className="text-left px-3 py-2 rounded-lg font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            >
+              My Profile
+            </button>
           )}
 
           <div className="border-t border-gray-100 my-1" />

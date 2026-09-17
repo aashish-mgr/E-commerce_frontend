@@ -13,9 +13,13 @@ export interface Category {
 }
 
 export interface User {
+  id?: string;
   userName: string;
   userEmail: string;
   userRole: string;
+  avatar?: string | null;
+  provider?: string;
+  googleId?: string | null;
 }
 
 export interface Cart {

@@ -20,6 +20,7 @@ import PlaceOrder from './pages/PlaceOrder.tsx'
 import PaymentCallback from './pages/PaymentCallback.tsx'
 import AuthComplete from './pages/AuthComplete.tsx'
 import Login from './pages/Login.tsx'
+import Profile from './pages/Profile.tsx'
 
 function App() {
   const dispatch = useDispatch();
@@ -45,6 +46,7 @@ function App() {
           <Route path='/product/:id' element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
           <Route path='/cart' element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path='/orders' element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path='/orderDetail/:id' element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path='/placeOrder' element={<ProtectedRoute><PlaceOrder /></ProtectedRoute>} />
           <Route path='/paymentCallback' element={<ProtectedRoute><PaymentCallback /></ProtectedRoute>} />

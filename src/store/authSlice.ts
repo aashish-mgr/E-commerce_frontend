@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { API,authAPI } from '../api/index';
 import { toast, showErrorToast } from '../lib/toast';
+import type { User } from '../types';
 
 
 
@@ -10,13 +11,6 @@ enum AuthStatus {
     Loading = "loading",
     Success = "success",
     Error = "error"
-}
-
-interface User{
-    id: string,
-    userName: string,
-    userEmail: string,
-    userRole: string
 }
 
 interface RegisterData {
@@ -143,6 +137,36 @@ export const getUserProfile = createAsyncThunk(
         }
         catch(error) {
             dispatch(setStatus(AuthStatus.Error));
+            return rejectWithValue(error);
+        }
+    }
+);
+
+export const updateUserProfile = createAsyncThunk(
+    'auth/updateUserProfile',
+    async (formData: FormData, { dispatch, rejectWithValue }) => {
+        try {
+            const response = await authAPI.patch("/auth/updateProfile", formData);
+            if (response.status === 200) {
+                dispatch(setUserData(response.data?.data ?? null));
+                return response.data;
+            }
+            return rejectWithValue('Unable to update profile');
+        }
+        catch (error) {
+            return rejectWithValue(error);
+        }
+    }
+);
+
+export const changeUserPassword = createAsyncThunk(
+    'auth/changeUserPassword',
+    async (passwordData: { currentPassword: string; newPassword: string }, { rejectWithValue }) => {
+        try {
+            const response = await authAPI.patch("/auth/changePassword", passwordData);
+            return response.data;
+        }
+        catch (error) {
             return rejectWithValue(error);
         }
     }
