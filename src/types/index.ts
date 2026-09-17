@@ -36,7 +36,7 @@ export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";
 export interface Order {
   id: string,
   shippingAddress: string,
-  phoneNumber: number,
+  phoneNumber: string,
   totalAmount: number,
   orderStatus: string,
   createdAt: string,

@@ -5,9 +5,10 @@ import AuthModal from "../Components/AuthModal";
 import { useSelector} from 'react-redux'
 import {useNavigate} from 'react-router-dom'
 import type { Product, PaginationMeta } from "../types";
-import { API } from "../api/index"
+import { API, authAPI } from "../api/index"
 import { useNavbar } from "../context/NavbarContext";
 import Pagination from "../Components/Pagination";
+import { toast, showErrorToast } from "../lib/toast";
 
 
 const STATS = [
@@ -34,9 +35,24 @@ export default function LandingPage() {
   const openRegister = useCallback(() => setAuthMode("register"), []);
   const closeModal = useCallback(() => setAuthMode(""), []);
   const switchMode = useCallback(() => setAuthMode((m) => (m === "login" ? "register" : "login")), []);
-  const handleAddToCart = () => {
-    // Implement add to cart functionality here
-  };
+  const handleAddToCart = useCallback(
+    async (product: Product) => {
+      if (!authState.isAuthenticated) {
+        openLogin();
+        return;
+      }
+      try {
+        await authAPI.post("/cart/addToCart", {
+          quantity: 1,
+          productId: product.id,
+        });
+        toast.success(`"${product.productName}" added to cart`);
+      } catch (error) {
+        showErrorToast(error, "Failed to add to cart.");
+      }
+    },
+    [authState.isAuthenticated, openLogin]
+  );
 
   const navbarData = useMemo(
     () => ({

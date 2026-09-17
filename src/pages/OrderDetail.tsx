@@ -31,7 +31,7 @@ function formatDate(iso: string ) {
   });
 }
 
-function formatPhone(phone: number) {
+function formatPhone(phone: string) {
   const str = phone.toString();
   if (str.length === 10) {
     return `${str.slice(0, 3)}-${str.slice(3, 6)}-${str.slice(6)}`;
@@ -286,7 +286,7 @@ export default function OrderDetail() {
                   </span>
                   <div>
                     <p className="text-xs text-gray-400">Contact Number</p>
-                    <p className="text-sm font-medium text-gray-800 mt-0.5">{formatPhone(order?.phoneNumber? order.phoneNumber : 0)}</p>
+                    <p className="text-sm font-medium text-gray-800 mt-0.5">{formatPhone(order?.phoneNumber ?? "")}</p>
                   </div>
                 </div>
               </div>
