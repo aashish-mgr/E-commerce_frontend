@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { getUserProfile, LogoutUser } from "../store/authSlice";
+import { LogoutUser } from "../store/authSlice";
 import { useNavbar } from "../context/NavbarContext";
 import { getImageUrl } from "../api/index";
 
@@ -34,6 +34,7 @@ export default function Navbar() {
   const user = navbarData.user ?? authState.user;
   const role: Role = user?.userRole === "vendor" ? "vendor" : "customer";
   const isAuthenticated = !!authState.isAuthenticated;
+  const authPending = authState.status === "idle" || authState.status === "loading";
 
   const cartCount =
     navbarData.cartCount ??
@@ -81,13 +82,6 @@ export default function Navbar() {
   useEffect(() => {
     closeMenus();
   }, [location.pathname, location.search]);
-
-  useEffect(() => {
-    if (authState.isAuthenticated) {
-      dispatch(getUserProfile() as any);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -138,7 +132,12 @@ export default function Navbar() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
-          {!isAuthenticated ? (
+          {authPending ? (
+            <div className="hidden md:flex items-center gap-3 px-2" aria-label="Loading user">
+              <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+              <div className="h-3.5 w-24 rounded bg-gray-200 animate-pulse" />
+            </div>
+          ) : !isAuthenticated ? (
             <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={openLogin}
@@ -333,7 +332,12 @@ export default function Navbar() {
 
           <div className="border-t border-gray-100 my-1" />
 
-          {!isAuthenticated ? (
+          {authPending ? (
+            <div className="flex items-center gap-3 pt-1" aria-label="Loading user">
+              <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+              <div className="h-4 w-32 rounded bg-gray-200 animate-pulse" />
+            </div>
+          ) : !isAuthenticated ? (
             <div className="grid grid-cols-2 gap-3 pt-1">
               <button
                 onClick={() => { openLogin(); setMenuOpen(false); }}

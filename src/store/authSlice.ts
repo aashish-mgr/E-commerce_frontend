@@ -120,27 +120,35 @@ export function LogoutUser() {
     }
 }
 
-export const getUserProfile = createAsyncThunk(
-    'auth/getUserProfile',
-    async (_, { dispatch, rejectWithValue }) => {
+let sessionRestoreInFlight: Promise<User | null> | null = null;
+
+export function restoreSession() {
+    return async function restoreSessionThunk(dispatch: any) {
+        if (sessionRestoreInFlight) return sessionRestoreInFlight;
+
         dispatch(setStatus(AuthStatus.Loading));
-        try{
-         const response =await authAPI.get("/auth/getUserProfile");
-            if(response.status === 200) {
-                dispatch(setUserData(response.data?.data ?? null));
-                dispatch(setAuthenticated(true));
-                dispatch(setStatus(AuthStatus.Success));
-                return response.data;
+        sessionRestoreInFlight = (async (): Promise<User | null> => {
+            try {
+                const response = await authAPI.get("/auth/session");
+                if (response.status === 200) {
+                    const user = response.data?.data ?? null;
+                    dispatch(setUserData(user));
+                    dispatch(setAuthenticated(true));
+                    dispatch(setStatus(AuthStatus.Success));
+                    return user;
+                }
+                dispatch(setStatus(AuthStatus.Error));
+                return null;
+            } catch (error) {
+                dispatch(setStatus(AuthStatus.Error));
+                return null;
+            } finally {
+                sessionRestoreInFlight = null;
             }
-            dispatch(setStatus(AuthStatus.Error));
-            return rejectWithValue('Unable to fetch user profile');
-        }
-        catch(error) {
-            dispatch(setStatus(AuthStatus.Error));
-            return rejectWithValue(error);
-        }
-    }
-);
+        })();
+        return sessionRestoreInFlight;
+    };
+}
 
 export const updateUserProfile = createAsyncThunk(
     'auth/updateUserProfile',

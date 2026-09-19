@@ -41,7 +41,8 @@ const isAuthEndpoint = (url?: string) =>
   !!url &&
   (url.includes('/auth/login') ||
     url.includes('/auth/register') ||
-    url.includes('/auth/refresh'));
+    url.includes('/auth/refresh') ||
+    url.includes('/auth/session'));
 
 type UnauthorizedHandler = () => void;
 let unauthorizedHandler: UnauthorizedHandler | null = null;

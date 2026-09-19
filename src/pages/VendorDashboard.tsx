@@ -118,14 +118,12 @@ export default function VendorDashboard() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     await Promise.all([
-      fetchProducts(),
       fetchCategories(),
-      fetchOrders(),
       fetchOverviewProducts(),
       fetchOverviewOrders(),
     ]);
     setLoading(false);
-  }, [fetchProducts, fetchCategories, fetchOrders, fetchOverviewProducts, fetchOverviewOrders]);
+  }, [fetchCategories, fetchOverviewProducts, fetchOverviewOrders]);
 
   useEffect(() => {
     fetchAll();

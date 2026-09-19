@@ -5,7 +5,7 @@ import Dashboard from './pages/Dashboard.tsx'
 import VendorDashboard from './pages/VendorDashboard.tsx'
 import VendorOrderDetail from './pages/VendorOrderDetail.tsx'
 import { useEffect } from 'react'
-import { getUserProfile } from './store/authSlice.ts'
+import { restoreSession } from './store/authSlice.ts'
 import { useDispatch } from 'react-redux'
 
 import ProductDetail from './Components/ProductDetail.tsx'
@@ -26,11 +26,7 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      await dispatch(getUserProfile() as any);
-    };
-
-    fetchUserProfile();
+    dispatch(restoreSession() as any);
   }, [dispatch]);
 
   return (
