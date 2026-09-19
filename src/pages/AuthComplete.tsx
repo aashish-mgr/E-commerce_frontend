@@ -11,7 +11,9 @@ export default function AuthComplete() {
   useEffect(() => {
     dispatch(restoreSession() as any)
       .then((user: any) => {
-        if (user?.userRole === "vendor") {
+        if (user?.userRole === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (user?.userRole === "vendor") {
           navigate("/vendor/dashboard", { replace: true });
         } else if (user) {
           navigate("/dashboard", { replace: true });

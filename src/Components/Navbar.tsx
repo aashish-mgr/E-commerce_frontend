@@ -5,11 +5,19 @@ import { LogoutUser } from "../store/authSlice";
 import { useNavbar } from "../context/NavbarContext";
 import { getImageUrl } from "../api/index";
 
-type Role = "customer" | "vendor";
+type Role = "customer" | "vendor" | "admin";
 
 const customerLinks = [
   { label: "Home", to: "/" },
   { label: "Orders", to: "/orders" },
+];
+
+const adminLinks = [
+  { label: "Overview", to: "/admin", tab: "overview" },
+  { label: "Users", to: "/admin?tab=users", tab: "users" },
+  { label: "Products", to: "/admin?tab=products", tab: "products" },
+  { label: "Orders", to: "/admin?tab=orders", tab: "orders" },
+  { label: "Categories", to: "/admin?tab=categories", tab: "categories" },
 ];
 
 const vendorLinks = [
@@ -32,7 +40,11 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = navbarData.user ?? authState.user;
-  const role: Role = user?.userRole === "vendor" ? "vendor" : "customer";
+  const role: Role = user?.userRole === "vendor"
+    ? "vendor"
+    : user?.userRole === "admin"
+      ? "admin"
+      : "customer";
   const isAuthenticated = !!authState.isAuthenticated;
   const authPending = authState.status === "idle" || authState.status === "loading";
 
@@ -42,9 +54,11 @@ export default function Navbar() {
 
   const links = !isAuthenticated
     ? publicLinks
-    : role === "vendor"
-      ? vendorLinks
-      : customerLinks;
+    : role === "admin"
+      ? adminLinks
+      : role === "vendor"
+        ? vendorLinks
+        : customerLinks;
 
   const closeMenus = () => {
     setMenuOpen(false);
@@ -64,11 +78,13 @@ export default function Navbar() {
     navigate("/profile");
   };
 
+  const isDashboard = location.pathname === "/admin" || location.pathname === "/vendor/dashboard";
+
   const isActive = (to: string) => {
-    if (location.pathname !== "/vendor/dashboard") return location.pathname === to;
-    if (to === "/vendor/dashboard") {
+    if (!isDashboard) return location.pathname === to;
+    if (to === location.pathname) {
       const tab = new URLSearchParams(location.search).get("tab");
-      return tab !== "products" && tab !== "orders";
+      return !tab || tab === "overview";
     }
     const wanted = to.split("?tab=")[1];
     return new URLSearchParams(location.search).get("tab") === wanted;
@@ -152,7 +168,7 @@ export default function Navbar() {
                 Register
               </button>
             </div>
-          ) : role === "vendor" ? (
+          ) : role === "vendor" || role === "admin" ? (
             <div ref={dropdownRef} className="hidden md:block relative">
               <button
                 onClick={() => setDropdownOpen((o) => !o)}
@@ -168,7 +184,7 @@ export default function Navbar() {
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1 text-sm z-50">
                   <Link
-                    to="/vendor/dashboard"
+                    to={role === "admin" ? "/admin" : "/vendor/dashboard"}
                     onClick={closeMenus}
                     className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors block"
                   >
@@ -291,7 +307,7 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {isAuthenticated && role === "vendor" && (
+          {isAuthenticated && (role === "vendor" || role === "admin") && (
             <Link
               to="/"
               onClick={closeMenus}

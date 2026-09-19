@@ -11,7 +11,9 @@ export default function Login() {
 
   const handleLogin = async (userEmail: string, userPassword: string) => {
     const result = await dispatch(loginUser({ userEmail, userPassword }));
-    if (result?.userRole === "vendor") {
+    if (result?.userRole === "admin") {
+      navigate("/admin", { replace: true });
+    } else if (result?.userRole === "vendor") {
       navigate("/vendor/dashboard", { replace: true });
     } else if (result) {
       navigate("/dashboard", { replace: true });
