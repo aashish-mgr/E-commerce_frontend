@@ -13,6 +13,8 @@ import NavbarProvider from './context/NavbarContext.tsx'
 import Navbar from './Components/Navbar.tsx'
 import ProtectedRoute from './Components/ProtectedRoute.tsx'
 import VendorRoute from './Components/VendorRoute.tsx'
+import AdminRoute from './Components/AdminRoute.tsx'
+import AdminDashboard from './pages/AdminDashboard.tsx'
 import Cart from './pages/Cart.tsx'
 import Orders from './pages/Order.tsx'
 import OrderDetail from './pages/OrderDetail.tsx'
@@ -38,6 +40,7 @@ function App() {
           <Route path='/login' element={<Login />} />
           <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path='/vendor/dashboard' element={<VendorRoute><VendorDashboard /></VendorRoute>} />
+          <Route path='/admin' element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path='/vendor/order/:orderId' element={<VendorRoute><VendorOrderDetail /></VendorRoute>} />
           <Route path='/product/:id' element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
           <Route path='/cart' element={<ProtectedRoute><Cart /></ProtectedRoute>} />
