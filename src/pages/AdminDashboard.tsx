@@ -12,8 +12,20 @@ import type { Category } from "../types";
 import { toast } from "../lib/toast";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import type { PaginationMeta } from "../types";
+import { Container } from "../Components/ui/Container";
+import { Skeleton } from "../Components/ui/Skeleton";
+import { cn } from "../lib/cn";
 
 type Tab = "overview" | "users" | "products" | "orders" | "categories";
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: "overview", label: "Overview" },
+  { value: "users", label: "Users" },
+  { value: "products", label: "Products" },
+  { value: "orders", label: "Orders" },
+  { value: "categories", label: "Categories" },
+];
+
 
 export default function AdminDashboard() {
   const user = useSelector((state: any) => state.auth.user);
@@ -318,112 +330,134 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Loading admin dashboard...</p>
-        </div>
+      <div className="min-h-screen bg-paper">
+        <Container width="dashboard" className="py-8">
+          <div className="rounded-panel bg-pine px-6 py-8 sm:px-8">
+            <Skeleton className="h-7 w-56 bg-pine-soft/40" />
+            <Skeleton className="mt-3 h-4 w-80 bg-pine-soft/25" />
+          </div>
+          <div className="mt-6 flex gap-2">
+            {TABS.map((t) => (
+              <Skeleton key={t.value} className="h-11 w-24" />
+            ))}
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-panel" />
+            ))}
+          </div>
+          <Skeleton className="mt-6 h-64 rounded-panel" />
+        </Container>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <div className="bg-gradient-to-r from-indigo-950 via-indigo-900 to-indigo-950 text-white rounded-2xl px-6 sm:px-8 py-6 sm:py-8 mb-6 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full blur-3xl" />
-              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white rounded-full blur-3xl" />
-            </div>
-            <div className="relative">
-              <h1 className="text-2xl sm:text-3xl font-bold mb-1">Admin Dashboard</h1>
-              <p className="text-indigo-200 text-sm sm:text-base">
-                Welcome back, <span className="text-white font-medium">{user?.userName ?? "Admin"}</span>! Manage the platform from here.
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-paper">
+      <Container width="dashboard" className="py-8">
+        <header className="rounded-panel bg-pine px-6 py-7 text-paper sm:px-8 sm:py-8">
+          <span aria-hidden className="mb-4 block h-1 w-12 rounded-full bg-marigold" />
+          <h1 className="font-display text-2xl font-semibold sm:text-[28px]">
+            Admin dashboard
+          </h1>
+          <p className="mt-1 max-w-prose text-sm text-pine-soft">
+            Welcome back,{" "}
+            <span className="font-medium text-paper">{user?.userName ?? "Admin"}</span>.
+            Manage the platform from here.
+          </p>
+        </header>
 
-          <div className="flex gap-1 bg-white p-1 rounded-xl shadow-sm w-fit max-w-full overflow-x-auto">
-            {(["overview", "users", "products", "orders", "categories"] as Tab[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => changeTab(t)}
-                className={`px-5 py-2.5 rounded-lg text-sm font-semibold capitalize transition-all duration-200 whitespace-nowrap ${
-                  tab === t
-                    ? "bg-gray-900 text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+        <div
+          role="tablist"
+          aria-label="Admin sections"
+          className="mt-6 flex gap-2 overflow-x-auto pb-1"
+        >
+          {TABS.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.value}
+              onClick={() => changeTab(t.value)}
+              className={cn(
+                "h-11 shrink-0 rounded-control px-4 text-sm font-medium transition-colors",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine",
+                tab === t.value
+                  ? "bg-pine text-paper"
+                  : "border border-line bg-surface text-ink-2 hover:border-pine hover:text-pine",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
 
-        {tab === "overview" && stats && (
-          <AdminDashboardHome
-            stats={stats}
-            onViewUsers={() => changeTab("users")}
-            onViewProducts={() => changeTab("products")}
-            onViewOrders={() => changeTab("orders")}
-          />
-        )}
+        <div className="pb-16 pt-6">
+          {tab === "overview" && stats && (
+            <AdminDashboardHome
+              stats={stats}
+              onViewUsers={() => changeTab("users")}
+              onViewProducts={() => changeTab("products")}
+              onViewOrders={() => changeTab("orders")}
+            />
+          )}
+
 
         {tab === "users" && (
-          <AdminUsers
-            users={users}
-            pagination={usersPagination}
-            search={userSearch}
-            roleFilter={userRoleFilter}
-            currentAdminId={user?.id}
-            onSearchChange={handleUserSearchChange}
-            onRoleFilterChange={handleUserRoleFilterChange}
-            onPageChange={setUserPage}
-            onRoleChange={handleUpdateUserRole}
-            onDelete={handleDeleteUser}
-          />
-        )}
+            <AdminUsers
+              users={users}
+              pagination={usersPagination}
+              search={userSearch}
+              roleFilter={userRoleFilter}
+              currentAdminId={user?.id}
+              onSearchChange={handleUserSearchChange}
+              onRoleFilterChange={handleUserRoleFilterChange}
+              onPageChange={setUserPage}
+              onRoleChange={handleUpdateUserRole}
+              onDelete={handleDeleteUser}
+            />
+          )}
 
-        {tab === "products" && (
-          <AdminProducts
-            products={products}
-            categories={["All", ...categories.map((c) => c.categoryName)]}
-            pagination={productsPagination}
-            search={productSearch}
-            selectedCategory={selectedCategory}
-            onSearchChange={handleProductSearchChange}
-            onCategoryChange={handleProductCategoryChange}
-            onPageChange={setProductPage}
-            onUpdateStock={handleUpdateProductStock}
-            onDelete={handleDeleteProduct}
-          />
-        )}
+          {tab === "products" && (
+            <AdminProducts
+              products={products}
+              categories={["All", ...categories.map((c) => c.categoryName)]}
+              pagination={productsPagination}
+              search={productSearch}
+              selectedCategory={selectedCategory}
+              onSearchChange={handleProductSearchChange}
+              onCategoryChange={handleProductCategoryChange}
+              onPageChange={setProductPage}
+              onUpdateStock={handleUpdateProductStock}
+              onDelete={handleDeleteProduct}
+            />
+          )}
 
-        {tab === "orders" && (
-          <AdminOrders
-            orders={orders}
-            pagination={ordersPagination}
-            search={orderSearch}
-            statusFilter={orderStatusFilter}
-            onSearchChange={handleOrderSearchChange}
-            onStatusFilterChange={handleOrderStatusFilterChange}
-            onPageChange={setOrderPage}
-            onUpdateStatus={handleUpdateOrderStatus}
-            onUpdatePayment={handleUpdatePaymentStatus}
-          />
-        )}
+          {tab === "orders" && (
+            <AdminOrders
+              orders={orders}
+              pagination={ordersPagination}
+              search={orderSearch}
+              statusFilter={orderStatusFilter}
+              onSearchChange={handleOrderSearchChange}
+              onStatusFilterChange={handleOrderStatusFilterChange}
+              onPageChange={setOrderPage}
+              onUpdateStatus={handleUpdateOrderStatus}
+              onUpdatePayment={handleUpdatePaymentStatus}
+            />
+          )}
 
-        {tab === "categories" && (
-          <AdminCategories
-            categories={categories}
-            statsCategoryCount={String(stats?.totalCategories ?? categories.length)}
-            onChangeCategory={handleCreateCategory}
-            onRenameCategory={handleRenameCategory}
-            onDeleteCategory={handleDeleteCategory}
-          />
-        )}
-      </main>
+          {tab === "categories" && (
+            <AdminCategories
+              categories={categories}
+              statsCategoryCount={String(stats?.totalCategories ?? categories.length)}
+              onChangeCategory={handleCreateCategory}
+              onRenameCategory={handleRenameCategory}
+              onDeleteCategory={handleDeleteCategory}
+            />
+          )}
+        </div>
+      </Container>
     </div>
   );
 }

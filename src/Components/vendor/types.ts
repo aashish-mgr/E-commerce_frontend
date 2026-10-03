@@ -55,6 +55,7 @@ export const emptyProductForm = {
 
 export type ProductForm = typeof emptyProductForm;
 
+/** Source of truth for status badge classes. `statusTones` drives <StatusBadge>. */
 export const statusStyles: Record<string, string> = {
   pending: "bg-marigold-soft text-amber",
   shipped: "bg-sky-soft text-sky",
@@ -62,6 +63,7 @@ export const statusStyles: Record<string, string> = {
   cancelled: "bg-crimson-soft text-crimson",
 };
 
+/** Source of truth for payment badge classes. `paymentTones` drives <StatusBadge>. */
 export const paymentStyles: Record<string, string> = {
   paid: "bg-pine-soft text-pine",
   unpaid: "bg-paper-2 text-muted",
@@ -81,3 +83,15 @@ export const paymentTones = {
 
 export type StatusTone = (typeof statusTones)[keyof typeof statusTones];
 export type PaymentTone = (typeof paymentTones)[keyof typeof paymentTones];
+
+/** Resolves an arbitrary API status string to a badge tone, defaulting to neutral. */
+export function toStatusTone(value: string | null | undefined): StatusTone | "neutral" {
+  return (statusTones as Record<string, StatusTone | undefined>)[value ?? ""] ?? "neutral";
+}
+
+/** Resolves an arbitrary payment status string to a badge tone. */
+export function toPaymentTone(
+  value: string | null | undefined,
+): PaymentTone | "neutral" {
+  return (paymentTones as Record<string, PaymentTone | undefined>)[value ?? ""] ?? "neutral";
+}

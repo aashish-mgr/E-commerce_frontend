@@ -1,4 +1,15 @@
 import { useState } from "react";
+import { ImageOff, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { getImageUrl } from "../../api";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/DropdownMenu";
+import { Price } from "../ui/Price";
+import { cn } from "../../lib/cn";
+import { formatCount } from "../../lib/format";
 import type { VendorProduct } from "./types";
 
 export default function VendorProductCard({
@@ -11,122 +22,89 @@ export default function VendorProductCard({
   onDelete: (p: VendorProduct) => void;
 }) {
   const [imgError, setImgError] = useState(false);
-  const [showActions, setShowActions] = useState(false);
+  const src = getImageUrl(product.image);
+  const stock = Number(product.stock ?? 0);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200 group flex flex-col">
-      {/* Image */}
-      <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-        {product.image && !imgError ? (
+    <article className="flex flex-col overflow-hidden rounded-panel border border-line bg-surface">
+      <div className="relative aspect-[4/3] bg-paper-2">
+        {src && !imgError ? (
           <img
-            src={product.image}
+            src={src}
             alt={product.productName}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
             onError={() => setImgError(true)}
+            className="size-full object-cover"
           />
         ) : (
-          <div className="flex flex-col items-center gap-2 text-gray-300">
-            <svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="M21 15l-5-5L5 21" />
-            </svg>
+          <span className="flex size-full flex-col items-center justify-center gap-2 text-muted">
+            <ImageOff aria-hidden className="size-8" />
             <span className="text-xs font-medium">No image</span>
-          </div>
+          </span>
         )}
 
-        {/* Category badge */}
         {product.Category?.categoryName && (
-          <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-sm text-gray-700 px-2.5 py-1 rounded-full shadow-sm">
+          <span className="absolute left-3 top-3 rounded-full bg-surface/90 px-2.5 py-1 text-xs font-medium text-ink-2 backdrop-blur-sm">
             {product.Category.categoryName}
           </span>
         )}
 
-        {/* Actions overlay */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowActions(!showActions);
-            }}
-            className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-sm hover:bg-white transition-colors"
-          >
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="5" r="1" />
-              <circle cx="12" cy="12" r="1" />
-              <circle cx="12" cy="19" r="1" />
-            </svg>
-          </button>
-          {showActions && (
-            <div className="absolute right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[120px] z-10">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowActions(false);
-                  onEdit(product);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Edit
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowActions(false);
-                  onDelete(product);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-              >
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                </svg>
-                Delete
-              </button>
-            </div>
+        <span
+          className={cn(
+            "absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium",
+            stock === 0
+              ? "bg-crimson-soft text-crimson"
+              : stock <= 5
+                ? "bg-marigold-soft text-amber"
+                : "bg-surface/90 text-ink-2 backdrop-blur-sm",
           )}
-        </div>
+        >
+          {stock === 0 ? "Out of stock" : `${formatCount(stock)} in stock`}
+        </span>
       </div>
 
-      {/* Content */}
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-1">
-          {product.productName}
-        </h3>
-        <p className="text-xs text-gray-500 line-clamp-2 mb-3 flex-1 leading-relaxed">
+      <div className="flex flex-1 flex-col gap-1 p-4">
+        <h3 className="truncate font-medium text-ink">{product.productName}</h3>
+        <p className="line-clamp-2 flex-1 text-sm leading-relaxed text-muted">
           {product.productDescription}
         </p>
+      </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <span className="font-bold text-gray-900">
-            Rs. {Number(product.productPrice).toFixed(2)}
-          </span>
-          <div className="flex gap-1.5">
-            <button
-              onClick={() => onEdit(product)}
-              className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-              title="Edit product"
-            >
-              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => onDelete(product)}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete product"
-            >
-              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-              </svg>
-            </button>
-          </div>
+      <div className="flex items-center justify-between border-t border-line px-4 py-3">
+        <Price value={product.productPrice} className="font-semibold text-ink" />
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onEdit(product)}
+            aria-label={`Edit ${product.productName}`}
+            title={`Edit ${product.productName}`}
+            className="flex size-10 items-center justify-center rounded-control text-ink-2 transition-colors hover:bg-paper-2 hover:text-pine focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine"
+          >
+            <Pencil aria-hidden className="size-4" />
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label={`More actions for ${product.productName}`}
+                className="flex size-10 items-center justify-center rounded-control text-ink-2 transition-colors hover:bg-paper-2 hover:text-pine focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine"
+              >
+                <MoreHorizontal aria-hidden className="size-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onSelect={() => onEdit(product)}>
+                <Pencil aria-hidden className="size-4" />
+                Edit product
+              </DropdownMenuItem>
+              <DropdownMenuItem destructive onSelect={() => onDelete(product)}>
+                <Trash2 aria-hidden className="size-4" />
+                Delete product
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

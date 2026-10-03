@@ -55,6 +55,8 @@ All text/background pairings meet WCAG AA (4.5:1 body, 3:1 large).
 
 ## Primitives — `src/Components/ui/`
 
-`Button` · `Input` · `Textarea` · `Field` · `Select` · `Dialog` (with a `sheet` variant) · `DropdownMenu` · `Checkbox` · `RadioGroup` · `StatusBadge` · `Price` · `QuantityStepper` · `Skeleton` · `EmptyState` · `PageHeader` · `Container` · `StatusPanel`
+`Button` · `Input` · `Textarea` · `Field` · `Select` · `Dialog` (with a `sheet` variant) · `DropdownMenu` · `Checkbox` · `RadioGroup` · `StatusBadge` · `Price` · `QuantityStepper` · `Skeleton` · `EmptyState` · `PageHeader` · `Container` · `StatusPanel` · `Panel` · `RevenueChart` · `SegmentedControl` · `FilterBar` (`SearchField` · `ChipGroup` · `ResultMeta`)
+
+Dashboard charts are inline SVG drawn with `currentColor` against `line`, `muted` and `pine`, so no hex values appear outside `src/index.css`.
 
 Helpers: `cn()` in `src/lib/cn.ts`, money and date formatting in `src/lib/format.ts`.
