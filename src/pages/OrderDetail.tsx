@@ -323,7 +323,7 @@ export default function OrderDetail() {
                 {order?.orderStatus?.toLowerCase() === "pending" && (
                   <Button
                     variant="ghost"
-                    className="w-full text-crimson hover:bg-crimson-soft hover:text-crimson"
+                    className="w-full text-crimson-bright hover:bg-crimson-bright/10 hover:text-crimson-bright"
                     onClick={cancelOrder}
                   >
                     Cancel order

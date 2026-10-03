@@ -114,15 +114,33 @@ function SummaryLine({
   label,
   children,
   muted = false,
+  onPine = false,
 }: {
   label: string;
   children: React.ReactNode;
   muted?: boolean;
+  onPine?: boolean;
 }) {
+  // On pine the light scale is mandatory: ink/muted are darker than the surface.
+  const labelTone = onPine
+    ? muted
+      ? "text-paper/70"
+      : "text-paper/75"
+    : muted
+      ? "text-muted"
+      : "text-ink-2";
+  const valueTone = onPine
+    ? muted
+      ? "text-paper/70"
+      : "text-paper"
+    : muted
+      ? "text-muted"
+      : "text-ink";
+
   return (
     <div className="flex items-baseline justify-between gap-4 text-sm">
-      <span className={muted ? "text-muted" : "text-ink-2"}>{label}</span>
-      <span className={cn("font-display font-medium tabular-nums", muted ? "text-muted" : "text-ink")}>
+      <span className={labelTone}>{label}</span>
+      <span className={cn("font-display font-medium tabular-nums", valueTone)}>
         {children}
       </span>
     </div>
@@ -321,20 +339,20 @@ export default function Cart() {
                 </p>
 
                 <div className="mt-5 flex flex-col gap-2.5 border-t border-paper/15 pt-4">
-                  <SummaryLine label="Subtotal">
+                  <SummaryLine label="Subtotal" onPine>
                     <Price value={subtotal} decimals />
                   </SummaryLine>
-                  <SummaryLine label="Delivery">
+                  <SummaryLine label="Delivery" onPine>
                     {shipping === 0 ? (
                       <span className="text-marigold">
                         {subtotal === 0 ? "—" : "Free"}
                       </span>
                     ) : (
-                      <Price value={shipping} decimals className="text-paper" />
+                      <Price value={shipping} decimals />
                     )}
                   </SummaryLine>
-                  <SummaryLine label={`Tax (${(TAX_RATE * 100).toFixed(0)}%)`} muted>
-                    <Price value={tax} decimals className="text-paper/70" />
+                  <SummaryLine label={`Tax (${(TAX_RATE * 100).toFixed(0)}%)`} muted onPine>
+                    <Price value={tax} decimals />
                   </SummaryLine>
                 </div>
 

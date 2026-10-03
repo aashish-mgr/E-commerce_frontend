@@ -312,7 +312,7 @@ export default function PlaceOrder() {
                         <p className="truncate text-sm font-medium text-paper">
                           {item.Product.productName}
                         </p>
-                        <p className="mt-0.5 text-xs text-paper/60">
+                        <p className="mt-0.5 text-xs text-paper/70">
                           {item.Product.Category.categoryName}
                         </p>
                         <QuantityStepper

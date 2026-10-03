@@ -284,7 +284,7 @@ export default function LandingPage() {
         </section>
 
         {/* ── Promo ────────────────────────────────────── */}
-        <section className="mt-16 bg-pine">
+        <section className="mt-16 bg-pine text-paper">
           <Container>
             <div className="flex flex-col items-start gap-6 py-12 sm:flex-row sm:items-center sm:justify-between">
               <div>

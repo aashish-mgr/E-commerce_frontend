@@ -15,11 +15,32 @@ Whitespace, hairlines and tinted backdrops replace stacked cards.
 | `pine` | `#0F4A43` | brand: nav rail, footer, order summary, secondary solid buttons, focus ring |
 | `marigold` | `#F2A900` | the single primary CTA per screen, hero accent |
 | `crimson` | `#B3261E` | errors, destructive actions, low stock |
+| `crimson-bright` | `#FFB4AB` | destructive text drawn on a pine surface |
 | `sky` | `#14507A` | shipped status |
 | `amber` | `#8A5A00` | pending status text on `marigold-soft` |
 | `nav-h` | `4rem` | sticky Navbar height; pages that stick content under it offset by this token |
 
 All text/background pairings meet WCAG AA (4.5:1 body, 3:1 large).
+
+## Text on pine
+
+`pine` is a deep brand green, so nothing on it is drawn in `ink`, `ink-2`, `muted` or
+`crimson` — all four are darker than the surface and land between 0.6:1 and 1.8:1.
+On pine use:
+
+| Role | Token | Ratio on `pine` |
+| --- | --- | --- |
+| Headings, values, primary copy | `paper` | 9.2:1 |
+| Supporting copy | `pine-soft` | 8.2:1 |
+| Small supporting copy | `paper/75` · `paper/70` · `paper/65` | 5.9:1 · 5.4:1 · 4.9:1 |
+| Large text only (24px, or 18.66px bold) | `paper/60` | 4.4:1 |
+| Hairlines, dividers | `paper/20` · `paper/15` | decorative |
+| Destructive action | `crimson-bright` | 5.9:1 |
+| Focus ring, hero accent, the one primary CTA | `marigold` | 5.0:1 |
+
+A pine surface must set its own text colour (usually `text-paper` on the container) so
+children inherit the light scale. Reusable components that render on both surfaces take
+an `onPine` flag, following `QuantityStepper`.
 
 ## Colour rules
 

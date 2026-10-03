@@ -22,6 +22,8 @@
   --color-marigold-soft: #fff1cc;
   --color-crimson: #b3261e;
   --color-crimson-soft: #fbe9e7;
+  /* Destructive text drawn on a pine surface. `crimson` is too dark to read there. */
+  --color-crimson-bright: #ffb4ab;
   --color-sky: #14507a;
   --color-sky-soft: #ddeef8;
   --color-amber: #8a5a00;
