@@ -32,6 +32,8 @@ All text/background pairings meet WCAG AA (4.5:1 body, 3:1 large).
 
 - `font-display` (Bricolage Grotesque) for headings, prices, big numerals.
 - `font-sans` (Instrument Sans) for everything else.
+- Both are loaded as variable fonts from Fontsource, so weights and widths are one file each.
+- Neither covers Devanagari, so Nepali product names fall back to Noto Sans Devanagari (loaded for that reason only). It reads fine; Latin and Devanagari runs will not match perfectly. Keep Devanagari text on `font-sans`, never on `font-display`, so the mismatch stays confined to one line of text.
 - Scale: 12 / 14 / 16 / 18 / 22 / 28 / 36 / 48. Body 16 on mobile, 15 on desktop, line-height 1.5.
 - Headings line-height ~1.15, letter-spacing negative from 28px up.
 - Sentence case everywhere. No tracked uppercase labels, no `capitalize` utility on UI strings.

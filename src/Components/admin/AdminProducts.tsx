@@ -216,7 +216,7 @@ export default function AdminProducts({
                               type="number"
                               min={0}
                               aria-label={`Stock for ${product.productName}`}
-                              className="h-9 w-24 text-sm"
+                              className="h-9 w-24 text-sm tabular-nums"
                               value={stockDrafts[product.id] ?? String(stock)}
                               onChange={(event) => setStock(product.id, event.target.value)}
                               onKeyDown={(event) => {

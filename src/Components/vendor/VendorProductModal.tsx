@@ -173,6 +173,7 @@ export default function VendorProductModal({
                 type="number"
                 addon="Rs."
                 placeholder="0.00"
+                className="tabular-nums"
                 value={form.productPrice}
                 onChange={(event) =>
                   onFormChange({ ...form, productPrice: event.target.value })
@@ -185,6 +186,7 @@ export default function VendorProductModal({
                 type="number"
                 min={0}
                 placeholder="0"
+                className="tabular-nums"
                 value={form.stock}
                 onChange={(event) =>
                   onFormChange({
