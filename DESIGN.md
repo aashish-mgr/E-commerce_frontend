@@ -17,6 +17,7 @@ Whitespace, hairlines and tinted backdrops replace stacked cards.
 | `crimson` | `#B3261E` | errors, destructive actions, low stock |
 | `sky` | `#14507A` | shipped status |
 | `amber` | `#8A5A00` | pending status text on `marigold-soft` |
+| `nav-h` | `4rem` | sticky Navbar height; pages that stick content under it offset by this token |
 
 All text/background pairings meet WCAG AA (4.5:1 body, 3:1 large).
 

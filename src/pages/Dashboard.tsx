@@ -119,7 +119,7 @@ export default function Dashboard() {
   return (
     <div className="flex min-h-screen flex-col bg-paper">
       <Container>
-        <div className="sticky top-16 z-20 -mx-4 border-b border-line bg-paper/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="sticky top-[var(--nav-h)] z-20 -mx-4 border-b border-line bg-paper/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
           <FilterBar
             search={search}
             selectedCategory={selectedCategory}

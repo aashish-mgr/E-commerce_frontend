@@ -247,7 +247,7 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur">
       <Container>
-        <div className="flex h-16 items-center justify-between gap-3">
+        <div className="flex h-[var(--nav-h)] items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-6">
             <Brand />
 

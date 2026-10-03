@@ -30,6 +30,9 @@
   --radius-panel: 12px;
   --radius-tile: 6px;
 
+  /* Sticky Navbar height. Pages that stick content under it offset by this token. */
+  --nav-h: 4rem;
+
   --shadow-lift: 0 12px 32px -12px rgb(15 74 67 / 0.28), 0 2px 8px -4px rgb(15 74 67 / 0.16);
 }
 
