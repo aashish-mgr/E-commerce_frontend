@@ -1,9 +1,31 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { ChevronDown, LayoutGrid, LogOut, Menu, ShoppingBag, Store, User } from "lucide-react";
 import { LogoutUser } from "../store/authSlice";
 import { useNavbar } from "../context/NavbarContext";
 import { getImageUrl } from "../api/index";
+import { cn } from "../lib/cn";
+import type { Cart, User as AppUser } from "../types";
+import { Container } from "./ui/Container";
+import { Button } from "./ui/Button";
+import { Dialog, DialogContent } from "./ui/Dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/DropdownMenu";
+
+type RootState = {
+  auth: { user: AppUser | null; isAuthenticated: boolean; status: string };
+  cart: { cart: Cart[] | null };
+};
+
+type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>;
 
 type Role = "customer" | "vendor" | "admin";
 
@@ -12,6 +34,7 @@ const customerLinks = [
   { label: "Orders", to: "/orders" },
 ];
 
+// The dashboard rail replaces these text links. Kept so `isActive` stays intact.
 const adminLinks = [
   { label: "Overview", to: "/admin", tab: "overview" },
   { label: "Users", to: "/admin?tab=users", tab: "users" },
@@ -28,57 +51,133 @@ const vendorLinks = [
 
 const publicLinks = [{ label: "Home", to: "/" }];
 
+function Brand({ onClick }: { onClick?: () => void }) {
+  return (
+    <Link
+      to="/"
+      onClick={onClick}
+      className="flex items-center gap-2 rounded-control focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
+    >
+      <span aria-hidden className="flex size-8 items-center justify-center rounded-control bg-pine">
+        <ShoppingBag className="size-4 text-paper" strokeWidth={2.4} />
+      </span>
+      <span className="font-display text-lg font-semibold tracking-tight text-ink">
+        ShopEase
+      </span>
+    </Link>
+  );
+}
+
+function UserAvatar({
+  name,
+  avatar,
+  className,
+}: {
+  name?: string;
+  avatar?: string | null;
+  className?: string;
+}) {
+  const initial = name?.[0]?.toUpperCase() ?? "?";
+  const src = avatar ? getImageUrl(avatar) : "";
+
+  return (
+    <span
+      className={`flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-pine-soft font-display text-sm font-semibold text-pine ${className ?? ""}`}
+    >
+      {src ? (
+        <img src={src} alt="" className="size-full object-cover" />
+      ) : (
+        initial
+      )}
+    </span>
+  );
+}
+
+function CartLink({
+  count,
+  onNavigate,
+  className,
+}: {
+  count: number;
+  onNavigate?: () => void;
+  className?: string;
+}) {
+  const reduce = useReducedMotion();
+
+  return (
+    <Link
+      to="/cart"
+      onClick={onNavigate}
+      aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}
+      className={cn(
+        "relative flex size-11 items-center justify-center rounded-control text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine",
+        className,
+      )}
+    >
+      <ShoppingBag aria-hidden className="size-5" />
+      <AnimatePresence>
+        {count > 0 && (
+          <motion.span
+            key={count}
+            initial={reduce ? false : { scale: 1 }}
+            animate={reduce ? {} : { scale: [1, 1.15, 1] }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-pine px-1 font-display text-[11px] font-semibold tabular-nums text-paper"
+          >
+            {count}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </Link>
+  );
+}
+
 export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dispatch = useDispatch();
-  const authState = useSelector((state: any) => state.auth);
-  const cart = useSelector((state: any) => state.cart.cart);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const authState = useSelector((state: RootState) => state.auth);
+  const cart = useSelector((state: RootState) => state.cart.cart);
   const { navbarData } = useNavbar();
   const navigate = useNavigate();
   const location = useLocation();
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = navbarData.user ?? authState.user;
-  const role: Role = user?.userRole === "vendor"
-    ? "vendor"
-    : user?.userRole === "admin"
-      ? "admin"
-      : "customer";
+  const role: Role =
+    user?.userRole === "vendor"
+      ? "vendor"
+      : user?.userRole === "admin"
+        ? "admin"
+        : "customer";
   const isAuthenticated = !!authState.isAuthenticated;
   const authPending = authState.status === "idle" || authState.status === "loading";
+  const isDashboard =
+    location.pathname === "/admin" || location.pathname === "/vendor/dashboard";
 
   const cartCount =
     navbarData.cartCount ??
-    (Array.isArray(cart) ? cart.reduce((sum: number, i: any) => sum + i.quantity, 0) : 0);
+    (Array.isArray(cart)
+      ? cart.reduce((sum: number, item: Cart) => sum + item.quantity, 0)
+      : 0);
 
   const links = !isAuthenticated
     ? publicLinks
-    : role === "admin"
-      ? adminLinks
-      : role === "vendor"
-        ? vendorLinks
-        : customerLinks;
-
-  const closeMenus = () => {
-    setMenuOpen(false);
-    setDropdownOpen(false);
-  };
+    : isDashboard
+      ? []
+      : role === "admin"
+        ? adminLinks
+        : role === "vendor"
+          ? vendorLinks
+          : customerLinks;
 
   const handleLogout = async () => {
-    closeMenus();
-    await dispatch(LogoutUser() as any);
+    setSheetOpen(false);
+    await dispatch(LogoutUser());
     navigate("/", { replace: true });
   };
 
   const openLogin = () => (navbarData.onLogin?.() ?? navigate("/login"));
   const openRegister = () => (navbarData.onRegister?.() ?? navigate("/login"));
-  const handleProfileClick = () => {
-    closeMenus();
-    navigate("/profile");
-  };
-
-  const isDashboard = location.pathname === "/admin" || location.pathname === "/vendor/dashboard";
+  const handleProfileClick = () => navigate("/profile");
 
   const isActive = (to: string) => {
     if (!isDashboard) return location.pathname === to;
@@ -91,293 +190,217 @@ export default function Navbar() {
   };
 
   const linkClass = (to: string) =>
-    `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-      isActive(to) ? "text-indigo-600 bg-indigo-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+    `rounded-control px-3 py-2 text-sm font-medium transition-colors ${
+      isActive(to) ? "bg-pine-soft text-pine" : "text-ink-2 hover:bg-paper-2 hover:text-ink"
     }`;
 
-  useEffect(() => {
-    closeMenus();
-  }, [location.pathname, location.search]);
+  const isStaff = isAuthenticated && (role === "vendor" || role === "admin");
+  const dashboardPath = role === "admin" ? "/admin" : "/vendor/dashboard";
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const avatarInitial = user?.userName?.[0]?.toUpperCase() ?? "?";
-  const avatarSrc = user?.avatar ? getImageUrl(user.avatar) : "";
-  const avatarContent = avatarSrc ? (
-    <img
-      src={avatarSrc}
-      alt={user?.userName ?? "User"}
-      className="w-8 h-8 rounded-full object-cover"
-    />
-  ) : (
-    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-semibold text-indigo-700">
-      {avatarInitial}
-    </div>
+  const menuItems = (
+    <>
+      {isAuthenticated && role === "customer" && (
+        <>
+          <DropdownMenuItem asChild>
+            <Link to="/orders">My orders</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/cart">Cart</Link>
+          </DropdownMenuItem>
+        </>
+      )}
+      {isStaff && (
+        <DropdownMenuItem asChild>
+          <Link to={dashboardPath}>
+            <LayoutGrid aria-hidden className="size-4" />
+            {role === "admin" ? "Admin console" : "Store dashboard"}
+          </Link>
+        </DropdownMenuItem>
+      )}
+      {isAuthenticated && (
+        <DropdownMenuItem onSelect={handleProfileClick}>
+          <User aria-hidden className="size-4" />
+          My profile
+        </DropdownMenuItem>
+      )}
+      {isAuthenticated && (
+        <DropdownMenuSeparator className="my-1 h-px bg-line" />
+      )}
+      {isAuthenticated ? (
+        <DropdownMenuItem destructive onSelect={handleLogout}>
+          <LogOut aria-hidden className="size-4" />
+          Sign out
+        </DropdownMenuItem>
+      ) : (
+        <DropdownMenuItem
+          onSelect={() => {
+            openLogin();
+            openRegister();
+          }}
+        >
+          Sign in
+        </DropdownMenuItem>
+      )}
+    </>
   );
 
   return (
-    <nav className="border-b border-gray-200 sticky top-0 bg-white z-40">
-      <div className="flex items-center justify-between h-16 pr-4">
-        {/* Brand — far left corner */}
-        <div className="flex items-center gap-6">
-          <Link
-            to="/"
-            onClick={closeMenus}
-            className="text-xl font-bold tracking-tight text-gray-900 hover:text-indigo-600 transition-colors p-2"
-          >
-            ShopEase
-          </Link>
+    <nav className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur">
+      <Container>
+        <div className="flex h-16 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-6">
+            <Brand />
 
-          {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-1">
-            {links.map((link) => (
-              <Link key={link.to} to={link.to} onClick={closeMenus} className={linkClass(link.to)}>
-                {link.label}
-              </Link>
-            ))}
+            <div className="hidden items-center gap-1 md:flex">
+              {links.map((link) => (
+                <Link key={link.to} to={link.to} className={linkClass(link.to)}>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {isAuthenticated && !isStaff && (
+              <CartLink count={cartCount} />
+            )}
+            {authPending ? (
+              <div className="hidden items-center gap-2 md:flex" aria-label="Loading account">
+                <UserAvatar />
+              </div>
+            ) : !isAuthenticated ? (              <div className="hidden items-center gap-2 md:flex">
+                <Button variant="ghost" size="sm" onClick={openLogin}>
+                  Sign in
+                </Button>
+                <Button variant="solid" size="sm" onClick={openRegister}>
+                  Create account
+                </Button>
+              </div>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  aria-label="Account menu"
+                  className="flex h-11 items-center gap-2 rounded-control pl-1 pr-2 transition-colors hover:bg-paper-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine"
+                >
+                  <UserAvatar name={user?.userName} avatar={user?.avatar} />
+                  <span className="hidden max-w-28 truncate text-sm font-medium text-ink lg:block">
+                    {user?.userName}
+                  </span>
+                  <ChevronDown aria-hidden className="hidden size-4 text-muted lg:block" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="min-w-[13rem]">
+                  <p className="px-3 pt-2 pb-1 text-xs text-muted lg:hidden">
+                    {user?.userName}
+                  </p>
+                  {menuItems}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {isAuthenticated && !isStaff && (
+              <CartLink count={cartCount} />
+            )}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              aria-label="Open menu"
+              aria-expanded={sheetOpen}
+              onClick={() => setSheetOpen(true)}
+            >
+              <Menu aria-hidden className="size-5" />
+            </Button>
           </div>
         </div>
+      </Container>
 
-        {/* Right actions */}
-        <div className="flex items-center gap-2">
-          {authPending ? (
-            <div className="hidden md:flex items-center gap-3 px-2" aria-label="Loading user">
-              <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
-              <div className="h-3.5 w-24 rounded bg-gray-200 animate-pulse" />
-            </div>
-          ) : !isAuthenticated ? (
-            <div className="hidden md:flex items-center gap-2">
-              <button
-                onClick={openLogin}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                Login
-              </button>
-              <button
-                onClick={openRegister}
-                className="text-sm font-semibold bg-gray-900 text-white px-4 py-1.5 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Register
-              </button>
-            </div>
-          ) : role === "vendor" || role === "admin" ? (
-            <div ref={dropdownRef} className="hidden md:block relative">
-              <button
-                onClick={() => setDropdownOpen((o) => !o)}
-                className="flex items-center gap-2 hover:bg-gray-100 pl-1.5 pr-3 py-1.5 rounded-lg transition-colors"
-              >
-                {avatarContent}
-                <span className="hidden lg:block text-sm font-medium text-gray-700">{user?.userName}</span>
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </button>
-
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1 text-sm z-50">
-                  <Link
-                    to={role === "admin" ? "/admin" : "/vendor/dashboard"}
-                    onClick={closeMenus}
-                    className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors block"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    to="/"
-                    onClick={closeMenus}
-                    className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors block"
-                  >
-                    View Store
-                  </Link>
-                  <button
-                    onClick={handleProfileClick}
-                    className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                  >
-                    My Profile
-                  </button>
-                  <div className="border-t border-gray-100 my-1" />
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 transition-colors">
-                    Sign Out
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              {/* Cart */}
-              <Link
-                to="/cart"
-                onClick={closeMenus}
-                className="hidden md:flex relative items-center gap-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
-              >
-                <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <path d="M16 10a4 4 0 01-8 0" />
-                </svg>
-                <span className="hidden xl:inline">Cart</span>
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full min-w-4 h-4 flex items-center justify-center px-1">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-
-              {/* User dropdown */}
-              <div ref={dropdownRef} className="hidden md:block relative">
-                <button
-                  onClick={() => setDropdownOpen((o) => !o)}
-                  className="flex items-center gap-2 hover:bg-gray-100 pl-1.5 pr-3 py-1.5 rounded-lg transition-colors"
+      <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
+        <DialogContent title="Menu" variant="sheet" className="border-line bg-surface p-0">
+          <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-4">
+            <div className="flex flex-col gap-1">
+              {links.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setSheetOpen(false)}
+                  className={`flex min-h-11 items-center rounded-control px-3 text-sm font-medium ${
+                    isActive(link.to)
+                      ? "bg-pine-soft text-pine"
+                      : "text-ink-2 hover:bg-paper-2 hover:text-ink"
+                  }`}
                 >
-                  {avatarContent}
-                  <span className="hidden lg:block text-sm font-medium text-gray-700">{user?.userName}</span>
-                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-
-                {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1 text-sm z-50">
-                    <button
-                      onClick={handleProfileClick}
-                      className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                    >
-                      My Profile
-                    </button>
-                    <Link
-                      to="/orders"
-                      onClick={closeMenus}
-                      className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors block"
-                    >
-                      My Orders
-                    </Link>
-                    <div className="border-t border-gray-100 my-1" />
-                    <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 transition-colors">
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden text-gray-600 hover:text-gray-900 ml-1"
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? (
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            ) : (
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="3" y1="7" x2="21" y2="7" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="17" x2="21" y2="17" />
-              </svg>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu panel */}
-      {menuOpen && (
-        <div className="md:hidden border-t border-gray-100 px-4 py-4 flex flex-col gap-3 text-sm bg-white shadow-lg animate-[slideDown_0.2s_ease]">
-          {links.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              onClick={closeMenus}
-              className={`px-3 py-2 rounded-lg font-medium transition-colors ${
-                isActive(link.to) ? "text-indigo-600 bg-indigo-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-
-          {isAuthenticated && (role === "vendor" || role === "admin") && (
-            <Link
-              to="/"
-              onClick={closeMenus}
-              className="px-3 py-2 rounded-lg font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            >
-              View Store
-            </Link>
-          )}
-
-          {isAuthenticated && role === "customer" && (
-            <Link
-              to="/cart"
-              onClick={closeMenus}
-              className="px-3 py-2 rounded-lg font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors flex items-center gap-2"
-            >
-              <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 01-8 0" />
-              </svg>
-               Cart
-              {cartCount > 0 && (
-                <span className="bg-indigo-600 text-white text-[10px] font-bold rounded-full min-w-4 h-4 flex items-center justify-center px-1">
-                  {cartCount}
-                </span>
+                  {link.label}
+                </Link>
+              ))}
+              {isStaff && (
+                <Link
+                  to="/"
+                  onClick={() => setSheetOpen(false)}
+                  className="flex min-h-11 items-center gap-2 rounded-control px-3 text-sm font-medium text-ink-2 hover:bg-paper-2 hover:text-ink"
+                >
+                  <Store aria-hidden className="size-4" />
+                  View store
+                </Link>
               )}
-            </Link>
-          )}
-
-          {isAuthenticated && (
-            <button
-              onClick={handleProfileClick}
-              className="text-left px-3 py-2 rounded-lg font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            >
-              My Profile
-            </button>
-          )}
-
-          <div className="border-t border-gray-100 my-1" />
-
-          {authPending ? (
-            <div className="flex items-center gap-3 pt-1" aria-label="Loading user">
-              <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
-              <div className="h-4 w-32 rounded bg-gray-200 animate-pulse" />
             </div>
-          ) : !isAuthenticated ? (
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <button
-                onClick={() => { openLogin(); setMenuOpen(false); }}
-                className="flex-1 border border-gray-300 rounded-lg py-2 hover:bg-gray-50 transition-colors"
-              >
-                Login
-              </button>
-              <button
-                onClick={() => { openRegister(); setMenuOpen(false); }}
-                className="flex-1 bg-gray-900 text-white rounded-lg py-2 hover:bg-gray-700 transition-colors"
-              >
-                Register
-              </button>
+
+            <div className="mt-auto flex flex-col gap-2 pt-4">
+              {authPending ? (
+                <p className="px-3 py-2 text-sm text-muted">Loading account</p>
+              ) : !isAuthenticated ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSheetOpen(false);
+                      openLogin();
+                    }}
+                  >
+                    Sign in
+                  </Button>
+                  <Button
+                    variant="solid"
+                    onClick={() => {
+                      setSheetOpen(false);
+                      openRegister();
+                    }}
+                  >
+                    Create account
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="px-3 text-sm font-medium text-ink">{user?.userName}</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSheetOpen(false);
+                      handleProfileClick();
+                    }}
+                  >
+                    My profile
+                  </Button>
+                  {isStaff && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSheetOpen(false);
+                        navigate(dashboardPath);
+                      }}
+                    >
+                      {role === "admin" ? "Admin console" : "Store dashboard"}
+                    </Button>
+                  )}
+                  <Button variant="danger" onClick={handleLogout}>
+                    Sign out
+                  </Button>
+                </>
+              )}
             </div>
-          ) : (
-            <button
-              onClick={handleLogout}
-              className="w-full text-left px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors font-medium"
-            >
-              Sign Out
-            </button>
-          )}
-        </div>
-      )}
+          </nav>
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 }

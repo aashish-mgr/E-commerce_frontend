@@ -1,12 +1,131 @@
 @import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/instrument-sans";
+@import "@fontsource/noto-sans-devanagari";
 
-@keyframes slideDown {
+@theme {
+  --font-display: "Bricolage Grotesque Variable", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-sans: "Instrument Sans Variable", "Noto Sans Devanagari", system-ui, sans-serif;
+
+  --color-paper: #f1f5f2;
+  --color-paper-2: #e4ebe6;
+  --color-surface: #ffffff;
+  --color-line: #d3dbd6;
+  --color-ink: #10231f;
+  --color-ink-2: #3d524c;
+  --color-muted: #5a6b64;
+  --color-pine: #0f4a43;
+  --color-pine-hover: #0a3833;
+  --color-pine-soft: #dcebe6;
+  --color-marigold: #f2a900;
+  --color-marigold-hover: #d99700;
+  --color-marigold-soft: #fff1cc;
+  --color-crimson: #b3261e;
+  --color-crimson-soft: #fbe9e7;
+  --color-sky: #14507a;
+  --color-sky-soft: #ddeef8;
+  --color-amber: #8a5a00;
+
+  --radius-control: 8px;
+  --radius-panel: 12px;
+  --radius-tile: 6px;
+
+  --shadow-lift: 0 12px 32px -12px rgb(15 74 67 / 0.28), 0 2px 8px -4px rgb(15 74 67 / 0.16);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (min-width: 640px) {
+    body {
+      font-size: 15px;
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-pine);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-marigold-soft);
+    color: var(--color-ink);
+  }
+
+  /* Chrome defaults that fight the token palette */
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+  }
+}
+
+@layer components {
+  /* The single elevated surface: dropdowns, dialogs, toasts */
+  .shadow-lift {
+    box-shadow: var(--shadow-lift);
+  }
+
+  /* Toaster sits bottom-right on desktop, top-center on mobile */
+  @media (max-width: 639px) {
+    [data-sonner-toaster] {
+      top: 0.75rem !important;
+      right: 0.75rem !important;
+      bottom: auto !important;
+      left: 0.75rem !important;
+      width: auto !important;
+    }
+  }
+}
+
+@keyframes se-panel-in {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -56,13 +56,28 @@ export const emptyProductForm = {
 export type ProductForm = typeof emptyProductForm;
 
 export const statusStyles: Record<string, string> = {
-  pending: "bg-amber-50 text-amber-700 border border-amber-200",
-  shipped: "bg-blue-50 text-blue-700 border border-blue-200",
-  delivered: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  cancelled: "bg-red-50 text-red-700 border border-red-200",
+  pending: "bg-marigold-soft text-amber",
+  shipped: "bg-sky-soft text-sky",
+  delivered: "bg-pine-soft text-pine",
+  cancelled: "bg-crimson-soft text-crimson",
 };
 
 export const paymentStyles: Record<string, string> = {
-  paid: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  unpaid: "bg-gray-100 text-gray-600 border border-gray-200",
+  paid: "bg-pine-soft text-pine",
+  unpaid: "bg-paper-2 text-muted",
 };
+
+export const statusTones = {
+  pending: "pending",
+  shipped: "shipped",
+  delivered: "delivered",
+  cancelled: "cancelled",
+} as const;
+
+export const paymentTones = {
+  paid: "delivered",
+  unpaid: "unpaid",
+} as const;
+
+export type StatusTone = (typeof statusTones)[keyof typeof statusTones];
+export type PaymentTone = (typeof paymentTones)[keyof typeof paymentTones];

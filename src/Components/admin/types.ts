@@ -84,7 +84,7 @@ export interface AdminOrder {
 }
 
 export const roleStyles: Record<string, string> = {
-  admin: "bg-purple-50 text-purple-700 border border-purple-200",
-  vendor: "bg-blue-50 text-blue-700 border border-blue-200",
-  customer: "bg-gray-100 text-gray-600 border border-gray-200",
+  admin: "bg-pine text-paper",
+  vendor: "bg-sky-soft text-sky",
+  customer: "bg-paper-2 text-ink-2",
 };
