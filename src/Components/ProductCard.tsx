@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import type { Product } from "../types";
 import { getImageUrl } from "../api";
 import { cn } from "../lib/cn";
@@ -9,13 +9,15 @@ import { Price } from "./ui/Price";
 
 interface Props {
   product: Product;
-  onAddToCart: (product: Product) => void;
+  /** Resolves `true` once the item is actually in the cart, `false` otherwise. */
+  onAddToCart: (product: Product) => Promise<boolean>;
 }
 
 const LOW_STOCK = 5;
 
 export default function ProductCard({ product, onAddToCart }: Props) {
   const [added, setAdded] = useState(false);
+  const [pending, setPending] = useState(false);
 
   const stock = product.stock;
   const outOfStock = stock != null && stock <= 0;
@@ -25,12 +27,20 @@ export default function ProductCard({ product, onAddToCart }: Props) {
    * The card used to wrap the whole tile in a click handler, so the add button
    * also navigated away. The button is now a sibling of the link and stops
    * propagation defensively.
+   *
+   * The "In cart" state waits for the request instead of flipping optimistically,
+   * so a failed add (or a signed-out visitor) never claims the item was added.
    */
-  const handleAdd = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleAdd = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    onAddToCart(product);
-    setAdded(true);
+    if (pending || outOfStock) return;
+    setPending(true);
+    try {
+      setAdded(await onAddToCart(product));
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -79,8 +89,15 @@ export default function ProductCard({ product, onAddToCart }: Props) {
         <button
           type="button"
           onClick={handleAdd}
-          disabled={outOfStock}
-          aria-label={outOfStock ? `${product.productName} is out of stock` : `Add ${product.productName} to cart`}
+          disabled={outOfStock || pending}
+          aria-busy={pending}
+          aria-label={
+            outOfStock
+              ? `${product.productName} is out of stock`
+              : pending
+                ? `Adding ${product.productName} to cart`
+                : `Add ${product.productName} to cart`
+          }
           className={cn(
             "mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-control px-4",
             "text-sm font-semibold transition-colors",
@@ -97,6 +114,11 @@ export default function ProductCard({ product, onAddToCart }: Props) {
             <>
               <Check aria-hidden className="size-4" strokeWidth={2.5} />
               In cart
+            </>
+          ) : pending ? (
+            <>
+              <Loader2 aria-hidden className="size-4 animate-spin" />
+              Adding…
             </>
           ) : outOfStock ? (
             "Out of stock"

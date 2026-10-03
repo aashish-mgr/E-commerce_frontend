@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { PackageSearch } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { useNavigate } from "react-router-dom";
 import Footer from "../Components/Footer";
 import ProductCard from "../Components/ProductCard";
 import AuthModal from "../Components/AuthModal";
 import Pagination from "../Components/Pagination";
-import type { Product, PaginationMeta, User } from "../types";
+import type { Cart, Product, PaginationMeta, User } from "../types";
 import { API, authAPI } from "../api/index";
 import { getImageUrl } from "../api";
+import { getCartItems } from "../store/cartSlice";
 import { useNavbar } from "../context/NavbarContext";
 import { toast, showErrorToast } from "../lib/toast";
 import { Container } from "../Components/ui/Container";
@@ -17,6 +19,13 @@ import { Button } from "../Components/ui/Button";
 import { PageHeader } from "../Components/ui/PageHeader";
 import { EmptyState } from "../Components/ui/EmptyState";
 import { ProductCardSkeleton } from "../Components/ui/Skeleton";
+
+type RootState = {
+  auth: { isAuthenticated: boolean; user: User | null };
+  cart: { cart: Cart[] | null };
+};
+
+type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>;
 
 const STATS = [
   { value: "50k+", label: "Happy customers" },
@@ -53,6 +62,7 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(true);
   const { setNavbarData } = useNavbar();
   const reduce = useReducedMotion();
+  const dispatch = useDispatch<AppDispatch>();
 
   const openLogin = useCallback(() => setAuthMode("login"), []);
   const openRegister = useCallback(() => setAuthMode("register"), []);
@@ -62,22 +72,26 @@ export default function LandingPage() {
     []
   );
   const handleAddToCart = useCallback(
-    async (product: Product) => {
+    async (product: Product): Promise<boolean> => {
       if (!authState.isAuthenticated) {
         openLogin();
-        return;
+        return false;
       }
       try {
         await authAPI.post("/cart/addToCart", {
           quantity: 1,
           productId: product.id,
         });
+        // Keep the Navbar badge in step with the server instead of guessing.
+        await dispatch(getCartItems());
         toast.success(`"${product.productName}" added to cart`);
+        return true;
       } catch (error) {
         showErrorToast(error, "Failed to add to cart.");
+        return false;
       }
     },
-    [authState.isAuthenticated, openLogin]
+    [authState.isAuthenticated, dispatch, openLogin]
   );
 
   const navbarData = useMemo(

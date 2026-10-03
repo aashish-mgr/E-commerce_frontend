@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import {
   ArrowLeft,
   Check,
@@ -10,14 +11,20 @@ import {
   Truck,
 } from "lucide-react";
 import { authAPI, getImageUrl } from "../api";
-import type { Product } from "../types";
-import { setCart } from "../store/cartSlice";
+import type { Cart, Product } from "../types";
+import { getCartItems, setCart } from "../store/cartSlice";
 import { toast, showErrorToast } from "../lib/toast";
 import { Container } from "../Components/ui/Container";
 import { Button } from "../Components/ui/Button";
 import { Price } from "../Components/ui/Price";
 import { QuantityStepper } from "../Components/ui/QuantityStepper";
 import { Skeleton } from "../Components/ui/Skeleton";
+
+type RootState = {
+  cart: { cart: Cart[] | null };
+};
+
+type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>;
 
 const MAX_QUANTITY = 15;
 const LOW_STOCK = 5;
@@ -34,7 +41,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const getProduct = async () => {
     if (!id) return;
@@ -55,6 +62,8 @@ export default function ProductDetail() {
       });
       if (res.status === 200) {
         setAdded(true);
+        // Refresh the shared cart so the Navbar badge matches the server.
+        await dispatch(getCartItems());
         toast.success("Added to cart.");
       }
     } catch (error) {

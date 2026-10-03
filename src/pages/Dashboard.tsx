@@ -1,27 +1,41 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PackageSearch, ReceiptText, ShoppingBag } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "../Components/ProductCard";
 import FilterBar from "../Components/FilterBar";
 import Footer from "../Components/Footer";
+import AuthModal from "../Components/AuthModal";
 import Pagination from "../Components/Pagination";
-import type { Product, User, Category, PaginationMeta } from "../types";
-import { API } from "../api/index";
+import type { Cart, Product, User, Category, PaginationMeta } from "../types";
+import { API, authAPI } from "../api/index";
+import { getCartItems } from "../store/cartSlice";
 import { useNavbar } from "../context/NavbarContext";
-import { toast } from "../lib/toast";
+import { toast, showErrorToast } from "../lib/toast";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { Container } from "../Components/ui/Container";
 import { Button } from "../Components/ui/Button";
 import { EmptyState } from "../Components/ui/EmptyState";
 import { ProductCardSkeleton } from "../Components/ui/Skeleton";
 
+type RootState = {
+  auth: { isAuthenticated: boolean; user: User | null };
+  cart: { cart: Cart[] | null };
+};
+
+type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>;
+
 // ── Dashboard ─────────────────────────────────────────────────
 export default function Dashboard() {
-  const [cartCount, setCartCount] = useState(0);
+  const [authMode, setAuthMode] = useState(""); // "login" | "register" | null
   const [search, setSearch] = useState("");
   const [selectedCategory, setCategory] = useState("All");
-  const authState = useSelector((state: { auth: { user: User | null } }) => state.auth);
+  const authState = useSelector(
+    (state: { auth: { isAuthenticated: boolean; user: User | null } }) => state.auth
+  );
+  const cartItems = useSelector((state: { cart: { cart: Cart[] | null } }) => state.cart.cart);
+  const dispatch = useDispatch<AppDispatch>();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
@@ -68,6 +82,13 @@ export default function Dashboard() {
     getCategories();
   }, [getCategories]);
 
+  // Signed-in visitors should see the real cart badge before they add anything.
+  useEffect(() => {
+    if (authState.isAuthenticated) {
+      dispatch(getCartItems());
+    }
+  }, [authState.isAuthenticated, dispatch]);
+
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     setPage(1);
@@ -83,15 +104,49 @@ export default function Dashboard() {
     [categories]
   );
 
+  const openLogin = useCallback(() => setAuthMode("login"), []);
+  const openRegister = useCallback(() => setAuthMode("register"), []);
+  const closeModal = useCallback(() => setAuthMode(""), []);
+  const switchMode = useCallback(
+    () => setAuthMode((m) => (m === "login" ? "register" : "login")),
+    []
+  );
+
+  const cartCount = useMemo(
+    () =>
+      Array.isArray(cartItems)
+        ? cartItems.reduce((sum: number, item: Cart) => sum + item.quantity, 0)
+        : 0,
+    [cartItems]
+  );
+
   /**
-   * Known gap, left as-is on purpose: this only bumps a local counter and
-   * shows a toast. It never calls /cart/addToCart, so the cart page will not
-   * show the item. Wiring it up would change behaviour, not styling.
+   * Adding a card used to bump a local counter and fire a toast without ever
+   * touching the API, so the item never reached the cart page. It now posts the
+   * real request, refreshes the shared cart slice for the Navbar badge, and only
+   * reports success once the server has accepted it.
    */
-  const handleAddToCart = useCallback((product: Product) => {
-    setCartCount((n) => n + 1);
-    toast.success(`"${product.productName}" added to cart`);
-  }, []);
+  const handleAddToCart = useCallback(
+    async (product: Product): Promise<boolean> => {
+      if (!authState.isAuthenticated) {
+        openLogin();
+        return false;
+      }
+      try {
+        await authAPI.post("/cart/addToCart", {
+          quantity: 1,
+          productId: product.id,
+        });
+        await dispatch(getCartItems());
+        toast.success(`"${product.productName}" added to cart`);
+        return true;
+      } catch (error) {
+        showErrorToast(error, "Failed to add to cart.");
+        return false;
+      }
+    },
+    [authState.isAuthenticated, dispatch, openLogin]
+  );
 
   const handleCartClick = useCallback(() => {
     navigate("/cart");
@@ -104,9 +159,10 @@ export default function Dashboard() {
   const navbarData = useMemo(
     () => ({
       user: CURRENT_USER,
-      cartCount,
+      onLogin: openLogin,
+      onRegister: openRegister,
     }),
-    [CURRENT_USER, cartCount]
+    [CURRENT_USER, openLogin, openRegister]
   );
 
   useEffect(() => {
@@ -205,6 +261,10 @@ export default function Dashboard() {
       <div className="mt-auto">
         <Footer />
       </div>
+
+      {authMode && (
+        <AuthModal mode={authMode} onClose={closeModal} onSwitch={switchMode} />
+      )}
     </div>
   );
 }
