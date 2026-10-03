@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { loginUser,  registerUser } from "../store/authSlice";
 import { API_BASE } from "../api";
+import { loginUser, registerUser } from "../store/authSlice";
+import { Dialog, DialogContent } from "./ui/Dialog";
+import { Button } from "./ui/Button";
+import { Input } from "./ui/Input";
+import { RadioGroup, RadioCard } from "./ui/RadioGroup";
+
+const ROLES = [
+  { value: "customer", label: "Buyer" },
+  { value: "vendor", label: "Seller" },
+];
 
 const AuthModal = ({ mode, onClose, onSwitch, onLogin }: any) => {
   const dispatch = useDispatch<any>();
@@ -11,88 +20,85 @@ const AuthModal = ({ mode, onClose, onSwitch, onLogin }: any) => {
   const [role, setRole] = useState("customer");
 
   const handleGoogleLogin = () => {
-  window.location.href =
-    `${API_BASE}/auth/google`;
-};
+    window.location.href = `${API_BASE}/auth/google`;
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-7 shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">
-            {mode === "login" ? "Welcome back" : "Create account"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <svg
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Fields */}
-        <div className="flex flex-col gap-3">
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        title={mode === "login" ? "Welcome back" : "Create your account"}
+        description={
+          mode === "login"
+            ? "Sign in to reach your cart, orders and saved details."
+            : "Shop as a buyer, or open a storefront as a seller."
+        }
+      >
+        <div className="flex flex-col gap-4 p-5">
           {mode === "register" && (
             <>
-              <div className="flex gap-2">
-                {["customer", "vendor"].map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-semibold capitalize border transition-colors ${
-                      role === r
-                        ? "bg-gray-900 text-white border-gray-900"
-                        : "border-gray-200 text-gray-600 hover:border-gray-900"
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
+              <fieldset className="flex flex-col gap-1.5">
+                <legend className="text-sm font-medium text-ink">I want to</legend>
+                <RadioGroup
+                  value={role}
+                  onValueChange={setRole}
+                  aria-label="Account type"
+                  orientation="horizontal"
+                  className="grid grid-cols-2 gap-2"
+                >
+                  {ROLES.map((r) => (
+                    <RadioCard key={r.value} value={r.value}>
+                      <span className="text-sm font-medium text-ink">{r.label}</span>
+                    </RadioCard>
+                  ))}
+                </RadioGroup>
+              </fieldset>
+
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="auth-name" className="text-sm font-medium text-ink">
+                  Full name
+                </label>
+                <Input
+                  id="auth-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Sita Gurung"
+                  autoComplete="name"
+                />
               </div>
-              <input
-                type="text"
-                placeholder="Full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition-colors"
-              />
             </>
           )}
-          <input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition-colors"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition-colors"
-          />
-          {mode === "login" && (
-            <a
-              href="#"
-              className="text-right text-xs text-indigo-600 hover:text-indigo-500"
-            >
-              Forgot password?
-            </a>
-          )}
-          <button
-            type="button"
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="auth-email" className="text-sm font-medium text-ink">
+              Email address
+            </label>
+            <Input
+              id="auth-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="auth-password" className="text-sm font-medium text-ink">
+              Password
+            </label>
+            <Input
+              id="auth-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Your password"
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+            />
+          </div>
+
+          <Button
+            variant="primary"
+            className="w-full"
             onClick={() => {
               if (mode === "register") {
                 dispatch(
@@ -101,7 +107,7 @@ const AuthModal = ({ mode, onClose, onSwitch, onLogin }: any) => {
                     userEmail: email,
                     userPassword: password,
                     userRole: role,
-                  }),
+                  })
                 );
               } else if (onLogin) {
                 onLogin(email, password);
@@ -110,37 +116,31 @@ const AuthModal = ({ mode, onClose, onSwitch, onLogin }: any) => {
                   loginUser({
                     userEmail: email,
                     userPassword: password,
-                  }),
+                  })
                 );
               }
             }}
-            className="w-full bg-gray-900 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-gray-700 transition-colors mt-1"
           >
-            {mode === "login" ? "Sign In" : "Register"}
-          </button>
-          
-        </div>
+            {mode === "login" ? "Sign in" : "Create account"}
+          </Button>
 
-        {/* Switch mode */}
-        <p className="text-center text-sm text-gray-500 mt-5">
-          {mode === "login"
-            ? "Don't have an account? "
-            : "Already have an account? "}
-          <button
-            onClick={onSwitch}
-            className="text-indigo-600 font-medium hover:text-indigo-500"
-          >
-            {mode === "login" ? "Register" : "Sign in"}
-          </button>
-        </p>
-        <button
-            className="w-full bg-gray-900 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-gray-700 transition-colors mt-1"
-            onClick={() => handleGoogleLogin()}
-          >
-            Login with Google
-          </button>
-      </div>
-    </div>
+          <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
+            Continue with Google
+          </Button>
+
+          <p className="text-center text-sm text-muted">
+            {mode === "login" ? "No account yet?" : "Already registered?"}{" "}
+            <button
+              type="button"
+              onClick={onSwitch}
+              className="rounded-control font-medium text-pine underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine"
+            >
+              {mode === "login" ? "Create one" : "Sign in"}
+            </button>
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
