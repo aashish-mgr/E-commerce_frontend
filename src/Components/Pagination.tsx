@@ -1,23 +1,30 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { PaginationMeta } from "../types";
+import { cn } from "../lib/cn";
 
 const PAGE_WINDOW = 2;
 
-function pageList(page: number, totalPages: number): (number | "...")[] {
-  const pages: (number | "...")[] = [];
+function pageList(page: number, totalPages: number): (number | "gap")[] {
+  const pages: (number | "gap")[] = [];
   const start = Math.max(2, page - PAGE_WINDOW);
   const end = Math.min(totalPages - 1, page + PAGE_WINDOW);
 
   pages.push(1);
 
-  if (start > 2) pages.push("...");
+  if (start > 2) pages.push("gap");
   for (let i = start; i <= end; i++) pages.push(i);
-  if (end < totalPages - 1) pages.push("...");
+  if (end < totalPages - 1) pages.push("gap");
 
   if (totalPages > 1) pages.push(totalPages);
   else pages.pop();
 
   return pages;
 }
+
+const stepClass =
+  "flex size-11 items-center justify-center rounded-control border border-line bg-surface text-ink-2 " +
+  "transition-colors hover:border-pine hover:text-pine focus-visible:outline-2 " +
+  "focus-visible:outline-offset-2 focus-visible:outline-pine";
 
 export default function Pagination({
   pagination,
@@ -31,63 +38,66 @@ export default function Pagination({
   }
 
   const { page, total, totalPages, hasNextPage, hasPrevPage } = pagination;
-
-  const base = "inline-flex items-center justify-center h-9 min-w-9 px-2 text-sm font-medium rounded-lg transition-colors";
-  const active = "bg-gray-900 text-white shadow-sm";
-  const idle = "text-gray-600 hover:bg-gray-100";
-  const disabled = "text-gray-300 cursor-not-allowed";
+  const first = total === 0 ? 0 : (page - 1) * pagination.limit + 1;
+  const last = Math.min(page * pagination.limit, total);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
-      <p className="text-sm text-gray-500">
+    <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-line pt-6 sm:flex-row">
+      <p aria-live="polite" className="text-sm text-muted">
         Showing{" "}
-        <span className="font-semibold text-gray-700">
-          {total === 0 ? 0 : (page - 1) * pagination.limit + 1}
-        </span>
-        {" – "}
-        <span className="font-semibold text-gray-700">
-          {Math.min(page * pagination.limit, total)}
-        </span>{" "}
-        of <span className="font-semibold text-gray-700">{total}</span>
+        <span className="font-display font-semibold tabular-nums text-ink">{first}</span>
+        {" to "}
+        <span className="font-display font-semibold tabular-nums text-ink">{last}</span>
+        {" of "}
+        <span className="font-display font-semibold tabular-nums text-ink">{total}</span>
       </p>
 
-      <div className="flex items-center gap-1.5">
+      <nav aria-label="Pagination" className="flex items-center gap-1.5">
         <button
+          type="button"
           onClick={() => onPageChange(page - 1)}
           disabled={!hasPrevPage}
-          className={`${base} ${hasPrevPage ? idle : disabled}`}
+          aria-label="Previous page"
+          className={cn(stepClass, !hasPrevPage && "cursor-not-allowed text-line hover:border-line hover:text-line")}
         >
-          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
+          <ChevronLeft aria-hidden className="size-4" />
         </button>
 
-        {pageList(page, totalPages).map((p, i) =>
-          p === "..." ? (
-            <span key={`e-${i}`} className="px-1.5 text-sm text-gray-400">
-              …
+        {pageList(page, totalPages).map((entry, index) =>
+          entry === "gap" ? (
+            <span key={`gap-${index}`} aria-hidden className="px-1 text-sm text-muted">
+              &hellip;
             </span>
           ) : (
             <button
-              key={p}
-              onClick={() => onPageChange(p)}
-              className={`${base} ${p === page ? active : idle}`}
+              key={entry}
+              type="button"
+              onClick={() => onPageChange(entry)}
+              aria-label={`Page ${entry}`}
+              aria-current={entry === page ? "page" : undefined}
+              className={cn(
+                "flex size-11 items-center justify-center rounded-control text-sm font-medium tabular-nums transition-colors",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine",
+                entry === page
+                  ? "bg-pine text-paper"
+                  : "border border-line bg-surface text-ink-2 hover:border-pine hover:text-pine",
+              )}
             >
-              {p}
+              {entry}
             </button>
           ),
         )}
 
         <button
+          type="button"
           onClick={() => onPageChange(page + 1)}
           disabled={!hasNextPage}
-          className={`${base} ${hasNextPage ? idle : disabled}`}
+          aria-label="Next page"
+          className={cn(stepClass, !hasNextPage && "cursor-not-allowed text-line hover:border-line hover:text-line")}
         >
-          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
+          <ChevronRight aria-hidden className="size-4" />
         </button>
-      </div>
+      </nav>
     </div>
   );
 }

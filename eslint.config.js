@@ -19,4 +19,12 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Primitives intentionally re-export Radix roots alongside their styled
+    // components, which the fast-refresh rule flags by design.
+    files: ['src/Components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

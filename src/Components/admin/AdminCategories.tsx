@@ -1,5 +1,11 @@
 import { useState } from "react";
+import { FolderTree, Pencil, Plus, Trash2 } from "lucide-react";
 import type { Category } from "../../types";
+import { Button } from "../ui/Button";
+import { EmptyState } from "../ui/EmptyState";
+import { Input } from "../ui/Input";
+import { PageHeader } from "../ui/PageHeader";
+import { Panel } from "../ui/Panel";
 
 export default function AdminCategories({
   categories,
@@ -50,129 +56,129 @@ export default function AdminCategories({
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">Categories</h2>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Create and manage product categories used across the store
-        </p>
-      </div>
+      <PageHeader
+        titleAs="h2"
+        title="Categories"
+        description="Create and manage the product categories used across the store."
+      />
 
-      {/* Create new category */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">New Category</h3>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="text"
-            placeholder="Category name (e.g. Electronics)"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") submitCreate();
-            }}
-            className="flex-1 px-4 py-3 text-sm border border-gray-200 rounded-xl outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 bg-gray-50 focus:bg-white"
-          />
-          <button
-            onClick={submitCreate}
+      <Panel className="p-4 sm:p-5">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitCreate();
+          }}
+          className="flex flex-col gap-3 sm:flex-row sm:items-end"
+        >
+          <div className="flex-1">
+            <label
+              htmlFor="admin-new-category"
+              className="mb-1.5 block text-sm font-medium text-ink-2"
+            >
+              New category
+            </label>
+            <Input
+              id="admin-new-category"
+              value={name}
+              placeholder="Category name, for example Electronics"
+              onChange={(event) => setName(event.target.value)}
+            />
+          </div>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={busy}
+            loadingLabel="Adding…"
             disabled={!name.trim() || busy}
-            className="bg-gray-900 text-white rounded-xl px-5 py-3 text-sm font-semibold hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="sm:w-40"
           >
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Add Category
-          </button>
-        </div>
-      </div>
+            <Plus aria-hidden className="size-4" />
+            Add category
+          </Button>
+        </form>
+      </Panel>
 
-      {/* Category list */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-            Categories
-          </span>
-          <span className="text-xs text-gray-500">
-            <span className="font-semibold text-gray-700">{statsCategoryCount}</span> total
-          </span>
+      <Panel>
+        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+          <h2 className="font-display text-base font-semibold text-ink">
+            All categories
+          </h2>
+          <p className="text-sm text-muted">
+            <span className="font-semibold text-ink">{statsCategoryCount}</span> total
+          </p>
         </div>
 
         {categories.length === 0 ? (
-          <div className="py-20 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
-              <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" className="text-gray-400">
-                <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
-              </svg>
-            </div>
-            <p className="text-lg font-semibold text-gray-700">No categories yet</p>
-            <p className="text-sm text-gray-500 mt-1">Create your first category above</p>
-          </div>
+          <EmptyState
+            icon={FolderTree}
+            title="No categories yet"
+            direction="Create your first category using the form above."
+          />
         ) : (
-          <ul>
-            {categories.map((category, index) => (
+          <ul className="divide-y divide-line">
+            {categories.map((category) => (
               <li
                 key={category.id}
-                className={`flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50/50 transition-colors ${
-                  index !== categories.length - 1 ? "border-b border-gray-50" : ""
-                }`}
+                className="flex flex-wrap items-center gap-3 px-5 py-3"
               >
-                <span className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-pine-soft text-sm font-semibold text-pine">
                   {category.categoryName[0]?.toUpperCase() ?? "?"}
                 </span>
 
                 {editingId === category.id ? (
-                  <div className="flex-1 flex items-center gap-2">
-                    <input
+                  <div className="flex flex-1 flex-wrap items-center gap-2">
+                    <Input
                       autoFocus
-                      type="text"
+                      aria-label={`Rename ${category.categoryName}`}
+                      className="h-10 max-w-sm flex-1"
                       value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") submitRename(category.id);
-                        if (e.key === "Escape") setEditingId(null);
+                      onChange={(event) => setEditName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") submitRename(category.id);
+                        if (event.key === "Escape") setEditingId(null);
                       }}
-                      className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 max-w-sm"
                     />
-                    <button
-                      onClick={() => submitRename(category.id)}
+                    <Button
+                      size="sm"
+                      variant="solid"
+                      loading={busy}
                       disabled={!editName.trim() || busy}
-                      className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold disabled:opacity-40"
+                      onClick={() => submitRename(category.id)}
                     >
                       Save
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       onClick={() => setEditingId(null)}
-                      className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold hover:bg-gray-200"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   <>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {category.categoryName}
-                      </p>
-                    </div>
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
+                      {category.categoryName}
+                    </p>
                     <div className="flex items-center gap-1">
-                      <button
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title={`Rename ${category.categoryName}`}
+                        aria-label={`Rename ${category.categoryName}`}
                         onClick={() => startEdit(category)}
-                        className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                        title="Rename category"
                       >
-                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                      </button>
-                      <button
+                        <Pencil aria-hidden className="size-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="danger"
+                        title={`Delete ${category.categoryName}`}
+                        aria-label={`Delete ${category.categoryName}`}
                         onClick={() => onDeleteCategory(category)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete category"
                       >
-                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                        </svg>
-                      </button>
+                        <Trash2 aria-hidden className="size-4" />
+                      </Button>
                     </div>
                   </>
                 )}
@@ -180,7 +186,7 @@ export default function AdminCategories({
             ))}
           </ul>
         )}
-      </div>
+      </Panel>
     </div>
   );
 }

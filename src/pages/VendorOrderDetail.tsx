@@ -1,9 +1,59 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { authAPI } from "../api";
-import { paymentStyles, statusStyles } from "../Components/vendor/types";
+import { CreditCard, ImageOff, MapPin, PackageSearch, Trash2, User } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { authAPI, getImageUrl } from "../api";
+import { toPaymentTone, toStatusTone } from "../Components/vendor/types";
 import type { VendorOrderDetail } from "../Components/vendor/types";
 import { toast } from "../lib/toast";
+import { Button } from "../Components/ui/Button";
+import { Container } from "../Components/ui/Container";
+import { EmptyState } from "../Components/ui/EmptyState";
+import { PageHeader } from "../Components/ui/PageHeader";
+import { Panel } from "../Components/ui/Panel";
+import { Price } from "../Components/ui/Price";
+import { SegmentedControl } from "../Components/ui/SegmentedControl";
+import { Skeleton } from "../Components/ui/Skeleton";
+import { StatusBadge } from "../Components/ui/StatusBadge";
+import { formatDateTime, humanize } from "../lib/format";
+
+const statusOptions = [
+  { value: "pending", label: "Pending" },
+  { value: "shipped", label: "Shipped" },
+  { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+function InfoCard({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Panel className="p-5">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex size-9 items-center justify-center rounded-control bg-pine-soft text-pine">
+          <Icon aria-hidden className="size-4" />
+        </span>
+        <h2 className="font-display text-base font-semibold text-ink">{title}</h2>
+      </div>
+      {children}
+    </Panel>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-sm text-muted">{label}</p>
+      <p className="break-words text-sm text-ink">{value}</p>
+    </div>
+  );
+}
 
 export default function VendorOrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -77,271 +127,218 @@ export default function VendorOrderDetailPage() {
     toast.confirm("Delete this order?", {
       label: "Delete",
       onClick: async () => {
-          try {
-            await toast.promise(
-              authAPI.delete(`/order/deleteOrder/${orderId}`),
-              {
-                loading: "Deleting order...",
-                success: "Order deleted",
-                error: "Failed to delete order",
-              }
-            ).unwrap();
-            navigate("/vendor/dashboard", { replace: true });
-          } catch (error) {
-            console.error("Error deleting order:", error);
-          }
-    },
+        try {
+          await toast.promise(authAPI.delete(`/order/deleteOrder/${orderId}`), {
+            loading: "Deleting order...",
+            success: "Order deleted",
+            error: "Failed to delete order",
+          }).unwrap();
+          navigate("/vendor/dashboard", { replace: true });
+        } catch (error) {
+          console.error("Error deleting order:", error);
+        }
+      },
     });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Loading order details...</p>
-        </div>
+      <div className="min-h-screen bg-paper">
+        <Container width="dashboard" className="py-8">
+          <Skeleton className="h-24 rounded-panel" />
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-44 rounded-panel" />
+            ))}
+          </div>
+          <Skeleton className="mt-6 h-72 rounded-panel" />
+        </Container>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
-          <p className="text-lg font-semibold text-gray-700">Order not found</p>
-          <button
-            onClick={() => navigate("/vendor/dashboard")}
-            className="mt-4 bg-gray-900 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-gray-700 transition-colors"
-          >
-            Back to Dashboard
-          </button>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-paper px-4">
+        <Panel className="w-full max-w-md">
+          <EmptyState
+            icon={PackageSearch}
+            title="Order not found"
+            direction="This order may have been removed or does not belong to your store."
+            action={
+              <Button variant="outline" onClick={() => navigate("/vendor/dashboard")}>
+                Back to dashboard
+              </Button>
+            }
+          />
+        </Panel>
       </div>
     );
   }
 
-  const statuses = ["pending", "shipped", "delivered", "cancelled"];
-  const orderDate = new Date(order.createdAt).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate("/vendor/dashboard")}
-            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-4"
-          >
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Back to Dashboard
-          </button>
+    <div className="min-h-screen bg-paper">
+      <Container width="dashboard" className="py-8">
+        <PageHeader
+          className="mb-6"
+          title="Order details"
+          description={
+            <>
+              Order <span className="text-ink">{order.id}</span> ·{" "}
+              {formatDateTime(order.createdAt)}
+            </>
+          }
+          action={
+            <StatusBadge tone={toStatusTone(order.orderStatus)}>
+              {humanize(order.orderStatus)}
+            </StatusBadge>
+          }
+        />
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Order <span className="font-mono font-medium text-gray-700">{order.id}</span>
-              </p>
+        <div className="grid gap-4 md:grid-cols-3">
+          <InfoCard icon={User} title="Customer">
+            <div className="space-y-3">
+              <Detail label="Name" value={order.User?.userName ?? "—"} />
+              <Detail label="Email" value={order.User?.userEmail ?? "—"} />
+              <Detail label="Phone" value={order.phoneNumber || "—"} />
             </div>
-            <div className="flex items-center gap-3">
-              <span
-                className={`inline-block px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${statusStyles[order.orderStatus] ?? "bg-gray-100 text-gray-600"}`}
-              >
-                {order.orderStatus}
-              </span>
-              <button
-                onClick={() => navigate("/vendor/dashboard")}
-                className="bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-gray-700 transition-colors"
-              >
-                Back
-              </button>
-            </div>
-          </div>
-        </div>
+          </InfoCard>
 
-        {/* Customer / Shipping / Payment cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {/* Customer */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              </div>
-              <h2 className="font-semibold text-gray-900 text-sm">Customer</h2>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">Name</p>
-                <p className="text-gray-800 font-medium">{order.User?.userName ?? "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">Email</p>
-                <p className="text-gray-800 break-all">{order.User?.userEmail ?? "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">Phone</p>
-                <p className="text-gray-800">{order.phoneNumber}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Shipping */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-              </div>
-              <h2 className="font-semibold text-gray-900 text-sm">Shipping</h2>
-            </div>
-            <p className="text-sm text-gray-700 leading-relaxed">
-              {order.shippingAddress}
+          <InfoCard icon={MapPin} title="Shipping">
+            <p className="text-sm leading-relaxed text-ink">{order.shippingAddress}</p>
+            <p className="mt-3 text-sm text-muted">
+              Ordered on {formatDateTime(order.createdAt)}
             </p>
-            <p className="text-xs text-gray-400 mt-3">Ordered on {orderDate}</p>
-          </div>
+          </InfoCard>
 
-          {/* Payment */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <rect x="1" y="4" width="22" height="16" rx="2" />
-                  <line x1="1" y1="10" x2="23" y2="10" />
-                </svg>
-              </div>
-              <h2 className="font-semibold text-gray-900 text-sm">Payment</h2>
-            </div>
-            <div className="space-y-2 text-sm">
+          <InfoCard icon={CreditCard} title="Payment">
+            <div className="space-y-3">
+              <Detail
+                label="Method"
+                value={payment?.paymentMethod ? humanize(payment.paymentMethod) : "—"}
+              />
               <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">Method</p>
-                <p className="text-gray-800 font-medium capitalize">
-                  {payment?.paymentMethod ?? "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">Status</p>
-                <span
-                  className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium mt-0.5 ${paymentStyles[payment?.paymentStatus ?? "unpaid"] ?? "bg-gray-100 text-gray-600"}`}
-                >
-                  {payment?.paymentStatus ?? "unpaid"}
-                </span>
+                <p className="mb-1.5 text-sm text-muted">Status</p>
+                <StatusBadge tone={toPaymentTone(payment?.paymentStatus)}>
+                  {payment?.paymentStatus
+                    ? humanize(payment.paymentStatus)
+                    : "No payment"}
+                </StatusBadge>
               </div>
             </div>
-          </div>
+          </InfoCard>
         </div>
 
-        {/* Items + Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Items */}
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900 text-sm">Order Items</h2>
-            </div>
-            <div className="divide-y divide-gray-50">
-              {items.map((od) => (
-                <div key={od.id} className="flex items-center gap-4 px-5 py-4">
-                  <img
-                    src={od.Product.image}
-                    alt={od.Product.productName}
-                    className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 text-sm truncate">
-                      {od.Product.productName}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Qty: {od.quantity} × Rs. {Number(od.Product.productPrice).toFixed(2)}
-                    </p>
-                  </div>
-                  <p className="font-semibold text-gray-900 text-sm whitespace-nowrap">
-                    Rs. {(Number(od.Product.productPrice) * od.quantity).toFixed(2)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+          <Panel className="lg:col-span-2">
+            <h2 className="border-b border-line px-5 py-4 font-display text-base font-semibold text-ink">
+              Order items
+            </h2>
+            <ul className="divide-y divide-line">
+              {items.map((od) => {
+                const src = getImageUrl(od.Product.image);
+                return (
+                  <li key={od.id} className="flex items-center gap-4 px-5 py-4">
+                    <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-tile bg-paper-2">
+                      {src ? (
+                        <img
+                          src={src}
+                          alt={od.Product.productName}
+                          loading="lazy"
+                          className="size-full object-cover"
+                        />
+                      ) : (
+                        <ImageOff aria-hidden className="size-5 text-muted" />
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-ink">
+                        {od.Product.productName}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        Qty {od.quantity} × <Price value={od.Product.productPrice} />
+                      </p>
+                    </div>
+                    <Price
+                      value={Number(od.Product.productPrice) * od.quantity}
+                      className="shrink-0 text-sm font-semibold text-ink"
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </Panel>
 
-          {/* Summary + Actions */}
           <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <h2 className="font-semibold text-gray-900 text-sm mb-4">Order Summary</h2>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-gray-600">
-                  <span>Items Subtotal</span>
-                  <span>Rs. {Number(order.totalAmount).toFixed(2)}</span>
+            <Panel className="bg-pine p-5 text-paper">
+              <h2 className="font-display text-base font-semibold">Order summary</h2>
+              <dl className="mt-4 space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-pine-soft">Items subtotal</dt>
+                  <dd>
+                    <Price value={order.totalAmount} />
+                  </dd>
                 </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Shipping</span>
-                  <span className="text-emerald-600 font-medium">Free</span>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-pine-soft">Shipping</dt>
+                  <dd>Free</dd>
                 </div>
-                <div className="border-t border-gray-100 pt-3 flex justify-between text-gray-900 font-bold">
-                  <span>Total</span>
-                  <span>Rs. {Number(order.totalAmount).toFixed(2)}</span>
+                <div className="flex items-center justify-between gap-4 border-t border-paper/20 pt-3 font-display text-base font-semibold">
+                  <dt>Total</dt>
+                  <dd>
+                    <Price value={order.totalAmount} />
+                  </dd>
                 </div>
-              </div>
-            </div>
+              </dl>
+            </Panel>
 
-            {/* Status management */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <h2 className="font-semibold text-gray-900 text-sm mb-4">Manage Order</h2>
-              <div className="space-y-3">
+            <Panel className="p-5">
+              <h2 className="font-display text-base font-semibold text-ink">
+                Manage order
+              </h2>
+              <div className="mt-4 space-y-3">
                 <div>
-                  <label className="block text-xs text-gray-400 uppercase tracking-wide mb-1.5">
-                    Order Status
-                  </label>
-                  <select
+                  <p className="mb-2 text-sm font-medium text-ink-2">Order status</p>
+                  <SegmentedControl
+                    ariaLabel="Order status"
+                    className="w-full"
                     value={order.orderStatus}
-                    onChange={(e) => handleStatusChange(e.target.value)}
+                    options={statusOptions}
                     disabled={saving}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-white disabled:opacity-50"
-                  >
-                    {statuses.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={handleStatusChange}
+                  />
                 </div>
-                <button
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  loading={saving}
+                  loadingLabel="Saving…"
+                  disabled={saving || !payment}
                   onClick={handlePaymentToggle}
-                  disabled={saving}
-                  className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 ${
-                    payment?.paymentStatus === "paid"
-                      ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                      : "bg-emerald-600 text-white hover:bg-emerald-700"
-                  }`}
                 >
-                  {payment?.paymentStatus === "paid" ? "Mark as Unpaid" : "Mark as Paid"}
-                </button>
-                <button
+                  {payment?.paymentStatus === "paid" ? "Mark as unpaid" : "Mark as paid"}
+                </Button>
+                <Button
+                  variant="danger"
+                  className="w-full"
+                  disabled={saving}
                   onClick={handleDelete}
-                  disabled={saving}
-                  className="w-full py-2.5 rounded-xl text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
                 >
-                  Delete Order
-                </button>
+                  <Trash2 aria-hidden className="size-4" />
+                  Delete order
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => navigate("/vendor/dashboard")}
+                >
+                  Back to dashboard
+                </Button>
               </div>
-            </div>
+            </Panel>
           </div>
         </div>
-      </main>
+      </Container>
     </div>
   );
 }

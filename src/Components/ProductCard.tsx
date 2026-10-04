@@ -1,78 +1,132 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Check, Loader2 } from "lucide-react";
 import type { Product } from "../types";
-import { useNavigate } from "react-router-dom";
+import { getImageUrl } from "../api";
+import { cn } from "../lib/cn";
+import { formatCount } from "../lib/format";
+import { Price } from "./ui/Price";
 
 interface Props {
   product: Product;
-  onAddToCart: (product: Product) => void;
+  /** Resolves `true` once the item is actually in the cart, `false` otherwise. */
+  onAddToCart: (product: Product) => Promise<boolean>;
 }
+
+const LOW_STOCK = 5;
 
 export default function ProductCard({ product, onAddToCart }: Props) {
   const [added, setAdded] = useState(false);
-  const navigate = useNavigate();
+  const [pending, setPending] = useState(false);
 
-  const handleAdd = () => {
-    onAddToCart(product);
-    setAdded(true);
+  const stock = product.stock;
+  const outOfStock = stock != null && stock <= 0;
+  const lowStock = stock != null && stock > 0 && stock <= LOW_STOCK;
+
+  /**
+   * The card used to wrap the whole tile in a click handler, so the add button
+   * also navigated away. The button is now a sibling of the link and stops
+   * propagation defensively.
+   *
+   * The "In cart" state waits for the request instead of flipping optimistically,
+   * so a failed add (or a signed-out visitor) never claims the item was added.
+   */
+  const handleAdd = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (pending || outOfStock) return;
+    setPending(true);
+    try {
+      setAdded(await onAddToCart(product));
+    } finally {
+      setPending(false);
+    }
   };
 
-  const handleProduct = (id: string) => {
-     navigate(`/product/${id}`);
-  }
-
   return (
-    <div className="bg-white border border-gray-200 rounded-xl cursor-pointer overflow-hidden hover:shadow-md transition-shadow flex flex-col" onClick={() => handleProduct(product.id)}>
- 
-      {/* Thumbnail */}
-      <div className="bg-gray-50 h-36 flex items-center justify-center text-5xl relative">
-        <img
-          src={product.image}
-          alt={product.productName}
-          className="h-full w-full object-contain"
-        />
-
-      </div>
-
-      {/* Content */}
-      <div className="p-4 flex flex-col flex-1">
-
-        {/* Category badge */}
-        <span className="inline-block text-[10px] font-semibold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full w-fit mb-2">
-          {product.Category.categoryName}
-        </span>
-
-        {/* Name */}
-        <h3 className="font-semibold text-gray-900 mb-1 hover:text-blue-500">{product.productName}</h3>
-
-        {/* Description */}
-        <p className="text-sm text-gray-500 leading-relaxed mb-3 flex-1 line-clamp-2">
-          {product.productDescription}
-        </p>
-
-        
-
-        {/* Units available */}
-        <span className={`text-xs font-medium mb-2 ${product.stock != null && product.stock > 0 ? "text-green-600" : "text-red-500"}`}>
-          {product.stock != null && product.stock > 0 ? `${product.stock} units available` : "Out of stock"}
-        </span>
-
-        {/* Price + button */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <span className="font-bold text-gray-900 text-lg">Rs.{product.productPrice}</span>
-          <button
-            onClick={handleAdd}
-            disabled={product.stock != null && product.stock <= 0}
-            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${ added
-                ? "bg-green-600 text-white"
-                : product.stock != null && product.stock <= 0
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-                }` }
-          >
-            {added ? "Added ✓" : product.stock != null && product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
-          </button>
+    <article className="group flex flex-col">
+      <Link
+        to={`/product/${product.id}`}
+        className="block rounded-tile focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
+      >
+        <div className="flex aspect-[4/5] items-center justify-center overflow-hidden rounded-tile bg-paper-2">
+          <img
+            src={getImageUrl(product.image)}
+            alt={product.productName}
+            loading="lazy"
+            className="h-full w-full object-contain"
+          />
         </div>
+        <p className="mt-3 text-xs text-muted">{product.Category.categoryName}</p>
+        <h3 className="mt-0.5 line-clamp-2 font-sans text-[15px] font-medium leading-snug text-ink group-hover:text-pine">
+          {product.productName}
+        </h3>
+      </Link>
+
+      <p className="mt-1 line-clamp-2 text-sm text-muted">
+        {product.productDescription}
+      </p>
+
+      <div className="mt-auto pt-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <Price value={product.productPrice} className="text-lg font-semibold text-ink" />
+          <p
+            className={cn(
+              "text-xs",
+              outOfStock
+                ? "text-muted"
+                : lowStock
+                  ? "font-medium text-crimson"
+                  : "text-muted",
+            )}
+          >
+            {outOfStock
+              ? "Out of stock"
+              : `${formatCount(stock ?? 0)} available`}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={outOfStock || pending}
+          aria-busy={pending}
+          aria-label={
+            outOfStock
+              ? `${product.productName} is out of stock`
+              : pending
+                ? `Adding ${product.productName} to cart`
+                : `Add ${product.productName} to cart`
+          }
+          className={cn(
+            "mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-control px-4",
+            "text-sm font-semibold transition-colors",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine",
+            "disabled:cursor-not-allowed",
+            added
+              ? "bg-pine-soft text-pine"
+              : outOfStock
+                ? "bg-paper-2 text-muted"
+                : "border border-line bg-surface text-ink hover:border-pine hover:text-pine",
+          )}
+        >
+          {added ? (
+            <>
+              <Check aria-hidden className="size-4" strokeWidth={2.5} />
+              In cart
+            </>
+          ) : pending ? (
+            <>
+              <Loader2 aria-hidden className="size-4 animate-spin" />
+              Adding…
+            </>
+          ) : outOfStock ? (
+            "Out of stock"
+          ) : (
+            "Add to cart"
+          )}
+        </button>
       </div>
-    </div>
+    </article>
   );
 }

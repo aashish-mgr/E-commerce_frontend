@@ -1,94 +1,33 @@
 import { useState, useEffect, useMemo } from "react";
 import type { User, Cart } from "../types";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
-import { authAPI, getImageUrl } from "../api";
+import { Link, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { useSearchParams } from "react-router-dom";
-import { setCart } from "../store/cartSlice";
+import { AlertCircle, ArrowLeft, Banknote, Lock, Wallet } from "lucide-react";
+import { authAPI, getImageUrl } from "../api";
+import { setCart, deleteCartItem } from "../store/cartSlice";
 import OrderSuccess from "../Components/OrderSuccess";
-import { deleteCartItem } from "../store/cartSlice";
 import { toast, getServerMessage, showErrorToast } from "../lib/toast";
-// ── Types (your exact interfaces) ────────────────────────────
+import { Container } from "../Components/ui/Container";
+import { Button } from "../Components/ui/Button";
+import { Field } from "../Components/ui/Field";
+import { Input } from "../Components/ui/Input";
+import { Textarea } from "../Components/ui/Textarea";
+import { RadioGroup, RadioCard } from "../Components/ui/RadioGroup";
+import { Price } from "../Components/ui/Price";
+import { QuantityStepper } from "../Components/ui/QuantityStepper";
 
 // ── Seed data ─────────────────────────────────────────────────
 
-
-
 const PAYMENT_METHODS = [
-  {
-    id: "esewa",
-    label: "E-sewa",
-    icon: "https://laz-img-cdn.alicdn.com/tfs/TB1EdzsDuT2gK0jSZFvXXXnFXXa-160-160.png",
-  },
-  {
-    id: "khalti",
-    label: "Khalti",
-    icon: "https://img.alicdn.com/imgextra/i3/O1CN01NiZzF21BsxsUY7d54_!!6000000000002-2-tps-288-288.png",
-  },
-  {
-    id: "cod",
-    label: "Cash on Delivery",
-    icon: "https://laz-img-cdn.alicdn.com/tfs/TB1ZP8kM1T2gK0jSZFvXXXnFXXa-96-96.png",
-  },
+  { id: "esewa", label: "E-sewa", note: "Pay from your eSewa wallet" },
+  { id: "khalti", label: "Khalti", note: "Redirects to Khalti to confirm" },
+  { id: "cod", label: "Cash on delivery", note: "Pay the courier on arrival" },
 ];
 
 const TAX_RATE = 0.08;
 const SHIPPING_THRESHOLD = 100;
 const SHIPPING_FLAT = 9.99;
-
-// ── Helpers ───────────────────────────────────────────────────
-
-function formatPrice(n: number) {
-  return `Rs. ${n?.toFixed(2)}`;
-}
-
-// ── Input field component ─────────────────────────────────────
-
-interface FieldProps {
-  label: string;
-  required?: boolean;
-  error?: string;
-  children: React.ReactNode;
-}
-
-function Field({ label, required, error, children }: FieldProps) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium text-gray-700">
-        {label}
-        {required && <span className="text-red-500 ml-0.5">*</span>}
-      </label>
-      {children}
-      {error && (
-        <p className="text-xs text-red-500 flex items-center gap-1">
-          <svg
-            width="12"
-            height="12"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function inputClass(hasError: boolean) {
-  return `w-full px-4 py-2.5 text-sm border rounded-lg outline-none transition-colors ${
-    hasError
-      ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-2 focus:ring-red-100"
-      : "border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-  }`;
-}
-
 
 // ── Place Order Page ──────────────────────────────────────────
 
@@ -110,27 +49,21 @@ export default function PlaceOrder() {
   const [placed, setPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
 
-  
-const CURRENT_USER: User | null = authState?.user ?? null;
-
+  const CURRENT_USER: User | null = authState?.user ?? null;
 
   // Quantities (per cart item, editable on this page too)
-  const [quantities, setQuantities] = useState<Record<string, number>>(
-    Object.fromEntries(cartItems? cartItems.map((c) => [c.id, c.quantity]): []),
-  );
-  
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+
   const selectedIds = useMemo(
     () => searchParams.get("items")?.split(",") ?? [],
-    [searchParams],
+    [searchParams]
   );
 
   useEffect(() => {
     const fetchCart = async () => {
       const res = await authAPI.get("/cart/getMyCarts");
       const cart: Cart[] = res.data?.data;
-      const filteredItems = cart.filter((item) =>
-        selectedIds.includes(item.productId),
-      );
+      const filteredItems = cart.filter((item) => selectedIds.includes(item.productId));
       if (filteredItems.length !== 0) {
         setCartItems(filteredItems);
         dispatch(setCart(filteredItems));
@@ -143,23 +76,20 @@ const CURRENT_USER: User | null = authState?.user ?? null;
 
   useEffect(() => {
     if (cartItems.length === 0) return;
-    setQuantities(
-      Object.fromEntries(cartItems.map((c) => [c.id, c.quantity])),
-    );
+    setQuantities(Object.fromEntries(cartItems.map((c) => [c.id, c.quantity])));
   }, [cartItems]);
 
-  const updateQty = (id: string, delta: number) => {
+  const updateQty = (id: string, next: number) => {
     setQuantities((prev) => ({
       ...prev,
-      [id]: Math.max(1, (prev[id] ?? 1) + delta),
+      [id]: Math.max(1, next),
     }));
   };
 
   // Pricing
   const subtotal = cartItems?.reduce(
-    (sum, item) =>
-      sum + item.Product.productPrice * (quantities[item.id] ?? item.quantity),
-    0,
+    (sum, item) => sum + item.Product.productPrice * (quantities[item.id] ?? item.quantity),
+    0
   );
   const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT;
   const tax = subtotal * TAX_RATE;
@@ -170,8 +100,7 @@ const CURRENT_USER: User | null = authState?.user ?? null;
     const e: Record<string, string> = {};
     if (!address.trim()) e.address = "Shipping address is required.";
     if (!phone.trim()) e.phone = "Phone number is required.";
-    else if (!/^\+?[\d\s\-]{7,15}$/.test(phone))
-      e.phone = "Enter a valid phone number.";
+    else if (!/^\+?[\d\s\-]{7,15}$/.test(phone)) e.phone = "Enter a valid phone number.";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -193,16 +122,15 @@ const CURRENT_USER: User | null = authState?.user ?? null;
       });
 
       if (res.status === 200) {
-         cartItems.map(c => dispatch(deleteCartItem(c.id) as any));
+        cartItems.map((c) => dispatch(deleteCartItem(c.id) as any));
         if (payment === "khalti") {
           window.location.href = res.data.response;
-          
+
           const pidx = searchParams.get("pidx");
           if (!pidx) {
             toast.error("Payment failed or cancelled.");
           }
-         
-         
+
           setLoading(false);
           setOrderId(res.data?.orderId ?? "N/A");
 
@@ -212,7 +140,6 @@ const CURRENT_USER: User | null = authState?.user ?? null;
         setLoading(false);
         setOrderId(res.data?.orderId ?? "N/A");
       } else {
-        
         setErrors((p) => ({
           ...p,
           form: "Failed to place order. Please try again.",
@@ -237,332 +164,243 @@ const CURRENT_USER: User | null = authState?.user ?? null;
     createOrder();
   };
 
-  if (placed)
-    return <OrderSuccess orderId={orderId} onBack={() => setPlaced(false)} />;
+  if (placed) return <OrderSuccess orderId={orderId} onBack={() => setPlaced(false)} />;
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-7">
+    <div className="min-h-screen bg-paper">
+      <Container className="max-w-5xl">
+        <div className="py-6">
           <Link
             to="/cart"
-            className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors mb-4"
+            className="mb-5 inline-flex items-center gap-1.5 rounded-control text-sm font-medium text-ink-2 transition-colors hover:text-pine focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
           >
-            <svg
-              width="16"
-              height="16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-            Back to Cart
+            <ArrowLeft aria-hidden className="size-4" />
+            Back to cart
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Place Order</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
+            Place your order
+          </h1>
+          <p className="mt-1 text-sm text-muted">
             Ordering as{" "}
-            <span className="font-medium text-gray-700">
-              {CURRENT_USER?.userName}
-            </span>{" "}
-            · {CURRENT_USER?.userEmail}
+            <span className="font-medium text-ink-2">{CURRENT_USER?.userName}</span>
+            {" · "}
+            {CURRENT_USER?.userEmail}
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid gap-8 pb-16 lg:grid-cols-3 lg:gap-10">
           {/* ── Left column — Forms ── */}
-          <div className="lg:col-span-2 flex flex-col gap-5">
+          <div className="flex flex-col gap-8 lg:col-span-2">
             {/* Shipping details */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-5">
-                <span className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center">
+            <section aria-labelledby="step-shipping">
+              <h2
+                id="step-shipping"
+                className="border-b border-line pb-3 font-display text-base font-semibold text-ink"
+              >
+                <span className="mr-2 font-display text-sm font-semibold tabular-nums text-pine">
                   1
                 </span>
-                <h2 className="text-base font-bold text-gray-900">
-                  Shipping Details
-                </h2>
-              </div>
+                Shipping details
+              </h2>
 
-              <div className="flex flex-col gap-4">
-                {/* Prefilled user info — read only
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <Field label="Full Name">
-                    <input
-                      type="text"
-                      value={CURRENT_USER.userName}
-                      readOnly
-                      className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                    />
-                  </Field>
-                  <Field label="Email Address">
-                    <input
-                      type="email"
-                      value={CURRENT_USER.userEmail}
-                      readOnly
-                      className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                    />
-                  </Field>
-                </div> */}
-
-                {/* Phone */}
-                <Field label="Phone Number" required error={errors.phone}>
-                  <div className="flex gap-2">
-                    <span className="flex items-center px-3 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-500 whitespace-nowrap">
-                      +977
-                    </span>
-                    <input
-                      type="tel"
-                      placeholder="98XXXXXXXX"
-                      value={phone}
-                      onChange={(e) => {
-                        setPhone(e.target.value);
-                        setErrors((p) => ({ ...p, phone: "" }));
-                      }}
-                      className={
-                        inputClass(!!errors.phone) +
-                        `flex-1 ${phone.length !== 10 ? inputClass(!!errors.phone) : ""}`
-                      }
-                    />
-                  </div>
+              <div className="flex flex-col gap-5 pt-5">
+                <Field label="Phone number" required error={errors.phone}>
+                  <Input
+                    type="tel"
+                    addon="+977"
+                    placeholder="98XXXXXXXX"
+                    value={phone}
+                    maxLength={10}
+                    onChange={(e) => {
+                      setPhone(e.target.value.replace(/\D/g, "").slice(0, 10));
+                      setErrors((p) => ({ ...p, phone: "" }));
+                    }}
+                  />
                 </Field>
 
-                {/* Shipping address */}
-                <Field label="Shipping Address" required error={errors.address}>
-                  <textarea
+                <Field label="Shipping address" required error={errors.address}>
+                  <Textarea
                     rows={3}
-                    placeholder="Street address, City, Province, Postal Code"
+                    placeholder="Street address, city, province, postal code"
                     value={address}
                     onChange={(e) => {
                       setAddress(e.target.value);
                       setErrors((p) => ({ ...p, address: "" }));
                     }}
-                    className={inputClass(!!errors.address) + " resize-none"}
+                    className="resize-none"
                   />
                 </Field>
 
-                {/* Delivery note */}
-                <Field label="Delivery Note (optional)">
-                  <input
+                <Field label="Delivery note" hint="Optional">
+                  <Input
                     type="text"
-                    placeholder="e.g. Leave at the door, call on arrival..."
+                    placeholder="Leave at the door, call on arrival"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className={inputClass(false)}
                   />
                 </Field>
               </div>
-            </div>
+            </section>
 
             {/* Payment method */}
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-5">
-                <span className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center">
+            <section aria-labelledby="step-payment">
+              <h2
+                id="step-payment"
+                className="border-b border-line pb-3 font-display text-base font-semibold text-ink"
+              >
+                <span className="mr-2 font-display text-sm font-semibold tabular-nums text-pine">
                   2
                 </span>
-                <h2 className="text-base font-bold text-gray-900">
-                  Payment Method
-                </h2>
-              </div>
+                Payment method
+              </h2>
 
-              {/* Method selector */}
-              <div className="grid sm:grid-cols-3 gap-3 mb-5">
-                {PAYMENT_METHODS.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => setPayment(m.id)}
-                    className={`flex flex-col items-center gap-2 py-4 px-3 border-2 rounded-xl text-xs font-semibold transition-colors ${
-                      payment === m.id
-                        ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                        : "border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
-                    }`}
-                  >
-                    <span className="text-2xl">
-                      {<img className="w-20 h-20 mt-6 mb-6" src={m.icon}></img>}
+              <RadioGroup
+                value={payment}
+                onValueChange={setPayment}
+                aria-label="Payment method"
+                className="flex flex-col gap-2 pt-5"
+              >
+                {PAYMENT_METHODS.map((method) => (
+                  <RadioCard key={method.id} value={method.id}>
+                    <span className="flex flex-col">
+                      <span className="text-sm font-medium text-ink">{method.label}</span>
+                      <span className="text-xs text-muted">{method.note}</span>
                     </span>
-                    {m.label}
-                  </button>
+                  </RadioCard>
                 ))}
-              </div>
+              </RadioGroup>
 
-              {payment === "cod" ? (
-                <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-700 flex items-center gap-2">
-                  <span className="text-xl">💵</span>
-                  Pay in cash when your order is delivered to your door.
-                </div>
-              ) : (
-                <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700 flex items-center gap-2">
-                  You'll be redirected to wallet to complete your payment after
-                  confirming.
-                </div>
-              )}
-            </div>
+              <p className="mt-4 flex items-start gap-2 rounded-control bg-marigold-soft p-3 text-sm text-amber">
+                {payment === "cod" ? (
+                  <Banknote aria-hidden className="mt-0.5 size-4 shrink-0" />
+                ) : (
+                  <Wallet aria-hidden className="mt-0.5 size-4 shrink-0" />
+                )}
+                {payment === "cod"
+                  ? "Pay the courier in cash when your order reaches your door."
+                  : "You will be redirected to your wallet to complete the payment."}
+              </p>
+            </section>
           </div>
 
           {/* ── Right column — Order Summary ── */}
-          <div className="lg:col-span-1">
-            <div className="bg-white border border-gray-200 rounded-xl p-5 sticky top-6 flex flex-col gap-4">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-7 h-7 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center">
+          <aside className="lg:col-span-1">
+            <div className="sticky top-24 rounded-panel bg-pine p-5 text-paper">
+              <h2 className="flex items-center gap-2 font-display text-base font-semibold">
+                <span className="font-display text-sm font-semibold tabular-nums text-marigold">
                   3
                 </span>
-                <h2 className="text-base font-bold text-gray-900">
-                  Order Summary
-                </h2>
-              </div>
+                Order summary
+              </h2>
 
               {/* Item list */}
-              <div className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1">
+              <div className="mt-4 flex max-h-72 flex-col gap-3 overflow-y-auto pr-1">
                 {cartItems?.map((item) => {
                   const qty = quantities[item.id] ?? item.quantity;
                   return (
                     <div key={item.id} className="flex items-center gap-3">
-                      {/* Image */}
-                      <div className="w-12 h-12 shrink-0 bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-center text-xl">
+                      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-tile bg-paper-2">
                         <img
                           src={getImageUrl(item.Product.image)}
                           alt={item.Product.productName}
+                          loading="lazy"
                           className="h-full w-full object-contain"
                         />
                       </div>
 
-                      {/* Name + qty controls */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-paper">
                           {item.Product.productName}
                         </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">
+                        <p className="mt-0.5 text-xs text-paper/70">
                           {item.Product.Category.categoryName}
                         </p>
-
-                        {/* Inline quantity control */}
-                        <div className="flex items-center gap-1.5 mt-1.5">
-                          <button
-                            onClick={() => updateQty(item.id, -1)}
-                            disabled={qty <= 1}
-                            className="w-5 h-5 rounded border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors text-xs"
-                          >
-                            −
-                          </button>
-                          <span className="text-xs font-semibold text-gray-700 w-4 text-center">
-                            {qty}
-                          </span>
-                          <button
-                            onClick={() => updateQty(item.id, 1)}
-                            className="w-5 h-5 rounded border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors text-xs"
-                          >
-                            +
-                          </button>
-                        </div>
+                        <QuantityStepper
+                          size="sm"
+                          onPine
+                          value={qty}
+                          onChange={(next) => updateQty(item.id, next)}
+                          label={item.Product.productName}
+                          className="mt-1.5"
+                        />
                       </div>
 
-                      {/* Line total */}
-                      <p className="text-sm font-semibold text-gray-800 shrink-0">
-                        {formatPrice(item.Product.productPrice * qty)}
-                      </p>
+                      <Price
+                        value={item.Product.productPrice * qty}
+                        decimals
+                        className="shrink-0 text-sm font-semibold text-paper"
+                      />
                     </div>
                   );
                 })}
               </div>
 
               {/* Price breakdown */}
-              <div className="border-t border-gray-100 pt-4 flex flex-col gap-2.5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Subtotal</span>
-                  <span className="font-medium text-gray-800">
-                    {formatPrice(subtotal)}
-                  </span>
+              <div className="mt-5 flex flex-col gap-2.5 border-t border-paper/15 pt-4 text-sm">
+                <div className="flex items-baseline justify-between gap-4">
+                  <span className="text-paper/75">Subtotal</span>
+                  <Price value={subtotal} decimals className="font-medium text-paper" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Shipping</span>
-                  <span
-                    className={`font-medium ${shipping === 0 ? "text-green-600" : "text-gray-800"}`}
-                  >
-                    {shipping === 0 ? "Free" : formatPrice(shipping)}
-                  </span>
+                <div className="flex items-baseline justify-between gap-4">
+                  <span className="text-paper/75">Delivery</span>
+                  {shipping === 0 ? (
+                    <span className="font-display font-medium text-marigold">Free</span>
+                  ) : (
+                    <Price value={shipping} decimals className="font-medium text-paper" />
+                  )}
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Tax (8%)</span>
-                  <span className="font-medium text-gray-500">
-                    {formatPrice(tax)}
-                  </span>
+                <div className="flex items-baseline justify-between gap-4">
+                  <span className="text-paper/75">Tax (8%)</span>
+                  <Price value={tax} decimals className="font-medium text-paper/70" />
                 </div>
               </div>
 
               {shipping > 0 && (
-                <p className="text-[10px] text-gray-400 bg-gray-50 rounded-lg px-3 py-2 -mt-1">
+                <p className="mt-3 rounded-control bg-paper/10 px-3 py-2 text-xs text-paper/80">
                   Add{" "}
-                  <span className="font-semibold text-gray-600">
-                    {formatPrice(SHIPPING_THRESHOLD - subtotal)}
-                  </span>{" "}
-                  more for free shipping 🚚
+                  <Price
+                    value={SHIPPING_THRESHOLD - subtotal}
+                    decimals
+                    className="font-semibold text-paper"
+                  />{" "}
+                  more for free delivery
                 </p>
               )}
 
               {/* Total */}
-              <div className="flex justify-between items-center border-t border-gray-200 pt-3">
-                <span className="font-bold text-gray-900">Total</span>
-                <span className="text-xl font-bold text-gray-900">
-                  {formatPrice(total)}
-                </span>
+              <div className="mt-4 flex items-baseline justify-between gap-4 border-t border-paper/15 pt-4">
+                <span className="font-display text-base font-semibold">Total</span>
+                <Price value={total} decimals className="text-xl font-semibold text-paper" />
               </div>
 
-              {/* Submit button */}
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-indigo-700 active:scale-[0.98] disabled:bg-indigo-300 transition-all flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <svg
-                      className="animate-spin"
-                      width="16"
-                      height="16"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="white"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="white"
-                        d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
-                      />
-                    </svg>
-                    Placing Order...
-                  </>
-                ) : (
-                  <>Proceed to Pay · {formatPrice(total)}</>
-                )}
-              </button>
-
-              {/* Trust note */}
-              <p className="text-center text-[10px] text-gray-400 flex items-center justify-center gap-1">
-                <svg
-                  width="11"
-                  height="11"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
+              {errors.form && (
+                <p
+                  role="alert"
+                  className="mt-4 flex items-start gap-2 rounded-control bg-crimson-soft p-3 text-sm text-crimson"
                 >
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-                Secured with SSL encryption
+                  <AlertCircle aria-hidden className="mt-0.5 size-4 shrink-0" />
+                  {errors.form}
+                </p>
+              )}
+
+              <Button
+                variant="primary"
+                className="mt-5 w-full"
+                onClick={handleSubmit}
+                loading={loading}
+                loadingLabel="Placing order"
+              >
+                Pay <Price value={total} decimals />
+              </Button>
+
+              <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-paper/65">
+                <Lock aria-hidden className="size-3.5" />
+                Payments are handled by your wallet provider
               </p>
             </div>
-          </div>
+          </aside>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

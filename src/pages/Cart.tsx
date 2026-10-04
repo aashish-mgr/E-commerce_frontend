@@ -1,62 +1,34 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { ArrowLeft, Lock, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { getImageUrl } from "../api";
-import type { Cart } from "../types";
-import { Link,useNavigate} from "react-router-dom";
-import { useDispatch,useSelector } from "react-redux";
-import { getCartItems,deleteCartItem } from "../store/cartSlice";
+import type { Cart as CartItem } from "../types";
+import { getCartItems, deleteCartItem } from "../store/cartSlice";
 import { showErrorToast } from "../lib/toast";
+import { cn } from "../lib/cn";
+import { Container } from "../Components/ui/Container";
+import { Button } from "../Components/ui/Button";
+import { CheckboxControl } from "../Components/ui/Checkbox";
+import { EmptyState } from "../Components/ui/EmptyState";
+import { PageHeader } from "../Components/ui/PageHeader";
+import { Price } from "../Components/ui/Price";
+import { QuantityStepper } from "../Components/ui/QuantityStepper";
 
 const SHIPPING_THRESHOLD = 50; // free shipping above this
-const TAX_RATE           = 0.08;
-const SHIPPING_FLAT      = 9.99;
-
-// ── Helpers ───────────────────────────────────────────────────
- 
+const TAX_RATE = 0.08;
+const SHIPPING_FLAT = 9.99;
 
 // ── Sub-components ────────────────────────────────────────────
 
-function QuantityControl({
-  value,
-  max,
-  onDecrement,
-  onIncrement,
-}: {
-  value: number;
-  max: number;
-  onDecrement: () => void;
-  onIncrement: () => void;
-}) {
-  return (
-    <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden w-fit">
-      <button
-        onClick={onDecrement}
-        disabled={value <= 1}
-        className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors font-medium text-base"
-      >
-        −
-      </button>
-      <span className="w-9 h-8 flex items-center justify-center text-sm font-semibold text-gray-900 border-x border-gray-200">
-        {value}
-      </span>
-      <button
-        onClick={onIncrement}
-        disabled={value >= max}
-        className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors font-medium text-base"
-      >
-        +
-      </button>
-    </div>
-  );
-}
-
-function CartItemRow({
+function CartRow({
   item,
   onToggleSelect,
   onIncrement,
   onDecrement,
   onRemove,
 }: {
-  item: Cart;
+  item: CartItem;
   onToggleSelect: (id: string) => void;
   onIncrement: (id: string) => void;
   onDecrement: (id: string) => void;
@@ -64,78 +36,113 @@ function CartItemRow({
 }) {
   return (
     <div
-      className={`bg-white border rounded-xl p-4 sm:p-5 flex items-start gap-4 transition-all duration-200 ${
-        item.selected ? "border-indigo-200 shadow-sm" : "border-gray-200"
-      }`}
+      className={cn(
+        "flex items-start gap-4 border-b border-line py-5 transition-colors",
+        !item.selected && "opacity-60",
+      )}
     >
-      {/* Checkbox */}
-      <div className="pt-0.5 shrink-0">
-        <input
-          type="checkbox"
-          checked={item.selected}
-          onChange={() => onToggleSelect(item.id)}
-          className="w-4 h-4 rounded accent-indigo-600 cursor-pointer"
-        />
-      </div>
+      <CheckboxControl
+        checked={item.selected}
+        onCheckedChange={() => onToggleSelect(item.id)}
+        aria-label={`Select ${item.Product.productName}`}
+        className="mt-1"
+      />
 
-      {/* Thumbnail */}
-      <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-3xl sm:text-4xl select-none">
+      <Link
+        to={`/product/${item.Product.id}`}
+        className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-tile bg-paper-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine"
+      >
         <img
           src={getImageUrl(item.Product.image)}
           alt={item.Product.productName}
+          loading="lazy"
           className="h-full w-full object-contain"
         />
-      </div>
+      </Link>
 
-      {/* Details */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
-              {item.Product.Category?.categoryName}
-            </span>
-            <h3 className="font-semibold text-gray-900 mt-1 truncate">{item.Product.productName}</h3>
-            <p className="text-xs text-gray-400 mt-0.5">brand</p>
+            <p className="text-xs text-muted">{item.Product.Category?.categoryName}</p>
+            <h3 className="mt-0.5 truncate font-sans text-[15px] font-medium text-ink">
+              {item.Product.productName}
+            </h3>
           </div>
-
-          {/* Unit price */}
-          <p className="text-base font-bold text-gray-900 shrink-0">
-           {(item.Product.productPrice)}
-          </p>
+          <Price
+            value={item.Product.productPrice}
+            className="shrink-0 text-base font-semibold text-ink"
+          />
         </div>
 
-        {/* Bottom row — qty + line total + remove */}
-        <div className="flex items-center justify-between mt-3 flex-wrap gap-2">
-          <div className="flex items-center gap-3">
-            <QuantityControl
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
+            <QuantityStepper
+              size="sm"
               value={item.quantity}
               max={15}
-              onDecrement={() => onDecrement(item.id)}
-              onIncrement={() => onIncrement(item.id)}
+              onChange={(next) =>
+                next > item.quantity ? onIncrement(item.id) : onDecrement(item.id)
+              }
+              label={item.Product.productName}
             />
-            <span className="text-xs text-gray-400">
-              Subtotal:{" "}
-              <span className="font-semibold text-gray-700">
-                {item.Product.productPrice * item.quantity}
-              </span>
+            <span className="text-xs text-muted">
+              Subtotal{" "}
+              <Price
+                value={item.Product.productPrice * item.quantity}
+                className="font-semibold text-ink-2"
+              />
             </span>
           </div>
 
-          {/* Remove button */}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted hover:text-crimson"
             onClick={() => onRemove(item.id)}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-colors"
+            aria-label={`Remove ${item.Product.productName} from cart`}
           >
-            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-              <path d="M10 11v6M14 11v6" />
-              <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-            </svg>
+            <Trash2 aria-hidden className="size-4" />
             Remove
-          </button>
+          </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryLine({
+  label,
+  children,
+  muted = false,
+  onPine = false,
+}: {
+  label: string;
+  children: React.ReactNode;
+  muted?: boolean;
+  onPine?: boolean;
+}) {
+  // On pine the light scale is mandatory: ink/muted are darker than the surface.
+  const labelTone = onPine
+    ? muted
+      ? "text-paper/70"
+      : "text-paper/75"
+    : muted
+      ? "text-muted"
+      : "text-ink-2";
+  const valueTone = onPine
+    ? muted
+      ? "text-paper/70"
+      : "text-paper"
+    : muted
+      ? "text-muted"
+      : "text-ink";
+
+  return (
+    <div className="flex items-baseline justify-between gap-4 text-sm">
+      <span className={labelTone}>{label}</span>
+      <span className={cn("font-display font-medium tabular-nums", valueTone)}>
+        {children}
+      </span>
     </div>
   );
 }
@@ -143,159 +150,176 @@ function CartItemRow({
 // ── Cart Page ─────────────────────────────────────────────────
 
 export default function Cart() {
-  const [items, setItems] = useState<Cart[]>([]);
+  const [items, setItems] = useState<CartItem[]>([]);
   const dispatch = useDispatch();
   const cartState = useSelector((state: any) => state.cart);
 
   // ── Derived values ────────────────────────────────────────
 
-  const selectedItems  = items?.filter((i) => i.selected);
-  const allSelected    = items?.length > 0 && items.every((i) => i.selected);
-  const someSelected   = items?.some((i) => i.selected);
+  const selectedItems = items?.filter((i) => i.selected);
+  const allSelected = items?.length > 0 && items.every((i) => i.selected);
+  const someSelected = items?.some((i) => i.selected);
 
-  const subtotal       = selectedItems?.reduce((sum, i) => sum + i.Product.productPrice * i.quantity, 0);
+  const subtotal = selectedItems?.reduce(
+    (sum, i) => sum + i.Product.productPrice * i.quantity,
+    0
+  );
 
-  const shipping       = subtotal >= SHIPPING_THRESHOLD || subtotal === 0 ? 0 : SHIPPING_FLAT;
-  const tax            = subtotal * TAX_RATE;
-  const total          = subtotal + shipping + tax;
-  const totalItems     = items?.reduce((sum, i) => sum + i.quantity, 0);
-  const selectedCount  = selectedItems?.reduce((sum, i) => sum + i.quantity, 0);
+  const shipping = subtotal >= SHIPPING_THRESHOLD || subtotal === 0 ? 0 : SHIPPING_FLAT;
+  const tax = subtotal * TAX_RATE;
+  const total = subtotal + shipping + tax;
+  const totalItems = items?.reduce((sum, i) => sum + i.quantity, 0);
+  const selectedCount = selectedItems?.reduce((sum, i) => sum + i.quantity, 0);
   const navigate = useNavigate();
 
   // ── Handlers ─────────────────────────────────────────────
 
-  const toggleSelect   = (id: string) => setItems((prev) => prev.map((i) => i.id === id ? { ...i, selected: !i.selected } : i));
-  const toggleAll      = () => setItems((prev) => prev.map((i) => ({ ...i, selected: !allSelected })));
-  const increment      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity < 15? { ...i, quantity: i.quantity + 1 } : i));
-  const decrement      = (id: string) => setItems((prev) => prev.map((i) => i.id === id && i.quantity > 1 ? { ...i, quantity: i.quantity - 1 } : i));
+  const toggleSelect = (id: string) =>
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, selected: !i.selected } : i)));
+  const toggleAll = () =>
+    setItems((prev) => prev.map((i) => ({ ...i, selected: !allSelected })));
+  const increment = (id: string) =>
+    setItems((prev) =>
+      prev.map((i) => (i.id === id && i.quantity < 15 ? { ...i, quantity: i.quantity + 1 } : i))
+    );
+  const decrement = (id: string) =>
+    setItems((prev) =>
+      prev.map((i) => (i.id === id && i.quantity > 1 ? { ...i, quantity: i.quantity - 1 } : i))
+    );
 
   useEffect(() => {
     dispatch(getCartItems() as any);
   }, []);
-    useEffect(() => {
-    setItems(cartState.cart)
+  useEffect(() => {
+    setItems(cartState.cart);
   }, [cartState.cart]);
 
   const placeOrder = () => {
-    const selectedIds = selectedItems?.map( i => i.productId);
-   
+    const selectedIds = selectedItems?.map((i) => i.productId);
     navigate(`/placeOrder?items=${selectedIds?.join(",")}`);
-  }
+  };
 
   const deleteCart = async (id: string) => {
     try {
       if (!id) return;
       await dispatch(deleteCartItem(id) as any);
-      await dispatch(getCartItems()as any);
+      await dispatch(getCartItems() as any);
     } catch (err) {
       showErrorToast(err, "Something went wrong");
     }
-  }
-
-
-
+  };
 
   // ── Render ────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Shopping Cart</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {totalItems} {totalItems === 1 ? "item" : "items"} in your cart
-            </p>
-          </div>
-          <Link to="/dashboard" className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
-            </svg>
-            Continue Shopping
-          </Link>
-        </div>
+    <div className="min-h-screen bg-paper">
+      <Container>
+        <PageHeader
+          className="mt-8"
+          title="Your cart"
+          description={
+            totalItems
+              ? `${totalItems} ${totalItems === 1 ? "item" : "items"} from sellers across Nepal`
+              : "Nothing here yet."
+          }
+          action={
+            <Link
+              to="/dashboard"
+              className="inline-flex h-11 items-center gap-1.5 rounded-control px-3 text-sm font-medium text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine"
+            >
+              <ArrowLeft aria-hidden className="size-4" />
+              Keep shopping
+            </Link>
+          }
+        />
 
         {items?.length === 0 ? (
-
-          /* ── Empty state ── */
-          <div className="bg-white border border-gray-200 rounded-2xl py-24 flex flex-col items-center text-center">
-            <div className="text-6xl mb-4">🛒</div>
-            <h2 className="text-xl font-bold text-gray-800 mb-1">Your cart is empty</h2>
-            <p className="text-gray-400 text-sm mb-6">Looks like you haven't added anything yet.</p>
-            <Link to="/dashboard" className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors">
-              Browse Products
-            </Link>
-          </div>
-
+          <EmptyState
+            className="py-10"
+            icon={ShoppingBag}
+            title="Your cart is empty"
+            direction="Products you add from any seller collect here before checkout."
+            action={
+              <Link
+                to="/dashboard"
+                className="inline-flex h-11 items-center rounded-control bg-marigold px-5 text-sm font-semibold text-ink transition-colors hover:bg-marigold-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+              >
+                Browse products
+              </Link>
+            }
+          />
         ) : (
-          <div className="flex flex-col lg:flex-row gap-6">
-
+          <div className="flex flex-col gap-10 py-8 lg:flex-row lg:gap-12">
             {/* ── Left — Item list ── */}
-            <div className="flex-1 flex flex-col gap-4">
-
-              {/* Select-all toolbar */}
-              <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between">
-                <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-4 py-3">
+                <label className="flex cursor-pointer select-none items-center gap-3">
+                  <CheckboxControl
                     checked={allSelected}
-                    onChange={toggleAll}
-                    className="w-4 h-4 rounded accent-indigo-600 cursor-pointer"
+                    onCheckedChange={toggleAll}
+                    aria-label="Select every item"
                   />
-                  <span className="text-sm font-medium text-gray-700">
-                    Select All
-                    <span className="text-gray-400 font-normal ml-1">({items?.length} items)</span>
+                  <span className="text-sm font-medium text-ink">
+                    Select all
+                    <span className="ml-1 font-normal text-muted">
+                      ({items?.length} {items?.length === 1 ? "line" : "lines"})
+                    </span>
                   </span>
                 </label>
 
                 {someSelected && (
                   <button
+                    type="button"
                     onClick={() => {
-                      selectedItems?.map(i => deleteCart(i.id));
+                      selectedItems?.map((i) => deleteCart(i.id));
                     }}
-                    className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
+                    className="inline-flex h-10 items-center gap-1.5 rounded-control px-3 text-sm font-medium text-muted transition-colors hover:bg-crimson-soft hover:text-crimson focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine"
                   >
-                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                      <path d="M10 11v6M14 11v6" />
-                      <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                    </svg>
+                    <Trash2 aria-hidden className="size-4" />
                     Remove selected
                   </button>
                 )}
               </div>
 
-              {/* Items */}
-              {items?.map((item) => (
-                <CartItemRow
-                  key={item.id}
-                  item={item}
-                  onToggleSelect={toggleSelect}
-                  onIncrement={increment}
-                  onDecrement={decrement}
-                  onRemove={deleteCart}
-                />
-              ))}
+              <div>
+                {items?.map((item) => (
+                  <CartRow
+                    key={item.id}
+                    item={item}
+                    onToggleSelect={toggleSelect}
+                    onIncrement={increment}
+                    onDecrement={decrement}
+                    onRemove={deleteCart}
+                  />
+                ))}
+              </div>
 
-              {/* Free shipping progress bar */}
               {subtotal < SHIPPING_THRESHOLD && subtotal > 0 && (
-                <div className="bg-white border border-gray-200 rounded-xl px-5 py-4">
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-600">
+                <div className="mt-6 rounded-panel border border-line bg-surface p-4">
+                  <div className="mb-2 flex items-center justify-between gap-4 text-sm">
+                    <span className="text-ink-2">
                       Add{" "}
-                      <span className="font-semibold text-gray-900">
-                        {SHIPPING_THRESHOLD - subtotal}
-                      </span>{" "}
-                      more for free shipping
+                      <Price
+                        value={SHIPPING_THRESHOLD - subtotal}
+                        className="font-semibold text-ink"
+                      />{" "}
+                      more for free delivery
                     </span>
-                    <span className="text-xs text-gray-400">🚚 Free over Rs.{SHIPPING_THRESHOLD}</span>
+                    <span className="inline-flex shrink-0 items-center gap-1.5 text-xs text-muted">
+                      <Truck aria-hidden className="size-4" />
+                      Free over <Price value={SHIPPING_THRESHOLD} />
+                    </span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
+                  <div
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={SHIPPING_THRESHOLD}
+                    aria-valuenow={Math.min(subtotal, SHIPPING_THRESHOLD)}
+                    aria-label="Progress toward free delivery"
+                    className="h-1.5 w-full overflow-hidden rounded-full bg-paper-2"
+                  >
                     <div
-                      className="bg-indigo-500 h-1.5 rounded-full transition-all duration-500"
+                      className="h-full rounded-full bg-pine transition-[width] duration-500"
                       style={{ width: `${Math.min((subtotal / SHIPPING_THRESHOLD) * 100, 100)}%` }}
                     />
                   </div>
@@ -304,109 +328,57 @@ export default function Cart() {
             </div>
 
             {/* ── Right — Order summary ── */}
-            <div className="w-full lg:w-85 shrink-0">
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 sticky top-6 flex flex-col gap-4">
+            <aside className="w-full shrink-0 lg:w-80">
+              <div className="sticky top-24 rounded-panel bg-pine p-5 text-paper">
+                <h2 className="font-display text-base font-semibold">Order summary</h2>
 
-                <h2 className="text-base font-bold text-gray-900">Order Summary</h2>
+                <p className="mt-2 text-xs text-paper/70">
+                  {selectedCount > 0
+                    ? `Calculating for ${selectedCount} selected ${selectedCount === 1 ? "item" : "items"}`
+                    : "Nothing selected yet."}
+                </p>
 
-                {/* Selected count notice */}
-                {selectedCount > 0 ? (
-                  <p className="text-xs text-indigo-600 bg-indigo-50 rounded-lg px-3 py-2">
-                    Calculating for{" "}
-                    <span className="font-semibold">{selectedCount} selected {selectedCount === 1 ? "item" : "items"}</span>
-                  </p>
-                ) : (
-                  <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-                    No items selected. Check the boxes to include items.
-                  </p>
-                )}
-
-                
-
-                {/* Price breakdown */}
-                <div className="flex flex-col gap-2.5 border-t border-gray-100 pt-4">
-                  <PriceLine label="Subtotal"  value={subtotal?.toFixed(2)} />
-                 
-                  <PriceLine
-                    label="Shipping"
-                    value={shipping === 0 ? (subtotal === 0 ? "—" : "Free") : (shipping.toFixed(2))}
-                    highlight={shipping === 0 && subtotal > 0 ? "green" : undefined}
-                  />
-                  <PriceLine label={`Tax (${(TAX_RATE * 100).toFixed(0)}%)`} value={(tax.toFixed(2))} muted />
+                <div className="mt-5 flex flex-col gap-2.5 border-t border-paper/15 pt-4">
+                  <SummaryLine label="Subtotal" onPine>
+                    <Price value={subtotal} decimals />
+                  </SummaryLine>
+                  <SummaryLine label="Delivery" onPine>
+                    {shipping === 0 ? (
+                      <span className="text-marigold">
+                        {subtotal === 0 ? "—" : "Free"}
+                      </span>
+                    ) : (
+                      <Price value={shipping} decimals />
+                    )}
+                  </SummaryLine>
+                  <SummaryLine label={`Tax (${(TAX_RATE * 100).toFixed(0)}%)`} muted onPine>
+                    <Price value={tax} decimals />
+                  </SummaryLine>
                 </div>
 
-                {/* Total */}
-                <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-                  <span className="font-bold text-gray-900">Total</span>
-                  <span className="text-xl font-bold text-gray-900">{total.toFixed(2)}</span>
+                <div className="mt-4 flex items-baseline justify-between gap-4 border-t border-paper/15 pt-4">
+                  <span className="font-display text-base font-semibold">Total</span>
+                  <Price value={total} decimals className="text-xl font-semibold text-paper" />
                 </div>
 
-                {/* Proceed button */}
-                <button
+                <Button
+                  variant="primary"
+                  className="mt-5 w-full"
                   disabled={selectedCount === 0}
                   onClick={placeOrder}
-                  className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold text-sm hover:bg-indigo-700 active:scale-[0.98] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
                 >
-                  {selectedCount === 0 ? "Select items to checkout" : "Proceed to Payment →"}
-                </button>
+                  {selectedCount === 0 ? "Select items to check out" : "Proceed to payment"}
+                </Button>
 
-                {/* Accepted payments */}
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  {["Visa", "Mastercard", "PayPal", "Apple Pay"].map((m) => (
-                    <span
-                      key={m}
-                      className="text-[10px] font-medium text-gray-400 border border-gray-200 rounded px-2 py-0.5"
-                    >
-                      {m}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Security note */}
-                <p className="text-center text-[10px] text-gray-400 flex items-center justify-center gap-1">
-                  <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                  Secure SSL encrypted checkout
+                <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-paper/65">
+                  <Lock aria-hidden className="size-3.5" />
+                  Payments are handled by Khalti
                 </p>
               </div>
-            </div>
+            </aside>
           </div>
         )}
-      </div>
+      </Container>
     </div>
   );
 }
-
-// ── Price line helper ──────────────────────────────────────────
-
-function PriceLine({
-  label,
-  value,
-  highlight,
-  muted,
-}: {
-  label: string;
-  value: string;
-  highlight?: "green";
-  muted?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className={muted ? "text-gray-400" : "text-gray-600"}>{label}</span>
-      <span
-        className={`font-medium ${
-          highlight === "green"
-            ? "text-green-600"
-            : muted
-            ? "text-gray-400"
-            : "text-gray-800"
-        }`}
-      >
-        {value}
-      </span>
-    </div>
-  );
-
-}
-

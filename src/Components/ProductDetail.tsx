@@ -1,11 +1,39 @@
-import { useState,useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { authAPI } from "../api";
-import type { Product } from "../types";
-import { Link,useNavigate } from "react-router-dom";
-import { setCart } from "../store/cartSlice";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
+import {
+  ArrowLeft,
+  Check,
+  Lock,
+  PackageX,
+  RotateCcw,
+  Truck,
+} from "lucide-react";
+import { authAPI, getImageUrl } from "../api";
+import type { Cart, Product } from "../types";
+import { getCartItems, setCart } from "../store/cartSlice";
 import { toast, showErrorToast } from "../lib/toast";
+import { Container } from "../Components/ui/Container";
+import { Button } from "../Components/ui/Button";
+import { Price } from "../Components/ui/Price";
+import { QuantityStepper } from "../Components/ui/QuantityStepper";
+import { Skeleton } from "../Components/ui/Skeleton";
+
+type RootState = {
+  cart: { cart: Cart[] | null };
+};
+
+type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>;
+
+const MAX_QUANTITY = 15;
+const LOW_STOCK = 5;
+
+const REASSURANCE = [
+  { icon: Truck, label: "Free delivery", sub: "Orders over Rs. 50" },
+  { icon: RotateCcw, label: "Easy returns", sub: "30-day window" },
+  { icon: Lock, label: "Secure payment", sub: "Handled by Khalti" },
+];
 
 export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
@@ -13,12 +41,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-
-  const decrement = () => setQuantity((q) => Math.max(1, q - 1));
-  const increment = () => setQuantity((q) => Math.min(15, q + 1));
-
+  const dispatch = useDispatch<AppDispatch>();
 
   const getProduct = async () => {
     if (!id) return;
@@ -33,200 +56,196 @@ export default function ProductDetail() {
   const addToCart = async (q: number) => {
     if (!id) return;
     try {
-      const res = await authAPI.post('/cart/addToCart', {
+      const res = await authAPI.post("/cart/addToCart", {
         quantity: q,
-        productId: id
-      })
-      if(res.status === 200) {
+        productId: id,
+      });
+      if (res.status === 200) {
         setAdded(true);
+        // Refresh the shared cart so the Navbar badge matches the server.
+        await dispatch(getCartItems());
         toast.success("Added to cart.");
       }
     } catch (error) {
       showErrorToast(error, "Failed to add to cart.");
     }
-  }
+  };
 
   useEffect(() => {
     getProduct();
-  
   }, [id]);
 
-  const placeOrder =async () => {
+  const placeOrder = async () => {
     if (!product) return;
     await addToCart(quantity);
-    dispatch(setCart([
-      {
-        Product: product,
-        id: "34398",
-        quantity: quantity,
-        selected: true,
-        productId: product.id
-       },
-    ]));
-   const selectedIds = [product.id];
-    // dispatch(setCart(selectedItems));
+    dispatch(
+      setCart([
+        {
+          Product: product,
+          id: "34398",
+          quantity: quantity,
+          selected: true,
+          productId: product.id,
+        },
+      ])
+    );
+    const selectedIds = [product.id];
     navigate(`/placeOrder?items=${selectedIds?.join(",")}`);
-  }
+  };
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 font-sans">
-        <div className="max-w-6xl mx-auto px-4 py-10">
-          <p className="text-center text-gray-500">Loading product...</p>
-        </div>
+      <div className="min-h-screen bg-paper">
+        <Container>
+          <div className="grid gap-10 py-10 lg:grid-cols-2">
+            <Skeleton className="aspect-square w-full rounded-panel" />
+            <div className="flex flex-col gap-4">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-9 w-3/4" />
+              <Skeleton className="h-8 w-32" />
+              <SkeletonTextLines />
+            </div>
+          </div>
+        </Container>
       </div>
     );
   }
 
+  const stock = product.stock;
+  const outOfStock = stock != null && stock <= 0;
+  const lowStock = stock != null && stock > 0 && stock <= LOW_STOCK;
+  const maxQuantity = Math.min(MAX_QUANTITY, stock ?? MAX_QUANTITY);
+
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <div className="max-w-6xl mx-auto px-4 py-10">
+    <div className="min-h-screen bg-paper">
+      <Container>
+        <div className="py-6">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1.5 rounded-control text-sm font-medium text-ink-2 transition-colors hover:text-pine focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pine"
+          >
+            <ArrowLeft aria-hidden className="size-4" />
+            Continue shopping
+          </Link>
+        </div>
 
-
-        {/* ── Top Section: Image + Info ── */}
-        <div className="grid lg:grid-cols-2 gap-10 mb-12">
-
-          {/* ── Product Image ── */}
+        <div className="grid gap-10 pb-16 lg:grid-cols-2 lg:gap-14">
           <div className="flex flex-col gap-4">
-
-            {/* Main image */}
-            <div className="bg-white border border-gray-200 rounded-2xl flex items-center justify-center h-95 text-[130px] select-none">
+            <div className="flex aspect-square items-center justify-center overflow-hidden rounded-panel border border-line bg-paper-2">
               <img
-          src={product.image}
-          alt={product.productName}
-          className="h-full w-full object-contain"
-        />
+                src={getImageUrl(product.image)}
+                alt={product.productName}
+                className="h-full w-full object-contain"
+              />
             </div>
-
-           
           </div>
 
-          {/* ── Product Info ── */}
           <div className="flex flex-col">
+            <p className="text-sm text-muted">{product.Category.categoryName}</p>
 
-            {/* Brand + category */}
-            <div className="flex items-center justify-between mb-3">
-              <div>
-              <span className="text-xs font-semibold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
-                {product.Category.categoryName}
-              </span>
-              <span className="text-xs text-gray-400">brand</span>
-              </div>
-               <Link to="/dashboard" className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
-            </svg>
-            Continue Shopping
-          </Link>
-            </div>
-
-            {/* Name */}
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-3">
+            <h1 className="mt-2 font-display text-3xl font-semibold leading-tight tracking-tight text-ink">
               {product.productName}
             </h1>
 
-           
-
-            {/* Price */}
-            <div className="flex items-end gap-3 mb-5">
-              <span className="text-4xl font-bold text-gray-900">Rs.{product.productPrice}</span>
-              <span className="text-xl text-gray-400 line-through mb-0.5">Rs.{Math.floor(110/100 * product.productPrice)}</span>
-              <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-lg mb-1">
-                10% off
-              </span>
+            <div className="mt-5 flex items-baseline gap-3">
+              <Price value={product.productPrice} className="text-4xl font-semibold text-ink" />
             </div>
 
-            {/* Short description */}
-            <p className="text-gray-500 text-sm leading-relaxed mb-5 border-b border-gray-100 pb-5">
+            <p className="mt-5 max-w-prose border-b border-line pb-5 text-sm leading-relaxed text-ink-2">
               {product.productDescription}
             </p>
 
-            {/* Tags */}
-           
-
-            {/* Stock */}
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-sm text-gray-600">
-                In stock —{" "}
-                {/* <span className="font-medium text-gray-800">10 units</span> left */}
+            <div className="mt-5 flex items-center gap-2">
+              <span
+                aria-hidden
+                className={`size-2 rounded-full ${
+                  outOfStock ? "bg-muted" : lowStock ? "bg-crimson" : "bg-pine"
+                }`}
+              />
+              <span className={`text-sm ${lowStock ? "font-medium text-crimson" : "text-muted"}`}>
+                {outOfStock
+                  ? "Out of stock"
+                  : lowStock
+                    ? `Only ${stock} left`
+                    : "In stock"}
               </span>
             </div>
 
-          
-
-            {/* ── Quantity + Buttons ── */}
-            <div className="flex flex-col gap-3">
-
-              {/* Quantity counter */}
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700 w-16">Quantity</span>
-                <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
-                  <button
-                    onClick={decrement}
-                    disabled={quantity === 1}
-                    className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors text-lg font-medium"
-                  >
-                    −
-                  </button>
-                  <span className="w-12 h-10 flex items-center justify-center text-sm font-semibold text-gray-900 border-x border-gray-200">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={increment}
-                    disabled={quantity === 15}
-                    className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors text-lg font-medium"
-                  >
-                    +
-                  </button>
-                </div>
-                <span className="text-sm text-gray-400">
-                  Total:{" "}
-                  <span className="font-semibold text-gray-700">Rs.{product.productPrice * quantity}</span>
+            <div className="mt-7 flex flex-col gap-5">
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="text-sm font-medium text-ink">Quantity</span>
+                <QuantityStepper
+                  value={quantity}
+                  min={1}
+                  max={maxQuantity}
+                  onChange={setQuantity}
+                />
+                <span className="text-sm text-muted">
+                  Total{" "}
+                  <Price
+                    value={product.productPrice * quantity}
+                    className="font-semibold text-ink"
+                  />
                 </span>
               </div>
 
-              {/* Action buttons */}
-              <div className="flex gap-3 mt-1">
-                <button className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 active:scale-[0.98] transition-all" onClick={placeOrder}>
-                  Buy Now
-                </button>
-                <button className={`flex-1 border-2 border-gray-900 text-gray-900 py-3 rounded-xl font-semibold text-sm hover:bg-gray-900 hover:text-white active:scale-[0.98] transition-all  ${added? "bg-green-600 text-white"
-                : "bg-gray-900 text-white hover:bg-gray-700"}` }
-                onClick={() => addToCart(quantity)}>
-                  {added ? "Added ✓" : "Add to Cart"}
-                </button>
-                <button className="w-12 h-12 flex items-center justify-center border border-gray-200 rounded-xl text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors shrink-0">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                  </svg>
-                </button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button
+                  variant="primary"
+                  className="flex-1"
+                  disabled={outOfStock}
+                  onClick={placeOrder}
+                >
+                  Buy now
+                </Button>
+                <Button
+                  variant="solid"
+                  className="flex-1"
+                  disabled={outOfStock}
+                  onClick={() => addToCart(quantity)}
+                >
+                  {added ? (
+                    <>
+                      <Check aria-hidden className="size-4" strokeWidth={2.5} />
+                      In cart
+                    </>
+                  ) : (
+                    "Add to cart"
+                  )}
+                </Button>
               </div>
 
-              {/* Reassurance strip */}
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                {[
-                  { icon: "🚚", label: "Free Delivery",   sub: "Orders over Rs. 50" },
-                  { icon: "↩️", label: "Easy Returns",    sub: "30-day window" },
-                  { icon: "🔒", label: "Secure Payment",  sub: "SSL encrypted" },
-                ].map(({ icon, label, sub }) => (
-                  <div
-                    key={label}
-                    className="flex flex-col items-center text-center bg-gray-50 border border-gray-100 rounded-xl py-3 px-2"
-                  >
-                    <span className="text-xl mb-1">{icon}</span>
-                    <p className="text-xs font-medium text-gray-700">{label}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>
+              {outOfStock && (
+                <p className="flex items-center gap-2 text-sm text-muted">
+                  <PackageX aria-hidden className="size-4" />
+                  This seller is out of stock. Check back or browse similar products.
+                </p>
+              )}
+
+              <div className="grid grid-cols-3 gap-2 border-t border-line pt-5">
+                {REASSURANCE.map(({ icon: Icon, label, sub }) => (
+                  <div key={label} className="flex flex-col items-center px-2 text-center">
+                    <Icon aria-hidden className="size-5 text-pine" />
+                    <p className="mt-2 text-xs font-medium text-ink">{label}</p>
+                    <p className="mt-0.5 text-[11px] text-muted">{sub}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
         </div>
+      </Container>
+    </div>
+  );
+}
 
-     
-
-      </div>
+function SkeletonTextLines() {
+  return (
+    <div className="flex flex-col gap-3">
+      <Skeleton className="h-3 w-full" />
+      <Skeleton className="h-3 w-11/12" />
+      <Skeleton className="h-3 w-4/5" />
+      <Skeleton className="mt-4 h-11 w-40 rounded-control" />
     </div>
   );
 }

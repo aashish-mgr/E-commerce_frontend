@@ -4,31 +4,28 @@ import App from './App.tsx'
 import store from './store/store.ts'
 import { Provider } from 'react-redux'
 import { Toaster } from 'sonner'
+import { MotionConfig } from 'motion/react'
 
 createRoot(document.getElementById('root')!).render(
-  
-    <Provider store={store}>
-    <App />
-    <Toaster
-      position="bottom-right"
-      richColors
-      toastOptions={{
-        classNames: {
-          toast: "rounded-xl border-gray-200 shadow-sm",
-        },
-        actionButtonStyle: {
-          backgroundColor: "#4f46e5",
-          color: "#fff",
-          borderRadius: "0.5rem",
-          fontWeight: "600",
-        },
-        cancelButtonStyle: {
-          backgroundColor: "#f3f4f6",
-          color: "#374151",
-          borderRadius: "0.5rem",
-        },
-      }}
-    />
-    </Provider>
-  ,
+  <Provider store={store}>
+    <MotionConfig reducedMotion="user">
+      <App />
+      <Toaster
+        position="bottom-right"
+        richColors={false}
+        toastOptions={{
+          classNames: {
+            toast:
+              '!rounded-panel !border !border-line !bg-surface !text-ink !shadow-lift',
+            title: '!text-sm !font-semibold !text-ink',
+            description: '!text-sm !text-muted',
+            actionButton:
+              '!rounded-control !bg-pine !px-3 !text-sm !font-semibold !text-paper',
+            cancelButton:
+              '!rounded-control !bg-paper-2 !px-3 !text-sm !font-medium !text-ink-2',
+          },
+        }}
+      />
+    </MotionConfig>
+  </Provider>,
 )

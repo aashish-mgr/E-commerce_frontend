@@ -1,4 +1,3 @@
-import './App.css'
 import { BrowserRouter,Route,Routes } from 'react-router-dom'
 import LandingPage from './pages/LandingPage.tsx'
 import Dashboard from './pages/Dashboard.tsx'

@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Camera } from "lucide-react";
 import type { User } from "../types";
 import { getImageUrl } from "../api/index";
-import {
-  updateUserProfile,
-  changeUserPassword,
-} from "../store/authSlice";
+import { updateUserProfile, changeUserPassword } from "../store/authSlice";
 import { toast, showErrorToast } from "../lib/toast";
+import { humanize } from "../lib/format";
+import { Container } from "../Components/ui/Container";
+import { Button } from "../Components/ui/Button";
+import { Field } from "../Components/ui/Field";
+import { Input } from "../Components/ui/Input";
+import { PageHeader } from "../Components/ui/PageHeader";
+import { SkeletonText } from "../Components/ui/Skeleton";
 
 export default function Profile() {
   const dispatch = useDispatch<any>();
@@ -86,9 +91,7 @@ export default function Profile() {
 
     setSavingPassword(true);
     try {
-      await dispatch(
-        changeUserPassword({ currentPassword, newPassword })
-      ).unwrap();
+      await dispatch(changeUserPassword({ currentPassword, newPassword })).unwrap();
       toast.success("Password changed successfully!");
       setCurrentPassword("");
       setNewPassword("");
@@ -102,158 +105,162 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Loading...</p>
+      <div className="min-h-screen bg-paper">
+        <Container className="max-w-3xl py-10">
+          <SkeletonText lines={6} />
+        </Container>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">My Profile</h1>
+    <div className="min-h-screen bg-paper">
+      <Container className="max-w-3xl">
+        <PageHeader
+          className="mt-8"
+          title="Your profile"
+          description="How sellers and couriers see you when an order is on its way."
+        />
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center text-3xl font-semibold text-indigo-700">
-                {avatarSrc ? (
-                  <img
-                    src={avatarSrc}
-                    alt={user.userName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  avatarInitial
-                )}
+        <div className="py-8">
+          <section aria-labelledby="details-heading">
+            <h2
+              id="details-heading"
+              className="border-b border-line pb-3 font-display text-base font-semibold text-ink"
+            >
+              Personal details
+            </h2>
+
+            <div className="flex flex-col gap-6 pt-6 sm:flex-row sm:items-start">
+              <div className="flex flex-col items-center gap-3">
+                <span className="flex size-24 items-center justify-center overflow-hidden rounded-full bg-pine-soft font-display text-3xl font-semibold text-pine">
+                  {avatarSrc ? (
+                    <img src={avatarSrc} alt={user.userName} className="size-full object-cover" />
+                  ) : (
+                    avatarInitial
+                  )}
+                </span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleAvatarChange}
+                  className="sr-only"
+                  id="avatar-upload"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Camera aria-hidden className="size-4" />
+                  Change photo
+                </Button>
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleAvatarChange}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
-              >
-                Change Photo
-              </button>
-            </div>
 
-            <div className="flex-1 w-full">
-              <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name
-                  </label>
-                  <input
+              <form onSubmit={handleProfileSubmit} className="flex min-w-0 flex-1 flex-col gap-5">
+                <Field label="Full name" required>
+                  <Input
                     type="text"
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     placeholder="Your name"
                   />
-                </div>
+                </Field>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
+                <Field label="Email" required>
+                  <Input
                     type="email"
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     placeholder="you@example.com"
                   />
-                </div>
+                </Field>
 
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1 capitalize">
-                    {user.userRole}
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center rounded-full bg-paper-2 px-3 py-1 text-xs font-medium text-ink-2">
+                    {humanize(user.userRole)}
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-muted">
                     {isGoogleAccount ? "Signed in with Google" : "Email account"}
                   </span>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={savingProfile}
-                  className="bg-indigo-600 text-white text-sm font-semibold px-5 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {savingProfile ? "Saving..." : "Save Changes"}
-                </button>
+                <div>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    loading={savingProfile}
+                    loadingLabel="Saving"
+                  >
+                    Save changes
+                  </Button>
+                </div>
               </form>
             </div>
-          </div>
-        </div>
+          </section>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Change Password
-          </h2>
+          <section aria-labelledby="password-heading" className="mt-10">
+            <h2
+              id="password-heading"
+              className="border-b border-line pb-3 font-display text-base font-semibold text-ink"
+            >
+              Password
+            </h2>
 
-          {isGoogleAccount ? (
-            <p className="text-sm text-gray-500">
-              Your account uses Google sign-in, so password management is handled
-              by Google.
-            </p>
-          ) : (
-            <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-md">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={savingPassword}
-                className="bg-gray-900 text-white text-sm font-semibold px-5 py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            {isGoogleAccount ? (
+              <p className="pt-4 max-w-prose text-sm text-muted">
+                Your account uses Google sign-in, so password management is handled by
+                Google.
+              </p>
+            ) : (
+              <form
+                onSubmit={handlePasswordSubmit}
+                className="flex max-w-md flex-col gap-5 pt-6"
               >
-                {savingPassword ? "Updating..." : "Update Password"}
-              </button>
-            </form>
-          )}
+                <Field label="Current password" required>
+                  <Input
+                    type="password"
+                    autoComplete="current-password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                  />
+                </Field>
+
+                <Field label="New password" hint="At least 6 characters" required>
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </Field>
+
+                <Field label="Confirm new password" required>
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </Field>
+
+                <div>
+                  <Button
+                    type="submit"
+                    variant="solid"
+                    loading={savingPassword}
+                    loadingLabel="Updating"
+                  >
+                    Update password
+                  </Button>
+                </div>
+              </form>
+            )}
+          </section>
         </div>
-      </main>
+      </Container>
     </div>
   );
 }

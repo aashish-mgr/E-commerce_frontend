@@ -21,7 +21,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="flex min-h-screen items-center justify-center bg-paper px-4 py-16">
       <AuthModal
         mode={mode}
         onClose={() => navigate("/")}

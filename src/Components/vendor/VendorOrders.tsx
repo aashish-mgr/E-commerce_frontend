@@ -1,31 +1,52 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { paymentStyles, statusStyles } from "./types";
-import type { VendorOrderDetail } from "./types";
+import { Eye, ImageOff, PackageSearch, Trash2 } from "lucide-react";
+import { getImageUrl } from "../../api";
 import type { PaginationMeta } from "../../types";
 import Pagination from "../Pagination";
-import { useState } from "react";
+import { Button } from "../ui/Button";
+import { EmptyState } from "../ui/EmptyState";
+import { ChipGroup, ResultMeta, SearchField } from "../ui/FilterBar";
+import { PageHeader } from "../ui/PageHeader";
+import { Panel } from "../ui/Panel";
+import { Price } from "../ui/Price";
+import { SegmentedControl } from "../ui/SegmentedControl";
+import { StatusBadge } from "../ui/StatusBadge";
+import { toPaymentTone, toStatusTone } from "./types";
+import { humanize } from "../../lib/format";
+import type { VendorOrderDetail } from "./types";
+
+const statusOptions = [
+  { value: "pending", label: "Pending" },
+  { value: "shipped", label: "Shipped" },
+  { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+const statusFilters = [
+  { value: "all", label: "All" },
+  ...statusOptions,
+];
 
 function ProductThumb({ image, name }: { image: string; name: string }) {
   const [error, setError] = useState(false);
+  const src = getImageUrl(image);
 
-  if (!image || error) {
+  if (!src || error) {
     return (
-      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="text-gray-300">
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <circle cx="8.5" cy="8.5" r="1.5" />
-          <path d="M21 15l-5-5L5 21" />
-        </svg>
-      </div>
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-tile bg-paper-2 text-muted">
+        <ImageOff aria-hidden className="size-4" />
+      </span>
     );
   }
 
   return (
     <img
-      src={image}
+      src={src}
       alt={name}
-      className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+      loading="lazy"
       onError={() => setError(true)}
+      className="size-11 shrink-0 rounded-tile object-cover"
     />
   );
 }
@@ -54,209 +75,183 @@ export default function VendorOrders({
   onDelete: (orderId: string) => void;
 }) {
   const navigate = useNavigate();
-
-  const statuses = ["pending", "shipped", "delivered", "cancelled"];
-  const statusFilters = ["all", "pending", "shipped", "delivered", "cancelled"];
   const total = pagination?.total ?? orderDetails.length;
+  const filtered = Boolean(orderSearch) || orderStatusFilter !== "all";
+
+  const clearFilters = () => {
+    onSearchChange("");
+    onStatusChange("all");
+  };
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">Store Orders</h2>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Track and manage orders for your products
-        </p>
-      </div>
+      <PageHeader
+        titleAs="h2"
+        title="Store orders"
+        description="Track and manage orders placed for your products."
+      />
 
-      {/* Search & Filter */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search by product, phone, or address..."
-              value={orderSearch}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 bg-gray-50 focus:bg-white"
-            />
-            {orderSearch && (
-              <button
-                onClick={() => onSearchChange("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-            {statusFilters.map((s) => (
-              <button
-                key={s}
-                onClick={() => onStatusChange(s)}
-                className={`text-xs px-3.5 py-2 rounded-lg font-medium transition-all duration-200 whitespace-nowrap capitalize flex-shrink-0 ${
-                  orderStatusFilter === s
-                    ? "bg-gray-900 text-white shadow-sm"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
+      <Panel className="p-4 sm:p-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+          <SearchField
+            value={orderSearch}
+            onChange={onSearchChange}
+            ariaLabel="Search store orders"
+            placeholder="Search by product, phone or address"
+          />
+          <ChipGroup
+            className="pb-0"
+            ariaLabel="Filter orders by status"
+            options={statusFilters}
+            value={orderStatusFilter}
+            onChange={onStatusChange}
+          />
         </div>
+        <ResultMeta
+          className="mt-4 border-t border-line pt-3"
+          shown={orderDetails.length}
+          total={total}
+          noun="orders"
+          onClear={filtered ? clearFilters : undefined}
+        />
+      </Panel>
 
-        <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-          <span>
-            Showing <span className="font-semibold text-gray-700">{orderDetails.length}</span> of{" "}
-            <span className="font-semibold text-gray-700">{total}</span> orders
-          </span>
-          {(orderSearch || orderStatusFilter !== "all") && (
-            <button
-              onClick={() => {
-                onSearchChange("");
-                onStatusChange("all");
-              }}
-              className="text-indigo-600 hover:text-indigo-700 font-medium"
-            >
-              Clear filters
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Orders Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <Panel>
         {orderDetails.length === 0 ? (
-          <div className="py-20 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
-              <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" className="text-gray-400">
-                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <p className="text-lg font-semibold text-gray-700">
-              {total === 0 ? "No orders yet" : "No orders match your search"}
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              {total === 0
-                ? "Orders for your products will appear here"
-                : "Try adjusting your search or filter"}
-            </p>
-          </div>
+          <EmptyState
+            icon={PackageSearch}
+            title={total === 0 ? "No orders yet" : "No orders match your search"}
+            direction={
+              total === 0
+                ? "Orders for your products will appear here."
+                : "Try adjusting your search or status filter."
+            }
+            action={
+              filtered ? (
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              ) : undefined
+            }
+          />
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-100 bg-gray-50/50">
-                    <th className="px-5 py-3 font-medium">Product</th>
-                    <th className="px-5 py-3 font-medium">Qty</th>
-                    <th className="px-5 py-3 font-medium">Customer</th>
-                    <th className="px-5 py-3 font-medium">Total</th>
-                    <th className="px-5 py-3 font-medium">Status</th>
-                    <th className="px-5 py-3 font-medium">Payment</th>
-                    <th className="px-5 py-3 font-medium">Actions</th>
+              <table className="w-full text-left text-sm">
+                <thead className="bg-paper-2/60 text-ink-2">
+                  <tr>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Product
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Qty
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Customer
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Order total
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Status
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-medium">
+                      Payment
+                    </th>
+                    <th scope="col" className="px-5 py-3 text-right font-medium">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-line">
                   {orderDetails.map((od) => {
                     const order = od.Order;
-                    const payment = order.Payment;
+                    const paymentStatus = order.Payment?.paymentStatus ?? "";
+                    const detailUrl = `/vendor/order/${order.id}`;
+
                     return (
-                      <tr key={od.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                        <td className="px-5 py-3.5">
+                      <tr
+                        key={od.id}
+                        className="transition-colors hover:bg-paper-2/40"
+                      >
+                        <td className="px-5 py-3">
                           <button
-                            onClick={() => navigate(`/vendor/order/${order.id}`)}
-                            className="flex items-center gap-3 text-left group"
-                            title="View order details"
+                            type="button"
+                            onClick={() => navigate(detailUrl)}
+                            className="flex items-center gap-3 rounded-control text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine"
                           >
-                            <ProductThumb image={od.Product.image} name={od.Product.productName} />
-                            <span className="font-medium text-gray-900 text-sm group-hover:text-indigo-600 transition-colors">
+                            <ProductThumb
+                              image={od.Product.image}
+                              name={od.Product.productName}
+                            />
+                            <span className="truncate font-medium text-ink">
                               {od.Product.productName}
                             </span>
                           </button>
                         </td>
-                        <td className="px-5 py-3.5 text-gray-600 font-medium">{od.quantity}</td>
-                        <td className="px-5 py-3.5">
-                          <p className="text-gray-900 text-sm">{order.phoneNumber}</p>
-                          <p className="text-xs text-gray-500 max-w-[180px] line-clamp-1 mt-0.5">
+                        <td className="px-5 py-3 tabular-nums text-ink-2">
+                          {od.quantity}
+                        </td>
+                        <td className="px-5 py-3">
+                          <p className="text-ink">{order.phoneNumber}</p>
+                          <p className="mt-0.5 max-w-[12rem] truncate text-xs text-muted">
                             {order.shippingAddress}
                           </p>
                         </td>
-                        <td className="px-5 py-3.5 text-gray-900 font-semibold">
-                          Rs. {Number(order.totalAmount).toFixed(2)}
+                        <td className="px-5 py-3">
+                          <Price
+                            value={order.totalAmount}
+                            className="font-semibold text-ink"
+                          />
                         </td>
-                        <td className="px-5 py-3.5">
-                          <span
-                            className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusStyles[order.orderStatus] ?? "bg-gray-100 text-gray-600"}`}
-                          >
-                            {order.orderStatus}
-                          </span>
+                        <td className="px-5 py-3">
+                          <StatusBadge tone={toStatusTone(order.orderStatus)}>
+                            {humanize(order.orderStatus)}
+                          </StatusBadge>
                         </td>
-                        <td className="px-5 py-3.5">
-                          <span
-                            className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${paymentStyles[payment?.paymentStatus ?? "unpaid"] ?? "bg-gray-100 text-gray-600"}`}
-                          >
-                            {payment?.paymentStatus ?? "unpaid"}
-                          </span>
+                        <td className="px-5 py-3">
+                          <StatusBadge tone={toPaymentTone(paymentStatus)}>
+                            {paymentStatus ? humanize(paymentStatus) : "No payment"}
+                          </StatusBadge>
                         </td>
-                        <td className="px-5 py-3.5">
-                          <div className="flex gap-1.5 items-center">
-                            <button
-                              onClick={() => navigate(`/vendor/order/${order.id}`)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
-                              title="View order details"
+                        <td className="px-5 py-3">
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => navigate(detailUrl)}
                             >
-                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
-                                <circle cx="12" cy="12" r="3" />
-                              </svg>
+                              <Eye aria-hidden className="size-4" />
                               View
-                            </button>
-                            <select
+                            </Button>
+                            <SegmentedControl
+                              ariaLabel={`Order status for ${order.id}`}
+                              className="w-full justify-end sm:w-auto"
                               value={order.orderStatus}
-                              onChange={(e) => onUpdateStatus(order.id, e.target.value)}
-                              className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 bg-white"
-                            >
-                              {statuses.map((s) => (
-                                <option key={s} value={s}>
-                                  {s}
-                                </option>
-                              ))}
-                            </select>
-                            <button
+                              options={statusOptions}
+                              onChange={(status) => onUpdateStatus(order.id, status)}
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() =>
                                 onUpdatePayment(
                                   order.id,
-                                  payment?.paymentStatus === "paid" ? "unpaid" : "paid",
+                                  paymentStatus === "paid" ? "unpaid" : "paid",
                                 )
                               }
-                              className={`px-2.5 py-1.5 rounded-lg transition-colors text-xs font-medium ${
-                                payment?.paymentStatus === "paid"
-                                  ? "text-amber-600 hover:bg-amber-50"
-                                  : "text-emerald-600 hover:bg-emerald-50"
-                              }`}
                             >
-                              {payment?.paymentStatus === "paid" ? "Unpay" : "Pay"}
-                            </button>
-                            <button
+                              {paymentStatus === "paid" ? "Mark unpaid" : "Mark paid"}
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="danger"
+                              title="Delete order"
+                              aria-label={`Delete order ${order.id}`}
                               onClick={() => onDelete(order.id)}
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                             >
-                              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                              </svg>
-                            </button>
+                              <Trash2 aria-hidden className="size-4" />
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -268,7 +263,7 @@ export default function VendorOrders({
             {pagination && <Pagination pagination={pagination} onPageChange={onPageChange} />}
           </>
         )}
-      </div>
+      </Panel>
     </div>
   );
 }
