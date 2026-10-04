@@ -27,17 +27,17 @@ export default function VendorProductCard({
 
   return (
     <article className="flex flex-col overflow-hidden rounded-panel border border-line bg-surface">
-      <div className="relative aspect-[4/3] bg-paper-2">
+      <div className="relative aspect-[4/3] shrink-0 overflow-hidden bg-paper-2">
         {src && !imgError ? (
           <img
             src={src}
             alt={product.productName}
             loading="lazy"
             onError={() => setImgError(true)}
-            className="size-full object-cover"
+            className="absolute inset-0 size-full object-cover"
           />
         ) : (
-          <span className="flex size-full flex-col items-center justify-center gap-2 text-muted">
+          <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted">
             <ImageOff aria-hidden className="size-8" />
             <span className="text-xs font-medium">No image</span>
           </span>
@@ -63,9 +63,9 @@ export default function VendorProductCard({
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-1 p-4">
         <h3 className="truncate font-medium text-ink">{product.productName}</h3>
-        <p className="line-clamp-2 flex-1 text-sm leading-relaxed text-muted">
+        <p className="line-clamp-2 text-sm leading-relaxed text-muted">
           {product.productDescription}
         </p>
       </div>
