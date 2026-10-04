@@ -32,17 +32,10 @@ function InstagramMark() {
 }
 
 const shopLinks = [
-  { label: "All products", to: "/products" },
+  { label: "All products", to: "/" },
   { label: "My orders", to: "/orders" },
   { label: "Cart", to: "/cart" },
   { label: "My profile", to: "/profile" },
-];
-
-const helpLinks = [
-  { label: "Place an order", to: "/products" },
-  { label: "Shipping and delivery", to: "/products" },
-  { label: "Returns", to: "/products" },
-  { label: "Contact the seller", to: "/products" },
 ];
 
 export default function Footer() {
@@ -130,7 +123,7 @@ export default function Footer() {
                 categories.map((category) => (
                   <li key={category.id}>
                     <Link
-                      to={`/category/${category.id}`}
+                      to={`/dashboard?category=${category.id}`}
                       className="text-sm text-paper/75 transition-colors hover:text-marigold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marigold"
                     >
                       {category.categoryName}
@@ -140,24 +133,6 @@ export default function Footer() {
               ) : (
                 <li className="text-sm text-paper/55">Loading categories</li>
               )}
-            </ul>
-          </nav>
-
-          <nav aria-labelledby="footer-help">
-            <h2 id="footer-help" className="font-display text-sm font-semibold">
-              Help
-            </h2>
-            <ul className="mt-4 flex flex-col gap-3">
-              {helpLinks.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    to={link.to}
-                    className="text-sm text-paper/75 transition-colors hover:text-marigold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marigold"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
             </ul>
           </nav>
         </div>

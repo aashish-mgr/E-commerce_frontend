@@ -191,7 +191,10 @@ export default function Cart() {
     dispatch(getCartItems() as any);
   }, []);
   useEffect(() => {
-    setItems(cartState.cart);
+    // cart is null until the request resolves, and stays null on failure.
+    // Assigning it straight through would leave items null and every later
+    // read of it undefined.
+    setItems(cartState.cart ?? []);
   }, [cartState.cart]);
 
   const placeOrder = () => {
