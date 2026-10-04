@@ -22,6 +22,7 @@ import PaymentCallback from './pages/PaymentCallback.tsx'
 import AuthComplete from './pages/AuthComplete.tsx'
 import Login from './pages/Login.tsx'
 import Profile from './pages/Profile.tsx'
+import NotFound from './pages/NotFound.tsx'
 
 function App() {
   const dispatch = useDispatch();
@@ -49,6 +50,7 @@ function App() {
           <Route path='/placeOrder' element={<ProtectedRoute><PlaceOrder /></ProtectedRoute>} />
           <Route path='/paymentCallback' element={<ProtectedRoute><PaymentCallback /></ProtectedRoute>} />
           <Route path='/auth/complete' element={<AuthComplete />} />
+          <Route path='*' element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </NavbarProvider>

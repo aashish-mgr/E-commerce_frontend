@@ -3,7 +3,17 @@ import { useDispatch, useSelector } from "react-redux";
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ChevronDown, LayoutGrid, LogOut, Menu, ShoppingBag, Store, User } from "lucide-react";
+import {
+  ChevronDown,
+  LayoutGrid,
+  LogOut,
+  Menu,
+  Package,
+  ShoppingBag,
+  Store,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import { LogoutUser } from "../store/authSlice";
 import { useNavbar } from "../context/NavbarContext";
 import { getImageUrl } from "../api/index";
@@ -62,7 +72,7 @@ function Brand({ onClick }: { onClick?: () => void }) {
         <ShoppingBag className="size-4 text-paper" strokeWidth={2.4} />
       </span>
       <span className="font-display text-lg font-semibold tracking-tight text-ink">
-        ShopEase
+        Kinau
       </span>
     </Link>
   );
@@ -93,12 +103,18 @@ function UserAvatar({
   );
 }
 
-function CartLink({
+function NavIconLink({
+  to,
+  label,
+  icon: Icon,
   count,
   onNavigate,
   className,
 }: {
-  count: number;
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  count?: number;
   onNavigate?: () => void;
   className?: string;
 }) {
@@ -106,17 +122,17 @@ function CartLink({
 
   return (
     <Link
-      to="/cart"
+      to={to}
       onClick={onNavigate}
-      aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}
+      aria-label={count ? `${label}, ${count} items` : label}
       className={cn(
         "relative flex size-11 items-center justify-center rounded-control text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine",
         className,
       )}
     >
-      <ShoppingBag aria-hidden className="size-5" />
+      <Icon aria-hidden className="size-5" />
       <AnimatePresence>
-        {count > 0 && (
+        {!!count && count > 0 && (
           <motion.span
             key={count}
             initial={reduce ? false : { scale: 1 }}
@@ -195,7 +211,16 @@ export default function Navbar() {
     }`;
 
   const isStaff = isAuthenticated && (role === "vendor" || role === "admin");
+  const isCustomer = isAuthenticated && !isStaff;
   const dashboardPath = role === "admin" ? "/admin" : "/vendor/dashboard";
+
+  const sheetLinkClass = (to: string) =>
+    `flex min-h-11 items-center gap-2 rounded-control px-3 text-sm font-medium ${
+      isActive(to) ? "bg-pine-soft text-pine" : "text-ink-2 hover:bg-paper-2 hover:text-ink"
+    }`;
+
+  // Cart and Orders get their own icon rows below, so drop Orders from the plain text list.
+  const sheetLinks = isCustomer ? links.filter((link) => link.to !== "/orders") : links;
 
   const menuItems = (
     <>
@@ -261,14 +286,15 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-1">
-            {isAuthenticated && !isStaff && (
-              <CartLink count={cartCount} />
+            {isCustomer && (
+              <NavIconLink to="/cart" label="Cart" icon={ShoppingBag} count={cartCount} />
             )}
             {authPending ? (
               <div className="hidden items-center gap-2 md:flex" aria-label="Loading account">
                 <UserAvatar />
               </div>
-            ) : !isAuthenticated ? (              <div className="hidden items-center gap-2 md:flex">
+            ) : !isAuthenticated ? (
+              <div className="hidden items-center gap-2 md:flex">
                 <Button variant="ghost" size="sm" onClick={openLogin}>
                   Sign in
                 </Button>
@@ -297,8 +323,8 @@ export default function Navbar() {
               </DropdownMenu>
             )}
 
-            {isAuthenticated && !isStaff && (
-              <CartLink count={cartCount} />
+            {isCustomer && (
+              <NavIconLink to="/orders" label="Orders" icon={Package} />
             )}
 
             <Button
@@ -319,20 +345,41 @@ export default function Navbar() {
         <DialogContent title="Menu" variant="sheet" className="border-line bg-surface p-0">
           <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-4">
             <div className="flex flex-col gap-1">
-              {links.map((link) => (
+              {sheetLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
                   onClick={() => setSheetOpen(false)}
-                  className={`flex min-h-11 items-center rounded-control px-3 text-sm font-medium ${
-                    isActive(link.to)
-                      ? "bg-pine-soft text-pine"
-                      : "text-ink-2 hover:bg-paper-2 hover:text-ink"
-                  }`}
+                  className={sheetLinkClass(link.to)}
                 >
                   {link.label}
                 </Link>
               ))}
+              {isCustomer && (
+                <>
+                  <Link
+                    to="/cart"
+                    onClick={() => setSheetOpen(false)}
+                    className={sheetLinkClass("/cart")}
+                  >
+                    <ShoppingBag aria-hidden className="size-4" />
+                    Cart
+                    {cartCount > 0 && (
+                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-pine px-1 font-display text-[11px] font-semibold tabular-nums text-paper">
+                        {cartCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    to="/orders"
+                    onClick={() => setSheetOpen(false)}
+                    className={sheetLinkClass("/orders")}
+                  >
+                    <Package aria-hidden className="size-4" />
+                    Orders
+                  </Link>
+                </>
+              )}
               {isStaff && (
                 <Link
                   to="/"

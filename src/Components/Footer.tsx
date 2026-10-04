@@ -32,17 +32,10 @@ function InstagramMark() {
 }
 
 const shopLinks = [
-  { label: "All products", to: "/products" },
+  { label: "All products", to: "/" },
   { label: "My orders", to: "/orders" },
   { label: "Cart", to: "/cart" },
   { label: "My profile", to: "/profile" },
-];
-
-const helpLinks = [
-  { label: "Place an order", to: "/products" },
-  { label: "Shipping and delivery", to: "/products" },
-  { label: "Returns", to: "/products" },
-  { label: "Contact the seller", to: "/products" },
 ];
 
 export default function Footer() {
@@ -74,7 +67,7 @@ export default function Footer() {
                 <ShoppingBag className="size-4 text-pine" strokeWidth={2.4} />
               </span>
               <span className="font-display text-lg font-semibold tracking-tight">
-                ShopEase
+                Kinau
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-paper/75">
@@ -86,7 +79,7 @@ export default function Footer() {
                 href="https://www.facebook.com"
                 target="_blank"
                 rel="noreferrer noopener"
-                aria-label="ShopEase on Facebook"
+                aria-label="Kinau on Facebook"
                 className="flex size-10 items-center justify-center rounded-control text-paper/80 transition-colors hover:bg-paper/10 hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marigold"
               >
                 <FacebookMark />
@@ -95,7 +88,7 @@ export default function Footer() {
                 href="https://www.instagram.com"
                 target="_blank"
                 rel="noreferrer noopener"
-                aria-label="ShopEase on Instagram"
+                aria-label="Kinau on Instagram"
                 className="flex size-10 items-center justify-center rounded-control text-paper/80 transition-colors hover:bg-paper/10 hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marigold"
               >
                 <InstagramMark />
@@ -130,7 +123,7 @@ export default function Footer() {
                 categories.map((category) => (
                   <li key={category.id}>
                     <Link
-                      to={`/category/${category.id}`}
+                      to={`/dashboard?category=${category.id}`}
                       className="text-sm text-paper/75 transition-colors hover:text-marigold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marigold"
                     >
                       {category.categoryName}
@@ -142,28 +135,10 @@ export default function Footer() {
               )}
             </ul>
           </nav>
-
-          <nav aria-labelledby="footer-help">
-            <h2 id="footer-help" className="font-display text-sm font-semibold">
-              Help
-            </h2>
-            <ul className="mt-4 flex flex-col gap-3">
-              {helpLinks.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    to={link.to}
-                    className="text-sm text-paper/75 transition-colors hover:text-marigold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marigold"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
         </div>
 
         <div className="flex flex-col gap-2 border-t border-paper/15 py-6 text-xs text-paper/65 sm:flex-row sm:items-center sm:justify-between">
-          <p>ShopEase. Built for sellers across Nepal.</p>
+          <p>Kinau. Built for sellers across Nepal.</p>
           <p>Prices in Nepali rupees. Payments secured by Khalti.</p>
         </div>
       </Container>

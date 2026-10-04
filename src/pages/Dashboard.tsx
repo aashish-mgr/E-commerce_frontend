@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { PackageSearch, ReceiptText, ShoppingBag } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import ProductCard from "../Components/ProductCard";
 import FilterBar from "../Components/FilterBar";
 import Footer from "../Components/Footer";
@@ -44,6 +44,7 @@ export default function Dashboard() {
   const debouncedSearch = useDebouncedValue(search);
   const { setNavbarData } = useNavbar();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const getProducts = useCallback(async () => {
     setLoading(true);
@@ -71,6 +72,21 @@ export default function Dashboard() {
       console.error("Error fetching categories:", error);
     }
   }, []);
+
+  // The footer links here with ?category=<id>. The filter is keyed by name
+  // while the link carries an id, so the name can only be resolved once the
+  // category list has loaded. Adjusting during render rather than in an effect
+  // keeps the fetch from running once with "All" and again with the real
+  // category, which would flash an unfiltered grid.
+  const requestedCategoryId = searchParams.get("category");
+  const resolvedCategoryName = requestedCategoryId
+    ? categories.find((c) => c.id === requestedCategoryId)?.categoryName
+    : undefined;
+  const [appliedUrlCategory, setAppliedUrlCategory] = useState<string | undefined>(undefined);
+  if (resolvedCategoryName && resolvedCategoryName !== appliedUrlCategory) {
+    setAppliedUrlCategory(resolvedCategoryName);
+    setCategory(resolvedCategoryName);
+  }
 
   const CURRENT_USER: User | null = authState.user ?? null;
 

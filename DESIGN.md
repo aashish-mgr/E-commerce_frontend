@@ -1,4 +1,4 @@
-# ShopEase design system
+# Kinau design system
 
 A calm, product-first market. Products and prices are loud; everything else is quiet.
 Whitespace, hairlines and tinted backdrops replace stacked cards.

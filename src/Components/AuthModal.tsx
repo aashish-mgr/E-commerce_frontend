@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useDispatch } from "react-redux";
 import { API_BASE } from "../api";
 import { loginUser, registerUser } from "../store/authSlice";
@@ -23,6 +23,30 @@ const AuthModal = ({ mode, onClose, onSwitch, onLogin }: any) => {
     window.location.href = `${API_BASE}/auth/google`;
   };
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (mode === "register") {
+      dispatch(
+        registerUser({
+          userName: name,
+          userEmail: email,
+          userPassword: password,
+          userRole: role,
+        })
+      );
+    } else if (onLogin) {
+      onLogin(email, password);
+    } else {
+      dispatch(
+        loginUser({
+          userEmail: email,
+          userPassword: password,
+        })
+      );
+    }
+  };
+
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -33,7 +57,7 @@ const AuthModal = ({ mode, onClose, onSwitch, onLogin }: any) => {
             : "Shop as a buyer, or open a storefront as a seller."
         }
       >
-        <div className="flex flex-col gap-4 p-5">
+        <form className="flex flex-col gap-4 p-5" onSubmit={handleSubmit}>
           {mode === "register" && (
             <>
               <fieldset className="flex flex-col gap-1.5">
@@ -97,34 +121,14 @@ const AuthModal = ({ mode, onClose, onSwitch, onLogin }: any) => {
           </div>
 
           <Button
+            type="submit"
             variant="primary"
             className="w-full"
-            onClick={() => {
-              if (mode === "register") {
-                dispatch(
-                  registerUser({
-                    userName: name,
-                    userEmail: email,
-                    userPassword: password,
-                    userRole: role,
-                  })
-                );
-              } else if (onLogin) {
-                onLogin(email, password);
-              } else {
-                dispatch(
-                  loginUser({
-                    userEmail: email,
-                    userPassword: password,
-                  })
-                );
-              }
-            }}
           >
             {mode === "login" ? "Sign in" : "Create account"}
           </Button>
 
-          <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
+          <Button type="button" variant="outline" className="w-full" onClick={handleGoogleLogin}>
             Continue with Google
           </Button>
 
@@ -138,7 +142,7 @@ const AuthModal = ({ mode, onClose, onSwitch, onLogin }: any) => {
               {mode === "login" ? "Create one" : "Sign in"}
             </button>
           </p>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

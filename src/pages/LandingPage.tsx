@@ -162,7 +162,7 @@ export default function LandingPage() {
                   Buy from Nepali sellers, all in one basket
                 </h1>
                 <p className="mt-4 max-w-prose text-base leading-relaxed text-ink-2">
-                  ShopEase brings independent vendors together in one place. Fill your
+                  Kinau brings independent vendors together in one place. Fill your
                   basket across sellers, pay once with Khalti, and follow every order to
                   your door.
                 </p>
@@ -227,7 +227,7 @@ export default function LandingPage() {
         {/* ── How it works ────────────────────────────── */}
         <section className="border-b border-line">
           <Container>
-            <PageHeader title="How ShopEase works" />
+            <PageHeader title="How Kinau works" />
             <div className="grid gap-x-8 gap-y-8 py-10 md:grid-cols-3">
               {PROMISES.map(({ title, body }, index) => (
                 <div key={title}>
@@ -248,7 +248,7 @@ export default function LandingPage() {
             <PageHeader
               className="mt-14"
               title="Featured products"
-              description="A rotating selection from sellers on ShopEase."
+              description="A rotating selection from sellers on Kinau."
             />
 
             {loading ? (
