@@ -46,7 +46,13 @@ export default function VendorDashboard() {
   const [productSearch, setProductSearch] = useState("");
   const [productCategory, setProductCategory] = useState("All");
   const [productsPagination, setProductsPagination] = useState<PaginationMeta | null>(null);
+  const [productsLoading, setProductsLoading] = useState(true);
   const debouncedProductSearch = useDebouncedValue(productSearch);
+
+  // Resolved to a primitive id so the category list changing identity does not
+  // re-trigger fetchProducts (it used to depend on `categories`, which made the
+  // list fetch twice on mount and flashed the empty state before the cards).
+  const selectedCategoryId = categories.find((c) => c.categoryName === productCategory)?.id;
 
   // Order listing state
   const [orderPage, setOrderPage] = useState(1);
@@ -68,18 +74,20 @@ export default function VendorDashboard() {
   };
 
   const fetchProducts = useCallback(async () => {
+    setProductsLoading(true);
     try {
       const params: Record<string, string | number> = { page: productPage, limit: 8 };
       if (debouncedProductSearch) params.search = debouncedProductSearch;
-      const category = categories.find((c) => c.categoryName === productCategory);
-      if (category) params.categoryId = category.id;
+      if (selectedCategoryId) params.categoryId = selectedCategoryId;
       const response = await authAPI.get("/product/getMyProducts", { params });
       setProducts(response.data.data);
       setProductsPagination(response.data.pagination);
     } catch (error) {
       console.error("Error fetching my products:", error);
+    } finally {
+      setProductsLoading(false);
     }
-  }, [productPage, debouncedProductSearch, productCategory, categories]);
+  }, [productPage, debouncedProductSearch, selectedCategoryId]);
 
   const fetchOverviewProducts = useCallback(async () => {
     try {
@@ -387,6 +395,7 @@ return (
         {tab === "products" && (
           <VendorProducts
             products={products}
+            loading={productsLoading}
             pagination={productsPagination}
             categories={["All", ...categories.map((c) => c.categoryName)]}
             search={productSearch}

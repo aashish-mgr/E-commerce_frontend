@@ -6,9 +6,31 @@ import { EmptyState } from "../ui/EmptyState";
 import { ChipGroup, ResultMeta, SearchField } from "../ui/FilterBar";
 import { PageHeader } from "../ui/PageHeader";
 import { Panel } from "../ui/Panel";
+import { Skeleton } from "../ui/Skeleton";
+import { cn } from "../../lib/cn";
 import { humanize } from "../../lib/format";
 import VendorProductCard from "./VendorProductCard";
 import type { VendorProduct } from "./types";
+
+const GRID = "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+
+/** Mirrors <VendorProductCard> so the grid does not resize when real cards land. */
+function ProductCardPlaceholder() {
+  return (
+    <div className="flex flex-col overflow-hidden rounded-panel border border-line bg-surface">
+      <Skeleton className="aspect-[4/3] w-full rounded-none" />
+      <div className="flex flex-col gap-2 p-4">
+        <Skeleton className="h-4 w-4/5" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-2/3" />
+      </div>
+      <div className="flex items-center justify-between border-t border-line px-4 py-3">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="size-10" />
+      </div>
+    </div>
+  );
+}
 
 export default function VendorProducts({
   products,
@@ -16,6 +38,7 @@ export default function VendorProducts({
   search,
   selectedCategory,
   pagination,
+  loading = false,
   onSearchChange,
   onCategoryChange,
   onPageChange,
@@ -28,6 +51,8 @@ export default function VendorProducts({
   search: string;
   selectedCategory: string;
   pagination: PaginationMeta | null;
+  /** True while a list request is in flight. */
+  loading?: boolean;
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onPageChange: (page: number) => void;
@@ -85,7 +110,15 @@ export default function VendorProducts({
         />
       </Panel>
 
-      {products.length === 0 ? (
+      {/* Nothing to show yet and a request is in flight: hold the grid shape with
+          placeholders rather than flashing the "no products" empty state. */}
+      {loading && products.length === 0 ? (
+        <div className={GRID} aria-busy="true">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <ProductCardPlaceholder key={i} />
+          ))}
+        </div>
+      ) : products.length === 0 ? (
         <Panel>
           <EmptyState
             icon={total === 0 ? PackagePlus : PackageSearch}
@@ -111,7 +144,12 @@ export default function VendorProducts({
         </Panel>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {/* Keep the existing cards mounted while refetching so search and paging
+              do not collapse the grid and shove the layout around. */}
+          <div
+            className={cn(GRID, loading && "opacity-60 transition-opacity")}
+            aria-busy={loading || undefined}
+          >
             {products.map((product) => (
               <VendorProductCard
                 key={product.id}
