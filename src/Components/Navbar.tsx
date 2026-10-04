@@ -72,7 +72,7 @@ function Brand({ onClick }: { onClick?: () => void }) {
         <ShoppingBag className="size-4 text-paper" strokeWidth={2.4} />
       </span>
       <span className="font-display text-lg font-semibold tracking-tight text-ink">
-        ShopEase
+        Kinau
       </span>
     </Link>
   );

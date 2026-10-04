@@ -74,7 +74,7 @@ export default function Footer() {
                 <ShoppingBag className="size-4 text-pine" strokeWidth={2.4} />
               </span>
               <span className="font-display text-lg font-semibold tracking-tight">
-                ShopEase
+                Kinau
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-paper/75">
@@ -86,7 +86,7 @@ export default function Footer() {
                 href="https://www.facebook.com"
                 target="_blank"
                 rel="noreferrer noopener"
-                aria-label="ShopEase on Facebook"
+                aria-label="Kinau on Facebook"
                 className="flex size-10 items-center justify-center rounded-control text-paper/80 transition-colors hover:bg-paper/10 hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marigold"
               >
                 <FacebookMark />
@@ -95,7 +95,7 @@ export default function Footer() {
                 href="https://www.instagram.com"
                 target="_blank"
                 rel="noreferrer noopener"
-                aria-label="ShopEase on Instagram"
+                aria-label="Kinau on Instagram"
                 className="flex size-10 items-center justify-center rounded-control text-paper/80 transition-colors hover:bg-paper/10 hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marigold"
               >
                 <InstagramMark />
@@ -163,7 +163,7 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col gap-2 border-t border-paper/15 py-6 text-xs text-paper/65 sm:flex-row sm:items-center sm:justify-between">
-          <p>ShopEase. Built for sellers across Nepal.</p>
+          <p>Kinau. Built for sellers across Nepal.</p>
           <p>Prices in Nepali rupees. Payments secured by Khalti.</p>
         </div>
       </Container>
