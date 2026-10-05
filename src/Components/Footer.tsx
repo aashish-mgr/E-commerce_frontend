@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingBag } from "lucide-react";
 import { Container } from "./ui/Container";
+import { API } from "../api";
 
 type Category = { id: string; categoryName: string };
 
@@ -42,13 +43,9 @@ export default function Footer() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch(`${import.meta.env.VITE_API_URL ?? "http://localhost:3000"}/categories`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: { categories?: Category[] } | Category[]) => {
-        const list = Array.isArray(data) ? data : (data.categories ?? []);
+    API.get("/category/getAll")
+      .then((res) => {
+        const list = (res.data?.data ?? []) as Category[];
         setCategories(list.slice(0, 5));
       })
       .catch(() => setCategories([]));
